@@ -116,7 +116,7 @@
 - (bool) enableBaselineHistory;
 - (double) baselineSampleTime;
 - (ORTimeRate*) baselineHistory:(unsigned int)chan;
-- (void) shipToInflux:(int)aChan energy:(int)anEnergy baseline:(int)aBaseline;
+- (void) shipToInflux:(int)aChan energy:(int)anEnergy baseline:(int)aBaseline fcioIndex:(int)anIndex;
 
 - (void) setChanEnabled:(unsigned int)chan    withValue:(bool)enabled;
 - (void) setTrigOutEnabled:(unsigned int)chan withValue:(bool)enabled;
