@@ -147,11 +147,11 @@ NSString* ORL200ModelViewTypeChanged = @"ORL200ModelViewTypeChanged";
     NSArray* objects = [[(ORAppDelegate*)[NSApp delegate]  document] collectObjectsOfClass:NSClassFromString(@"OrcaObject")];
     [objects makeObjectsPerformSelector:@selector(clearLoopChecked) withObject:nil];
 
-    [connectedHisto release];
+//    [connectedHisto release];
     [rc release];
     rc = [[[(ORAppDelegate*)[NSApp delegate] document] findObjectWithFullID:@"ORRunModel,1"] retain];
-    NSArray* hists = [rc collectConnectedObjectsOfClass:NSClassFromString(@"ORHistoModel")];
-    connectedHisto = [[hists objectAtIndex:0]retain];
+//    NSArray* hists = [rc collectConnectedObjectsOfClass:NSClassFromString(@"ORHistoModel")];
+//    connectedHisto = [[hists objectAtIndex:0]retain];
 
     [self postInFluxRunTime];
 }

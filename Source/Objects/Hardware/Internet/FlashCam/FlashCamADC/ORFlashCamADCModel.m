@@ -814,12 +814,13 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
 - (void) shipToInflux:(int)aChan energy:(int)anEnergy baseline:(int)aBaseline
 {
     if(inFlux){
+        double aTimeStamp = [[NSDate date]timeIntervalSince1970];
         ORInFluxDBMeasurement* aCmd = [ORInFluxDBMeasurement measurementForBucket:@"L200" org:[inFlux org]];
         [aCmd start   : @"flashCamADC"];
         [aCmd addTag  : @"location"     withString:[NSString stringWithFormat:@"%02d_%02d_%02d",[self crateNumber],[self slot],aChan]];
-        [aCmd addField: @"fpgaEnergy"   withLong:anEnergy];
-        [aCmd addField: @"fpgaBaseline" withLong:aBaseline];
-        [aCmd setTimeStamp:[NSDate timeIntervalSinceReferenceDate]];
+        [aCmd addField: @"fpgaEnergy"   withDouble:anEnergy];
+        [aCmd addField: @"fpgaBaseline" withDouble:aBaseline];
+        [aCmd setTimeStamp: aTimeStamp];
         [inFlux executeDBCmd:aCmd];
     }
 }
