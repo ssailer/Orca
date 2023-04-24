@@ -787,7 +787,11 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     }
     else{
         if(includeWF) wfCount[channel] ++;
-        if(event->theader[index][1] > 0) trigCount[channel] ++;
+        int fpgaEnergy = event->theader[index][1];
+        if(fpgaEnergy > 0){
+            trigCount[channel]++;
+            [self shipToInflux:channel energy:fpgaEnergy baseline:event->theader[index][0] fcioIndex:index];
+        }
     }
     
     //ship the data
@@ -807,6 +811,20 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [aDataPacket addLongsToFrameBuffer:dataRecord length:dataRecordLength];
 }
 
+- (void) shipToInflux:(int)aChan energy:(int)anEnergy baseline:(int)aBaseline fcioIndex:(int)anIndex
+{
+    if(inFlux){
+        double aTimeStamp = [[NSDate date]timeIntervalSince1970];
+        ORInFluxDBMeasurement* aCmd = [ORInFluxDBMeasurement measurementForBucket:@"L200" org:[inFlux org]];
+        [aCmd start   : @"flashCamADC"];
+        [aCmd addTag  : @"location"     withString:[NSString stringWithFormat:@"%02d_%02d_%02d",[self crateNumber],[self slot],aChan]];
+        [aCmd addTag  : @"fcioIndex"   withLong:anIndex];
+        [aCmd addField: @"fpgaEnergy"   withDouble:anEnergy];
+        [aCmd addField: @"fpgaBaseline" withDouble:aBaseline];
+        [aCmd setTimeStamp: aTimeStamp];
+        [inFlux executeDBCmd:aCmd];
+    }
+}
 
 - (void) runTaskStarted:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
