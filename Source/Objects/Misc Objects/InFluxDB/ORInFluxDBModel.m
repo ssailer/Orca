@@ -502,7 +502,7 @@ static NSString* ORInFluxDBModelInConnector = @"ORInFluxDBModelInConnector";
         messageQueue = [[ORSafeQueue alloc] init];
     }
     [messageQueue enqueue:aCmd];
-    
+
     if(([self connectionStatus]==kInFluxDBConnectionOK) && connectionAlarm && [connectionAlarm acknowledged]){
         [connectionAlarm clearAlarm];
         [connectionAlarm release];
