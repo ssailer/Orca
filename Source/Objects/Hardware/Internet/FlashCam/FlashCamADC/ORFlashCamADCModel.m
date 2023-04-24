@@ -93,11 +93,13 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
 
 - (void) dealloc
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
     [self setWFsamples:0];
     [wfRates release];
     [trigRates release];
     for(int i=0; i<[self numberOfChannels]; i++) [baselineHistory[i] release];
+    [inFlux release];
     [super dealloc];
 }
 
@@ -105,8 +107,33 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
 {
     @try{
         [self performSelector:@selector(postConfig) withObject:nil afterDelay:3];
+        [self registerNotificationObservers];
+        inFlux = [[[(ORAppDelegate*)[NSApp delegate] document] findObjectWithFullID:@"ORInFluxDBModel,1"]retain];
     }
     @catch(NSException* localException){ }
+}
+
+- (void) registerNotificationObservers
+{
+    NSNotificationCenter* notifyCenter = [NSNotificationCenter defaultCenter];
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+           
+    [notifyCenter addObserver : self
+                     selector : @selector(configurationChanged:)
+                         name : ORGroupObjectsAdded
+                       object : nil];
+
+    [notifyCenter addObserver : self
+                     selector : @selector(configurationChanged:)
+                         name : ORGroupObjectsRemoved
+                       object : nil];
+}
+
+- (void) configurationChanged:(NSNotification*)aNote
+{
+    [inFlux release];
+    inFlux = [[[(ORAppDelegate*)[NSApp delegate] document] findObjectWithFullID:@"ORInFluxDBModel,1"]retain];
 }
 
 - (void) setUpImage
