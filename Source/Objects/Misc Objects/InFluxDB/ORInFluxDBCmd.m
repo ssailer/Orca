@@ -317,7 +317,12 @@
 }
 - (void) setTimeStamp:(double)aTimeStamp
 {
-    timeStamp = aTimeStamp;
+    timeStampNanoSeconds = aTimeStamp * 1e9;
+}
+
+- (void) setTimeStampNanoSeconds:(long)aTimeStamp
+{
+    timeStampNanoSeconds = aTimeStamp;
 }
 
 - (void) start:(NSString*)aMeasurement withTags:(NSString*)someTags
@@ -392,11 +397,11 @@
                               measurement,
                               [tags componentsJoinedByString:@","],
                               [measurements componentsJoinedByString:@","],
-                              timeStamp?[NSString stringWithFormat:@"%ld\n",(long)(timeStamp*1E9)]:@"\n"];
+                              timeStampNanoSeconds?[NSString stringWithFormat:@"%ld\n",timeStampNanoSeconds]:@"\n"];
     else return [NSString stringWithFormat:@"%@ %@ %@",
                         measurement,
                         [measurements componentsJoinedByString:@","],
-                        timeStamp?[NSString stringWithFormat:@"%ld\n",(long)(timeStamp*1E9)]:@"\n"];
+                        timeStampNanoSeconds?[NSString stringWithFormat:@"%ld\n",timeStampNanoSeconds]:@"\n"];
 
 }
 

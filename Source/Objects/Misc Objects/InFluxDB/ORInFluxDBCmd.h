@@ -111,10 +111,12 @@ enum {
     NSString*       bucket;
     NSString*       org;
     double          timeStamp;
+    long            timeStampNanoSeconds;
 }
 + (ORInFluxDBMeasurement*)measurementForBucket:(NSString*)aBucket org:(NSString*)anOrg;
 - (id) init:(int)aType bucket:(NSString*)aBucket org:(NSString*)anOrg;
 - (void) setTimeStamp:(double)aTimeStamp;
+- (void) setTimeStampNanoSeconds:(long)aTimeStamp;
 - (NSString*) bucket;
 - (NSString*) org;
 - (NSString*) cmdLine;
