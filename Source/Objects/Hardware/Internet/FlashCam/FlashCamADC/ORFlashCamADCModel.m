@@ -790,7 +790,6 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         int fpgaEnergy = event->theader[index][1];
         if(fpgaEnergy > 0){
             trigCount[channel]++;
-            [self shipToInflux:channel energy:fpgaEnergy baseline:event->theader[index][0]];
         }
     }
     
@@ -811,18 +810,50 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [aDataPacket addLongsToFrameBuffer:dataRecord length:dataRecordLength];
 }
 
-- (void) shipToInflux:(int)aChan energy:(int)anEnergy baseline:(int)aBaseline
+
+- (void) shipInfluxEvent:(fcio_event*)event config:(fcio_config*)config withTag:(int)tag withIndex:(int)index andChannel:(int)aChan andListener:(int)listener_id
 {
     if(inFlux){
-        ORInFluxDBMeasurement* aCmd = [ORInFluxDBMeasurement measurementForBucket:@"L200" org:[inFlux org]];
-        [aCmd start   : @"flashCamADC"];
-        [aCmd addTag  : @"location"     withString:[NSString stringWithFormat:@"%02d_%02d_%02d",[self crateNumber],[self slot],aChan]];
-        [aCmd addField: @"fpgaEnergy"   withLong:anEnergy];
-        [aCmd addField: @"fpgaBaseline" withLong:aBaseline];
-        [aCmd setTimeStamp:[NSDate timeIntervalSinceReferenceDate]];
+
+        double anEnergy = 0.0;
+
+        /* Depending on the firmware, the header[0] field changes meaning. in GE this
+           is the last peak amplitude within the readout trace above the channel threshold
+           in PMT firmware this is the integral of samples, with length determined by the sumlength parameter.
+        */
+        if (config->adcbits == 16) {
+            anEnergy = event->theader[index][1];
+        } else if (config->adcbits == 12) {
+            anEnergy = 1.0 * config->sumlength / config->blprecision * (event->theader[index][1] - event->theader[index][0]);
+        }
+        /* For */
+        double aBaseline = event->theader[index][0] / config->blprecision;
+        /* TimeStamp relative to start of readout system in nanoseconds.
+        */
+        double nanoseconds = (double)event->timestamp[2] / (1.0 + event->timestamp[3]);
+        long timestamp = (long)event->timestamp[1] * 1e9 + nanoseconds*1e9;
+        /*
+         Depending on the type of attached clock we need adjust calculating the absolute time.
+         */
+        if (config->gps) {
+            timestamp += (long)event->timeoffset[2] * 1e9;
+        } else {
+            timestamp += (long)event->timeoffset[0] * 1e9 + (long)event->timeoffset[1] * 1e3;
+        }
+
+        ORInFluxDBMeasurement* aCmd = [ORInFluxDBMeasurement measurementForBucket:@"Datastreams" org:[inFlux org]];
+        [aCmd start : @"fcioWaveform"];
+
+        [aCmd addTag : @"rawid" withString:[NSString stringWithFormat:@"%d", listener_id * 1000000 + [self cardAddress] * 100 + aChan]];
+        [aCmd addTag : @"location" withString:[NSString stringWithFormat:@"%02d_%02d_%02d",[self crateNumber],[self slot],aChan]];
+        [aCmd addField: @"fpgaBaseline" withDouble:aBaseline];
+        if (anEnergy > 0.0)
+            [aCmd addField: @"fpgaEnergy"   withDouble:anEnergy];
+        [aCmd setTimeStampNanoSeconds: timestamp];
         [inFlux executeDBCmd:aCmd];
     }
 }
+
 
 - (void) runTaskStarted:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
