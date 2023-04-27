@@ -484,7 +484,8 @@ static NSString* ORInFluxDBModelInConnector = @"ORInFluxDBModelInConnector";
     if([cmds count]==0)return;
     ORInFluxDBMeasurement* firstCmd = [cmds firstObject]; //need the bucket and org. will be same for all here
     ORInFluxDBCmdLineMode* aCombinedCmd = [ORInFluxDBCmdLineMode lineModeForBucket:[firstCmd bucket] org:[firstCmd org]];
-    for(ORInFluxDBMeasurement* aCmd in cmds){
+    for (ORInFluxDBMeasurement* aCmd in cmds)
+    {
         [aCombinedCmd appendLine:[aCmd cmdLine]];
     }
     [cmds removeAllObjects];
@@ -495,7 +496,7 @@ static NSString* ORInFluxDBModelInConnector = @"ORInFluxDBModelInConnector";
 - (void) sendCmd:(ORInFluxDBCmd*)aCmd
 {
     if(!processThread){
-        processThread = [[NSThread alloc] initWithTarget:self selector:@selector(sendMeasurments) object:nil];
+        processThread = [[NSThread alloc] initWithTarget:self selector:@selector(sendMeasurements) object:nil];
         [processThread start];
     }
     if(!messageQueue){
@@ -742,6 +743,9 @@ static NSString* ORInFluxDBModelInConnector = @"ORInFluxDBModelInConnector";
     
     [self executeDBCmd:[ORInFluxDBCreateBucket createBucket:@"Alarms"
                                                       orgId:[self orgId] expireTime:60*60*24*10]];
+    
+    [self executeDBCmd:[ORInFluxDBCreateBucket createBucket:@"Datastreams"
+                                                      orgId:[self orgId] expireTime:60*60*24*10]];
 
     [self performSelector:@selector(executeDBCmd:) withObject:[ORInFluxDBListBuckets listBuckets] afterDelay:1];
 }
@@ -987,7 +991,7 @@ static NSString* ORInFluxDBModelInConnector = @"ORInFluxDBModelInConnector";
 // or we have >4000 lines in the buffer. A complication is
 // that we have to keep track for each bucket
 //-----------------------------------------------------
-- (void)sendMeasurments
+- (void)sendMeasurements
 {
     NSAutoreleasePool* outerPool = [[NSAutoreleasePool alloc] init];
     if(!messageQueue){
