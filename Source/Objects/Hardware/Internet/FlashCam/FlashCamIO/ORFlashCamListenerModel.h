@@ -25,6 +25,7 @@
 #import "ORDataFileModel.h"
 #import "fcio.h"
 #import "bufio.h"
+#import "ORInFluxDBModel.h"
 
 #define kFlashCamConfigBufferLength 64
 #define kFlashCamStatusBufferLength 256
@@ -84,6 +85,7 @@
     NSMutableArray* fclog;
     NSMutableArray* fcrunlog;
     ORDataFileModel* dataFileObject;
+    ORInFluxDBModel* inFlux;
 }
 
 #pragma mark •••Initialization
@@ -189,6 +191,7 @@
 - (void) reset;
 - (NSDictionary*) dataRecordDescription;
 - (void) readThread:(ORDataPacket*)aDataPacket;
+- (void) shipInfluxStatus:(fcio_status*)fcstatus;
 
 #pragma mark •••Archival
 - (id) initWithCoder:(NSCoder*)decoder;

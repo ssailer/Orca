@@ -529,7 +529,7 @@ static NSString* ORFlashCamReadoutModelEthConnectors[kFlashCamMaxEthInterfaces] 
         [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamReadoutModelRemotePathStart object:self];
     }
     checkedFCSourcePath = true;
-}
+}	
 
 - (void) taskFinished:(id)task
 {

@@ -181,7 +181,23 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     [fclog release];
     [fcrunlog release];
+    [inFlux release];
     [super dealloc];
+}
+
+- (void) awakeAfterDocumentLoaded
+{
+    @try{
+        [self registerNotificationObservers];
+        inFlux = [[[(ORAppDelegate*)[NSApp delegate] document] findObjectWithFullID:@"ORInFluxDBModel,1"]retain];
+    }
+    @catch(NSException* localException){ }
+}
+
+- (void) configurationChanged:(NSNotification*)aNote
+{
+    [inFlux release];
+    inFlux = [[[(ORAppDelegate*)[NSApp delegate] document] findObjectWithFullID:@"ORInFluxDBModel,1"]retain];
 }
 
 - (void) setUpImage
@@ -240,6 +256,18 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 - (void) registerNotificationObservers
 {
     NSNotificationCenter* notifyCenter = [NSNotificationCenter defaultCenter];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+           
+    [notifyCenter addObserver : self
+                     selector : @selector(configurationChanged:)
+                         name : ORGroupObjectsAdded
+                       object : nil];
+
+    [notifyCenter addObserver : self
+                     selector : @selector(configurationChanged:)
+                         name : ORGroupObjectsRemoved
+                       object : nil];
+
     [notifyCenter addObserver : self
                      selector : @selector(dataFileNameChanged:)
                          name : ORDataFileChangedNotification
@@ -1582,8 +1610,29 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     else NSLog(@"ORFlashCamListenerModel on %@ at %@:%d successfully validated channel map\n", interface, ip, (int) port);
 }
 
+- (void) shipInfluxCardStatus:(fcio_status*)fcstatus forCard:(int)cardIndex andListener:(int)listenerId
+{
+    
+}
+
+- (void) shipInfluxStatus:(fcio_status*)fcstatus
+{
+    long timestampNanoSeconds = fcstatus->statustime[2] * 1e9 + fcstatus->statustime[3] * 1e3;
+    
+    ORInFluxDBMeasurement* aCmd = [ORInFluxDBMeasurement measurementForBucket:@"Datastreams" org:[inFlux org]];
+    [aCmd start : @"fcioStatus"];
+    [aCmd addTag: @"listener" withDouble:[self uniqueIdNumber]];
+    [aCmd addField: @"systemStatus" withDouble:fcstatus->status];
+    [aCmd setTimeStampNanoSeconds: timestampNanoSeconds];
+}
+
+
+
 - (void) readStatus:(fcio_status*)fcstatus
 {
+
+    [self shipInfluxStatus:fcstatus];
+   
     uint32_t index = statusBufferIndex;
     statusBufferIndex = (statusBufferIndex + 1) % kFlashCamStatusBufferLength;
     bufferedStatusCount++;

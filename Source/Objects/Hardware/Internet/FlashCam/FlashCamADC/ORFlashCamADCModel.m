@@ -833,7 +833,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         double nanoseconds = (double)event->timestamp[2] / (1.0 + event->timestamp[3]);
         long timestamp = (long)event->timestamp[1] * 1e9 + nanoseconds*1e9;
         /*
-         Depending on the type of attached clock we need adjust calculating the absolute time.
+         Depending on the type of attached clock we need to use different offsets to calculate an absolute time.
          */
         if (config->gps) {
             timestamp += (long)event->timeoffset[2] * 1e9;
@@ -845,7 +845,9 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [aCmd start : @"fcioWaveform"];
 
         [aCmd addTag : @"rawid" withString:[NSString stringWithFormat:@"%d", listener_id * 1000000 + [self cardAddress] * 100 + aChan]];
-        [aCmd addTag : @"location" withString:[NSString stringWithFormat:@"%02d_%02d_%02d",[self crateNumber],[self slot],aChan]];
+        [aCmd addTag : @"crate" withString:[NSString stringWithFormat:@"%d", [self crateNumber]]];
+        [aCmd addTag : @"slot" withString:[NSString stringWithFormat:@"%d", [self slot]]];
+        [aCmd addTag : @"channel" withString:[NSString stringWithFormat:@"%d", aChan]];
         [aCmd addField: @"fpgaBaseline" withDouble:aBaseline];
         if (anEnergy > 0.0)
             [aCmd addField: @"fpgaEnergy"   withDouble:anEnergy];
