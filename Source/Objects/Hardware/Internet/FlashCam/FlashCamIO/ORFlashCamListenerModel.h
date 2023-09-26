@@ -24,11 +24,13 @@
 #import "ORTimeRate.h"
 #import "ORDataFileModel.h"
 #import "fcio.h"
-#import "bufio.h"
 #import "ANSIEscapeHelper.h"
+//#import "bufio.h"
+#import "lpp.h"
 
 #define kFlashCamConfigBufferLength 64
 #define kFlashCamStatusBufferLength 256
+
 
 @interface ORFlashCamListenerModel : ORAuxHw <ORDataTaker>
 {
@@ -42,8 +44,9 @@
     int ioBuffer;
     int stateBuffer;
     FCIOStateReader* reader;
-    int readerRecordCount;
-    int bufferedRecords;
+    PostProcessor* postprocessor;
+//    int readerRecordCount;
+//    int bufferedRecords;
     uint32_t  configId;
     uint32_t* configBuffer;
     uint32_t  configBufferIndex;
@@ -71,14 +74,18 @@
     ORTimeRate* eventRateHistory;
     ORTimeRate* deadTimeHistory;
     NSTask*     runTask;            //added. MAH 9/17/22
+    NSThread* readoutThread;
     ORReadOutList* readOutList;
     NSArray* dataTakers;
     NSMutableArray* readOutArgs;
     NSMutableArray* chanMap;
     NSMutableArray* cardMap;
     NSLock* readStateLock; //MAH 9/18/22
-    bool timeToQuitReadoutThread;
+//    bool timeToQuitReadoutThread;
+    bool fcioReadThreadRunning;
+    int fcio_last_tag;
     bool readWait;
+    bool enablePostProcessor;
     ORDataPacket* dataPacketForThread;
     NSString* writeDataToFile;
     NSUInteger fclogIndex;
@@ -89,6 +96,27 @@
     //new
     NSDateFormatter*  logDateFormatter;
     ANSIEscapeHelper* ansieHelper;
+//     LPP Internal Parser stuff
+    int nlppHWChannels;
+    int* lppHWChannelMap;
+    unsigned short* lppHWPrescalingThresholds;
+
+    int nlppPSChannels;
+    int* lppPSChannelMap;
+    float* lppPSChannelGains;
+    float* lppPSChannelThresholds;
+    int* lppPSChannelShapings;
+    float* lppPSChannelLowPass;
+    
+    int lppPulserChannel;
+    int lppPulserChannelThreshold;
+    int lppBaselineChannel;
+    int lppBaselineChannelThreshold;
+    int lppMuonChannel;
+    int lppMuonChannelThreshold;
+    
+    bool debug;
+    
 }
 
 #pragma mark •••Initialization
@@ -166,6 +194,11 @@
 - (void) appendToFCLog:(NSString*)line andNotify:(BOOL)notify;
 - (void) clearFCLog;
 - (void) appendToFCRunLog:(NSString*)line;
+//- (void) addDigitalFlagChannel:(NSNumber*) channelID withType: (NSString*) typeID;
+//- (void) removeDigitalFlagChannel:(NSNumber*) channelID;
+//- (bool) isMyDigitalFlagChannel:(NSNumber*) channelID;
+//- (int) getIndexOfDigitalFlagChannel:(NSNumber*) channelID;
+//- (NSNumber*) getDigitalFlagChannelAtIndex:(int) index;
 
 #pragma mark ***Formaters
 - (NSDateFormatter*) logDateFormatter;
@@ -175,10 +208,15 @@
 - (BOOL) sameInterface:(NSString*)iface andPort:(uint16_t)p;
 - (BOOL) sameIP:(NSString*)address andPort:(uint16_t)p;
 
+//#pragma mark •••PostProcessor methods
+//- (void) updateConnectedDigitalFlagChannels;
+
 #pragma mark •••FCIO methods
-- (bool) connect;
-- (void) disconnect:(bool)destroy;
-- (void) read:(ORDataPacket*)aDataPacket;
+- (bool) startFCIOReader:(ORDataPacket*)aDataPacket;
+- (bool) fcioOpen;
+- (bool) fcioClose;
+- (bool) fcioRead:(ORDataPacket*)aDataPacket;
+- (void) fcioReadInThread:(ORDataPacket*)aDataPacket;
 - (void) runFailed;
 
 #pragma mark •••Task methods
@@ -197,7 +235,7 @@
 - (void) loadReadOutList:(NSFileHandle*)aFile;
 - (void) reset;
 - (NSDictionary*) dataRecordDescription;
-- (void) readThread:(ORDataPacket*)aDataPacket;
+
 
 #pragma mark •••Archival
 - (id) initWithCoder:(NSCoder*)decoder;
@@ -225,3 +263,4 @@ extern NSString* ORFlashCamListenerModelStatusBufferFull;
 extern NSString* ORFlashCamListenerModelFCLogChanged;
 extern NSString* ORFlashCamListenerModelFCRunLogChanged;
 extern NSString* ORFlashCamListenerModelFCRunLogFlushed;
+extern NSString* ORFlashCamListenerModelLPPConfigChanged;

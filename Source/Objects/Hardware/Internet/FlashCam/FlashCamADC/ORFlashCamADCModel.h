@@ -23,8 +23,9 @@
 #import "ORDataTaker.h"
 #import "ORHWWizard.h"
 #import "ORAdcInfoProviding.h"
-#import "fcio.h"
 #import "ORInFluxDBModel.h"
+
+#import "fcio.h"
 
 #define kMaxFlashCamADCChannels 24
 #define kFlashCamADCChannels 6
@@ -53,7 +54,10 @@
     float poleZeroTime[kMaxFlashCamADCChannels];  // gpz
     float postTrigger[kMaxFlashCamADCChannels];   // pthr
     int baselineSlew[kMaxFlashCamADCChannels];    // gbs
-    bool swTrigInclude[kMaxFlashCamADCChannels];
+    int swTrigInclude[kMaxFlashCamADCChannels];   // LPP Channel Type
+    float swTrigGain[kMaxFlashCamADCChannels];       // LPP Channel Gain if type is analog
+    float swTrigThreshold[kMaxFlashCamADCChannels];  // LPP Channel Threshold if type is analog
+    int swTrigShaping[kMaxFlashCamADCChannels]; // LPP Channel Shaping time / samples
     int baseBias;                                 // blbias
     int majorityLevel;                            // majl
     int majorityWidth;                            // majw
@@ -101,7 +105,10 @@
 - (float) poleZeroTime:(unsigned int)chan;
 - (float) postTrigger:(unsigned int)chan;
 - (int) baselineSlew:(unsigned int)chan;
-- (bool) swTrigInclude:(unsigned int)chan;
+- (int) swTrigInclude:(unsigned int)chan;
+- (float) swTrigGain:(unsigned int)chan;
+- (float) swTrigThreshold:(unsigned int)chan;
+- (int) swTrigShaping:(unsigned int)chan;
 - (int) baseBias;
 - (int) majorityLevel;
 - (int) majorityWidth;
@@ -133,7 +140,10 @@
 - (void) setPoleZeroTime:(unsigned int)chan   withValue:(float)time;
 - (void) setPostTrigger:(unsigned int)chan    withValue:(float)time;
 - (void) setBaselineSlew:(unsigned int)chan   withValue:(int)slew;
-- (void) setSWTrigInclude:(unsigned int)chan  withValue:(bool)include;
+- (void) setSWTrigInclude:(unsigned int)chan  withValue:(int)swTrigType;
+- (void) setSWTrigGain:(unsigned int)chan     withValue:(float)swTrigGain;
+- (void) setSWTrigThreshold:(unsigned int)chan  withValue:(float)swTrigThreshold;
+- (void) setSWTrigShaping:(unsigned int)chan    withValue:(int)swTrigShaping;
 - (void) setBaseBias:(int)bias;
 - (void) setMajorityLevel:(int)level;
 - (void) setMajorityWidth:(int)width;
@@ -221,6 +231,9 @@ extern NSString* ORFlashCamADCModelPoleZeroTimeChanged;
 extern NSString* ORFlashCamADCModelPostTriggerChanged;
 extern NSString* ORFlashCamADCModelBaselineSlewChanged;
 extern NSString* ORFlashCamADCModelSWTrigIncludeChanged;
+extern NSString* ORFlashCamADCModelSWTrigGainChanged;
+extern NSString* ORFlashCamADCModelSWTrigThresholdChanged;
+extern NSString* ORFlashCamADCModelSWTrigShapingChanged;
 extern NSString* ORFlashCamADCModelMajorityLevelChanged;
 extern NSString* ORFlashCamADCModelMajorityWidthChanged;
 extern NSString* ORFlashCamADCModelRateGroupChanged;
