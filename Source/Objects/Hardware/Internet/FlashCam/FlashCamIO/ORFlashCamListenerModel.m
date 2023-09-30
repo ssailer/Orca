@@ -1301,22 +1301,25 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 //        }
 //    NSLog(@"fcioRead() current thread %@\n", [NSThread currentThread]);
     int timedout;
+    bool writeWaveforms = true;
     FCIOState* state = NULL;
+    LPPState* lppstate = NULL;
     if (!postprocessor) {
         state = FCIOGetNextState(reader, &timedout);
     } else {
-        LPPState* lppstate = NULL;
-        
-        while ((lppstate = LPPGetNextState(postprocessor, reader, &timedout))){
-            if (LPPStatsUpdate(postprocessor, !lppstate)) {
-                // returns one if logtime set in postprocessor has been reached.
-                // Force if lppstate == NULL
-                // TODO fill ListenerPostProcessor stats here
-                // for now, we use LPP Influx style string to print to the statuslog
-                char logstring[255];
-                if (LPPStatsInfluxString(postprocessor, logstring, 255))
-                    NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
-            }
+        lppstate = LPPGetNextState(postprocessor, reader, &timedout);
+        if (lppstate)
+            state = lppstate->state;
+//        while ((lppstate = LPPGetNextState(postprocessor, reader, &timedout))){
+        if (LPPStatsUpdate(postprocessor, !lppstate)) {
+            // returns one if logtime set in postprocessor has been reached.
+            // Force if lppstate == NULL
+            // TODO fill ListenerPostProcessor stats here
+            // for now, we use LPP Influx style string to print to the statuslog
+            char logstring[255];
+            if (LPPStatsInfluxString(postprocessor, logstring, 255))
+                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
+        }
             // TODO Handle what to do with non-triggered records here!
             
             /* lpp_state definition
@@ -1380,12 +1383,13 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
              } LPPState;
              */
             
-            if (lppstate->write)
-                break;
-        }
+//            if (lppstate->write)
+//                break;
+//        }
         
-        if (lppstate)
-            state = lppstate->state;
+//        if (lppstate) {
+//            state = lppstate->state;
+//        }
         /* lppstate == NULL indicates, that the reader has reached End-of-Stream.
          we can check if timedout has any more information and report a reason.
          In any case it's done now and we will disconnect.
@@ -1405,18 +1409,37 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             for(id obj in dataTakers) [obj setWFsamples:state->config->eventsamples];
             [self readConfig:state->config];
 //                    [self sendConfigPacket:aDataPacket]; // send outside of the locked function
-            fprintf(stderr, "DEBUG fcioRead: parsing Config\n");
+//            fprintf(stderr, "DEBUG fcioRead: parsing Config\n");
             break;
         }
         case FCIOEvent:
         case FCIOSparseEvent: {
-            fprintf(stderr, "DEBUG fcioRead: parsing Event no %d with tag %d\n", state->event->timestamp[0], fcio_last_tag);
+//            fprintf(stderr, "DEBUG fcioRead: parsing Event no %d with tag %d\n", state->event->timestamp[0], fcio_last_tag);
+            // TODO: this is for debugging only at the moment.
+            // check which ones got triggered and which ones not.
+            // need a new packet + extend the existing one in principle
+            // we can just use the unused channels here for the time being.
+            // would be better to have a dynamic size possible for these kinds
+            // of extensions
+            if (lppstate) {
+                if (!lppstate->write) {
+                    writeWaveforms = false;
+                }
+                state->event->type = 10; // LPP Event, use new EventType
+                state->event->timestamp[4] = (int)lppstate->flags.trigger;
+                state->event->timestamp[5] = (int)lppstate->flags.event;
+                state->event->timestamp[6] = (int)lppstate->largest_sum_pe;
+                state->event->timestamp[7] = (int)lppstate->largest_sum_offset;
+                state->event->timestamp[8] = (int)lppstate->channel_multiplicity;
+                state->event->timestamp[9] = (int)lppstate->largest_pe;
+                state->event->timestamp_size = 10;
+            }
             for(int itr=0; itr<state->event->num_traces; itr++){
                 NSDictionary* dict = [chanMap objectAtIndex:state->event->trace_list[itr]];
                 ORFlashCamADCModel* card = [dict objectForKey:@"adc"];
                 unsigned int chan = [[dict objectForKey:@"channel"] unsignedIntValue];
                 [card shipEvent:state->event withIndex:state->event->trace_list[itr]
-                     andChannel:chan use:aDataPacket includeWF:true];
+                     andChannel:chan use:aDataPacket includeWF:writeWaveforms];
             }
 
             break;
@@ -1431,7 +1454,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         case FCIOStatus:
             [self readStatus:state->status];
 //                    [self sendStatusPacket:aDataPacket]; // send outside of the locked function
-            fprintf(stderr, "DEBUG fcioRead: parsing Status\n");
+//            fprintf(stderr, "DEBUG fcioRead: parsing Status\n");
             break;
         default: {
             bool found = false;

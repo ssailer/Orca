@@ -716,6 +716,17 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     dataRecordLength = 0;
     if(wfSamples > 0){
         // first 3 items in WF header get put into Orca header, then trace header gets moved to WF header
+        // 0xffff = 16 bits
+        // 0x3f = 6 bits
+        // 0xf = 4 bits
+        // 20 bits << 6 -> 6:22
+        // 0x3f << 22 -> 22:28
+        // lengths  | (event->type&0x3f); // from shipEvent()
+        // 6 bits at the bottom left over for event type.
+        // if(!includeWF) lengths &= 0xFFFC0003F
+        // selects top 10 bits and bottom 6 bits, reset inbetween,
+        // so we keep event->type and the header lengths (orca nad ADCWFHeader)
+        // but reset the wfSamples field
         dataLengths = ((wfSamples&0xffff) << 6) | (((kFlashCamADCWFHeaderLength-3+1)&0x3f) << 22);
         dataLengths = dataLengths | ((kFlashCamADCOrcaHeaderLength&0xf) << 28);
         dataRecordLength = kFlashCamADCOrcaHeaderLength + (kFlashCamADCWFHeaderLength - 3 + 1) + wfSamples/2;
@@ -886,7 +897,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     dataRecord[kFlashCamADCWFHeaderLength]  = (unsigned int)(*(event->theader[index]+1) << 16);
     dataRecord[kFlashCamADCWFHeaderLength] |= (unsigned int)(*event->theader[index]);
     if(includeWF)
-        memcpy(dataRecord+kFlashCamADCWFHeaderLength+1, event->theader[index]+2, wfSamples*sizeof(unsigned short));
+        memcpy(dataRecord+kFlashCamADCWFHeaderLength+1, event->trace[index], wfSamples*sizeof(unsigned short));
     [aDataPacket addLongsToFrameBuffer:dataRecord length:dataRecordLength];
 }
 
