@@ -39,7 +39,6 @@
     IBOutlet NSTableView* listenerExtraFlagsView;
     IBOutlet NSTableView* listenerExtraFilesView;
     IBOutlet NSTableView* listenerLPPGeneralView;
-    IBOutlet NSTableView* listenerLPPDigitalFlagView;
     IBOutlet NSTableView* listenerLPPHWMultiplicityView;
     IBOutlet NSTableView* listenerLPPPeakSumTriggerView;
     IBOutlet NSTableView* listenerLPPPeakSumParametersView;

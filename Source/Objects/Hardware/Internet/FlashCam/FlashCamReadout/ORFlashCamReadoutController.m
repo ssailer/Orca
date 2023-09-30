@@ -194,10 +194,6 @@
     [notifyCenter addObserver : self
                      selector : @selector(tableViewSelectionDidChange:)
                          name : NSTableViewSelectionDidChangeNotification
-                       object : listenerLPPDigitalFlagView];
-    [notifyCenter addObserver : self
-                     selector : @selector(tableViewSelectionDidChange:)
-                         name : NSTableViewSelectionDidChangeNotification
                        object : listenerLPPPeakSumTriggerView];
     [notifyCenter addObserver : self
                      selector : @selector(tableViewSelectionDidChange:)
@@ -370,7 +366,6 @@
     [listenerExtraFilesView reloadData];
     [listenerExtraFlagsView reloadData];
     [listenerLPPGeneralView reloadData];
-    [listenerLPPDigitalFlagView reloadData];
     [listenerLPPHWMultiplicityView reloadData];
     [listenerLPPPeakSumTriggerView reloadData];
     [listenerLPPPeakSumParametersView reloadData];
@@ -653,7 +648,6 @@
     [listenerExtraFilesView    setEnabled:!lock];
     [listenerExtraFlagsView    setEnabled:!lock];
     [listenerLPPGeneralView    setEnabled:!lock];
-    [listenerLPPDigitalFlagView    setEnabled:!lock];
     [listenerLPPHWMultiplicityView    setEnabled:!lock];
     [listenerLPPPeakSumTriggerView    setEnabled:!lock];
     [listenerLPPPeakSumParametersView    setEnabled:!lock];
@@ -1133,7 +1127,6 @@
     else if(view == listenerReadoutView) return [model listenerCount];
     else if(view == monitorView)         return [model listenerCount];
     else if(view == listenerLPPGeneralView) return [model listenerCount];
-    else if(view == listenerLPPDigitalFlagView) return [model listenerCount];
     else if(view == listenerLPPHWMultiplicityView) return [model listenerCount];
     else if(view == listenerLPPPeakSumTriggerView) return [model listenerCount];
     else if(view == listenerLPPPeakSumParametersView) return [model listenerCount];
