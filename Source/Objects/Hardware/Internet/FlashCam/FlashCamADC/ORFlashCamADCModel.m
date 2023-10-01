@@ -1059,7 +1059,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [self setBaselineSlew:i
                     withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"baselineSlew%i", i]]];
         [self setSWTrigInclude:i
-                     withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"swTrigInclude%i", i]]];
+                     withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"swTrigType%i", i]]];
         [self setSWTrigGain:i
                      withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"swTrigGain%i", i]]];
         [self setSWTrigThreshold:i
@@ -1115,7 +1115,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [encoder encodeFloat:poleZeroTime[i]  forKey:[NSString stringWithFormat:@"poleZeroTime%i",    i]];
         [encoder encodeFloat:postTrigger[i]   forKey:[NSString stringWithFormat:@"postTrigger%i",     i]];
         [encoder encodeInt:baselineSlew[i]    forKey:[NSString stringWithFormat:@"baselineSlew%i",    i]];
-        [encoder encodeInt:swTrigInclude[i]  forKey:[NSString stringWithFormat:@"swTrigInclude%i",   i]];
+        [encoder encodeInt:swTrigInclude[i]  forKey:[NSString stringWithFormat:@"swTrigType%i",   i]];
         [encoder encodeFloat:swTrigGain[i]     forKey:[NSString stringWithFormat:@"swTrigGain%i",      i]];
         [encoder encodeFloat:swTrigThreshold[i]  forKey:[NSString stringWithFormat:@"swTrigThreshold%i",   i]];
         [encoder encodeInt:swTrigShaping[i]  forKey:[NSString stringWithFormat:@"swTrigShaping%i",   i]];
@@ -1145,7 +1145,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [self addCurrentState:dict floatArray:poleZeroTime       forKey:@"PoleZeroTime"];
     [self addCurrentState:dict floatArray:postTrigger        forKey:@"PostTrigger"];
     [self addCurrentState:dict intArray:baselineSlew         forKey:@"BaselineSlew"];
-    [self addCurrentState:dict intArray:swTrigInclude        forKey:@"SWTrigInclude"];
+    [self addCurrentState:dict intArray:swTrigInclude        forKey:@"SWTrigType"];
     [self addCurrentState:dict floatArray:swTrigGain         forKey:@"SWTrigGain"];
     [self addCurrentState:dict floatArray:swTrigThreshold    forKey:@"SWTrigThreshold"];
     [self addCurrentState:dict intArray:swTrigShaping        forKey:@"SWTrigShaping"];
@@ -1365,7 +1365,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [chval setObject:[NSNumber numberWithFloat:[self poleZeroTime:i]]   forKey:@"poleZeroTime"];
         [chval setObject:[NSNumber numberWithFloat:[self postTrigger:i]]    forKey:@"postTrigger"];
         [chval setObject:[NSNumber numberWithInt:[self baselineSlew:i]]     forKey:@"baselineSlew"];
-        [chval setObject:[NSNumber numberWithBool:[self swTrigInclude:i]]   forKey:@"swTrigInclude:"];
+        [chval setObject:[NSNumber numberWithBool:[self swTrigInclude:i]]   forKey:@"swTrigType:"];
         [chval setObject:[NSNumber numberWithFloat:[self swTrigGain:i]]      forKey:@"swTrigGain:"];
         [chval setObject:[NSNumber numberWithFloat:[self swTrigThreshold:i]] forKey:@"swTrigThreshold:"];
         [chval setObject:[NSNumber numberWithInt:[self swTrigShaping:i]] forKey:@"swTrigShaping:"];
