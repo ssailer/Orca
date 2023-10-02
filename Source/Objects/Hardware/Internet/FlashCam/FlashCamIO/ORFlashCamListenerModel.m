@@ -1071,17 +1071,18 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (bool) startFCIOReader:(ORDataPacket *)aDataPacket
 {
-    @synchronized (self) {
-        
-        NSLog(@"fcioReaderThread() current thread %@\n", [NSThread currentThread]);
-
-        if (![self fcioOpen]) {
-            [self runFailed];
-            return NO;
-        }
-    
-    }
-    [NSThread detachNewThreadSelector:@selector(fcioReadInThread:) toTarget:self withObject:dataPacketForThread];
+    // TODO: temporarily moved code section t fcioReadInThread.
+//    @synchronized (self) {
+//        
+//        NSLog(@"fcioReaderThread() current thread %@\n", [NSThread currentThread]);
+//
+//        if (![self fcioOpen]) {
+//            [self runFailed];
+//            return NO;
+//        }
+//    
+//    }
+    [NSThread detachNewThreadSelector:@selector(fcioReadInThread:) toTarget:self withObject:aDataPacket];
     return YES;
 }
 
@@ -1091,39 +1092,45 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 {
     fcioReadThreadRunning = YES;
     
-    while (true) {
-
-        @autoreleasepool {
-
-            if (![self fcioRead:aDataPacket]) {
-                if (fcio_last_tag == FCIOConfig) {
-                    fprintf(stderr, "fcio stream closed with FCIOConfig?\n");
-                }
-                else if (fcio_last_tag != FCIOStatus) {
-                                            NSLog(@"ORFlashCamListenerModel: fcio stream closed without FCIOStatus.\n");
-                                            fprintf(stderr, "fcio stream closed without FCIOStatus.\n");
+    if ([self fcioOpen]) {
+        
+        while (true) {
+            
+            @autoreleasepool {
+                
+                if (![self fcioRead:aDataPacket]) {
+//                    if (fcio_last_tag == FCIOConfig) {
+//                        fprintf(stderr, "fcio stream closed with FCIOConfig?\n");
+//                    }
+                    //                else if (fcio_last_tag != FCIOStatus) {
+                    //                                            NSLog(@"ORFlashCamListenerModel: fcio stream closed without FCIOStatus.\n");
+                    //                                            fprintf(stderr, "fcio stream closed without FCIOStatus.\n");
                     
+                    //                }
+                    break;
                 }
-                break;
+                // TODO: make sure that we don't need to empty the buffers here.. better just get rid of them.
+                @synchronized (self) {
+                    // As we read only one record, there can only be one config or status in the listener buffers..
+                    if (bufferedConfigCount > 0) {
+                        [self sendConfigPacket:aDataPacket];
+                    }
+                    if (bufferedStatusCount > 0) {
+                        [self sendStatusPacket:aDataPacket];
+                    }
+                    [[aDataPacket dataTask] putDataInQueue:aDataPacket force:YES];
+                }
             }
-            @synchronized (self) {
-                // As we read only one record, there can only be one config or status in the listener buffers..
-                if (bufferedConfigCount > 0) {
-                    [self sendConfigPacket:aDataPacket];
-                }
-                if (bufferedStatusCount > 0) {
-                    [self sendStatusPacket:aDataPacket];
-                }
-                [[aDataPacket dataTask] putDataInQueue:aDataPacket force:YES];
-            }
+            
         }
-
-    }
-    // If we reach this section, the stream is closed already, and we would need to reconnect/reopen
-    // Time to clean up memory
-    [self fcioClose];
-    if (fcio_last_tag != FCIOStatus) {
-        NSLog(@"ORFlashCamListenerModel: FCIO Stream ended with tag %d, while FCIOStatus (%d) is expected.\n", fcio_last_tag, FCIOStatus);
+        // If we reach this section, the stream is closed already, and we would need to reconnect/reopen
+        // Time to clean up memory
+        [self fcioClose];
+        if (fcio_last_tag != FCIOStatus) {
+            NSLog(@"ORFlashCamListenerModel: FCIO Stream ended with tag %d, while FCIOStatus (%d) is expected.\n", fcio_last_tag, FCIOStatus);
+        }
+    } else {
+        [self runFailed];
     }
     fcioReadThreadRunning = NO;
 }
@@ -1132,13 +1139,13 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 {
 
         if(reader) {
-            fprintf(stderr, "DEBUG fcioOpen(): Alreay connected.\n");
+            fprintf(stderr, "DEBUG DEBUG ORFlashCamListener/fcioOpen: reader already allocated.\n");
             return NO;
         }
-        if(!chanMap){
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: channel mapping has not been specified, aborting connection\n");
-            return NO;
-        }
+//        if(!chanMap){
+//            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: channel mapping has not been specified, aborting connection\n");
+//            return NO;
+//        }
         if(!interface || port == 0){
             return NO;
         }
@@ -1150,9 +1157,10 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         }
         NSString* s;
         if([[self configParam:@"extraFiles"] boolValue]) s = writeDataToFile; // dangerous if polling is faster and EOF is reached.
-        else s = [NSString stringWithFormat:@"tcp://connect/%d/%@", port, ip];
+        else s = [NSString stringWithFormat:@"tcp://listen/%d/%@", port, ip];
         
         fprintf(stderr, "ORFLashCamListenerModel: Reader connection to %s with timeout %d and buffersize %d and bufferdepth %d\n", [s UTF8String], timeout, ioBuffer, stateBuffer);
+//        FCIODebug(5); // TODO: enable FCIOdebugging from the gui.
         reader = FCIOCreateStateReader([s UTF8String], timeout, ioBuffer, stateBuffer);
         if(reader){
 //            FCIOSelectStateTag(reader, FCIOConfig);
@@ -1176,7 +1184,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 //                return NO;
 //            }
             
-            NSLog(@"ORFlashCamListenerModel: connected to on %@\n", [self streamDescription]);
+            NSLog(@"ORFlashCamListenerModel: connected to %@\n", [self streamDescription]);
             
             
             FCIOSelectStateTag(reader, 0);
@@ -1197,18 +1205,19 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 LPPSetLogLevel(postprocessor, [[self configParam:@"lppLogLevel"] intValue]);
 
                 
-                const char* channelmap_format = "fcio-tracemap";
-                LPPSetAuxParameters(postprocessor, channelmap_format,
+//                const char* channelmap_format = "fcio-tracemap";
+#define LPPChannelMapFormat "fcio-tracemap"
+                LPPSetAuxParameters(postprocessor, LPPChannelMapFormat,
                                     lppPulserChannel, lppPulserChannelThreshold,
                                     lppBaselineChannel, lppBaselineChannelThreshold,
                                     lppMuonChannel, lppMuonChannelThreshold
                                 );
 
-                LPPSetGeParameters(postprocessor, nlppHWChannels, lppHWChannelMap, channelmap_format,
-                                   [[self configParam:@"lppHWMajThreshold"] intValue], [[self configParam:@"lppSkipFullCounting"] intValue],
+                LPPSetGeParameters(postprocessor, nlppHWChannels, lppHWChannelMap, LPPChannelMapFormat,
+                                   [[self configParam:@"lppHWMajThreshold"] intValue], [[self configParam:@"lppHWSkipFullCounting"] intValue],
                                    lppHWPrescalingThresholds, [[self configParam:@"lppHWPreScalingRate"] doubleValue]);
                 
-                LPPSetSiPMParameters(postprocessor, nlppPSChannels, lppPSChannelMap, channelmap_format,
+                LPPSetSiPMParameters(postprocessor, nlppPSChannels, lppPSChannelMap, LPPChannelMapFormat,
                                      lppPSChannelGains, lppPSChannelThresholds,
                                      lppPSChannelShapings, lppPSChannelLowPass,
                                          [[self configParam:@"lppPSPreWindow"] intValue],
@@ -1256,8 +1265,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (bool) fcioClose
 {
-    NSLog(@"fcioClose() current thread %@\n", [NSThread currentThread]);
-    fprintf(stderr, "DEBUG fcioClose()\n");
+//    NSLog(@"fcioClose() current thread %@\n", [NSThread currentThread]);
+//    fprintf(stderr, "DEBUG DEBUG ORFlashCamListener/fcioClose()\n");
 
     if(reader)
         FCIODestroyStateReader(reader);
@@ -1267,7 +1276,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         LPPDestroy(postprocessor);
     postprocessor = NULL;
 //    }
-    fprintf(stderr, "DEBUG disconnect() reader = %p, postproc = %p\n", reader, postprocessor);
+//    fprintf(stderr, "DEBUG disconnect() reader = %p, postproc = %p\n", reader, postprocessor);
 
     [self setChanMap:nil];
     [self setCardMap:nil];
@@ -1316,7 +1325,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             // for now, we use LPP Influx style string to print to the statuslog
             char logstring[255];
             if (LPPStatsInfluxString(postprocessor, logstring, 255))
-                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
+                fprintf(stderr, "DEBUG postprocessor %s\n", logstring);
+//                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
         }
             // TODO Handle what to do with non-triggered records here!
             
@@ -1397,7 +1407,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         
     }
     if (!state) {
-        fprintf(stderr, "fcioRead() finished with: timedout %d last received tag %d\n", timedout, fcio_last_tag);
+        fprintf(stderr, "DEBUG ORFlashCamListener/fcioRead: finished with: timedout %d last received tag %d\n", timedout, fcio_last_tag);
         return NO;
     }
     fcio_last_tag = state->last_tag;
@@ -1431,6 +1441,10 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 state->event->timestamp[8] = (int)lppstate->channel_multiplicity;
                 state->event->timestamp[9] = (int)lppstate->largest_pe;
                 state->event->timestamp_size = 10;
+            }
+            if(!chanMap){
+                NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: channel mapping has not been specified, aborting connection\n");
+                return NO;
             }
             for(int itr=0; itr<state->event->num_traces; itr++){
                 NSDictionary* dict = [chanMap objectAtIndex:state->event->trace_list[itr]];
@@ -1639,7 +1653,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) taskCompleted:(NSNotification*)note
 {
-    fprintf(stderr, "taskCompleted()\n");
+//    fprintf(stderr, "taskCompleted()\n");
     // reset the hardare id to 0 since they will be read again at the start of the next run
     if([note object] == runTask){
         for(id obj in [readOutList children]){
@@ -1674,7 +1688,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) startReadoutAfterPing
 {
-    fprintf(stderr, "startReadoutAfterPing()\n");
+//    fprintf(stderr, "startReadoutAfterPing()\n");
     if([guardian pingRunning]){
         [self performSelector:@selector(startReadoutAfterPing) withObject:self afterDelay:0.01];
         return;
@@ -1755,7 +1769,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                                     lppPulserChannel = identifier;
                                     lppPulserChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
                                 } else {
-                                    NSLog(@"ORFlashCamListenerModel: Trying to overwrite Pulser Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
+                                    NSLog(@"ORFlashCamListenerModel/startReadoutAfterPing: Trying to overwrite Pulser Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
                                 }
                                 break;
                             }
@@ -1764,7 +1778,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                                     lppBaselineChannel = identifier;
                                     lppBaselineChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
                                 } else {
-                                    NSLog(@"ORFlashCamListenerModel: Trying to overwrite Baseline Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
+                                    NSLog(@"ORFlashCamListenerModel/startReadoutAfterPing: Trying to overwrite Baseline Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
                                 }
                                 break;
                             }
@@ -1773,7 +1787,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                                     lppMuonChannel = identifier;
                                     lppMuonChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
                                 } else {
-                                    NSLog(@"ORFlashCamListenerModel: Trying to overwrite Muon Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
+                                    NSLog(@"ORFlashCamListenerModel/startReadoutAfterPing: Trying to overwrite Muon Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
                                 }
                                 break;
                             }
@@ -1800,6 +1814,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         [self runFailed];
         return;
     }
+    [self setChanMap:orcaChanMap];
     // make sure the shaping time and event samples are such that flashcam will silently change the waveform length
     if([[self configParam:@"traceType"] intValue] != 0){
         if(MIN(8000, 20+maxShapeTime*2.5/16) > [[self configParam:@"eventSamples"] intValue]){
@@ -1896,7 +1911,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         writeDataToFile = [fileName copy];
     }
     else {
-        NSString* listen = [NSString stringWithFormat:@"tcp://listen/%d/%@", port, ip];
+        NSString* listen = [NSString stringWithFormat:@"tcp://connect/%d/%@", port, ip];
         [readoutArgs addObjectsFromArray:@[@"-o", listen]];
     }
     //--------------------------------------------------
@@ -1963,7 +1978,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 //    }
 //----------------------------------------------------------------------
 
-    [self setChanMap:orcaChanMap];
+//    [self setChanMap:orcaChanMap];
     // if writing fcio file, the file must exist before we can connect to the stream
 //    if([[self configParam:@"extraFiles"] boolValue]){
 //
@@ -1997,6 +2012,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     
     if(@available(macOS 10.13,*)){
         NSError *error =nil;
+        fprintf(stderr, "ORFlashCamListenerModel/startReadoutAfterPing: launching runTask\n");
         if(![runTask launchAndReturnError:(&error)]){
             NSLogColor([NSColor redColor],@"ORFlashCamListenerModel: RunTask failed with error :%@ \n",error);
             [self runFailed];
@@ -2017,7 +2033,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) readConfig:(fcio_config*)config
 {
-    fprintf(stderr, "DEBUG readConfig()\n");
+//    fprintf(stderr, "DEBUG readConfig()\n");
     // validate the number of waveform samples
     if(config->eventsamples != [[self configParam:@"eventSamples"] intValue]){
         NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d user defined waveform length %d "
@@ -2108,6 +2124,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 - (void) readStatus:(fcio_status*)fcstatus
 {
 //    NSLog(@"readStatus() %@\n", [NSThread currentThread]);
+//    fprintf(stderr, "DEBUG ORFlashCamListener/readStatus: reading status into buffer.\n");
     uint32_t index = statusBufferIndex;
     statusBufferIndex = (statusBufferIndex + 1) % kFlashCamStatusBufferLength;
     bufferedStatusCount++;
@@ -2161,7 +2178,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) runTaskStarted:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "runTaskStarted()\n");
+//    fprintf(stderr, "runTaskStarted()\n");
     // TODO switch the order around, first create the listener to receive data, then start the readout
     //
     if(runFailedAlarm) [runFailedAlarm clearAlarm];
@@ -2182,7 +2199,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     bufferedStatusCount = 0;
     
     [aDataPacket addDataDescriptionItem:[self dataRecordDescription] forKey:@"ORFlashCamListenerModel"];
-    fprintf(stderr, "runTaskStarted: startReadoutAfterPing\n");
+//    fprintf(stderr, "DEBUGrunTaskStarted: startReadoutAfterPing\n");
     [self startReadoutAfterPing];
     dataTakers = [[readOutList allObjects] retain];
     
@@ -2195,13 +2212,17 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     if(!dataPacketForThread)dataPacketForThread = [[ORDataPacket alloc]init];
     [dataPacketForThread setDataTask:[aDataPacket dataTask]];
     
-    fprintf(stderr, "runTaskStarted: detach fcioReaderThread\n");
+//    fprintf(stderr, "runTaskStarted: detach fcioReaderThread\n");
 //    readoutThread = [[NSThread alloc] initWithTarget:self selector:@selector(fcioReaderThread:) object:dataPacketForThread];
 //    [readoutThread start];
-    if (![self startFCIOReader:dataPacketForThread]) {
-        NSLog(@"ORFlashCamListenerModel/runTaskStarted: startFCIOReader failed.\n");
-        return;
-    }
+    // wait one second for the readout to start.
+//    [ORTimer delay:3.0];
+//    if (![self startFCIOReader:dataPacketForThread]) {
+//        NSLog(@"ORFlashCamListenerModel/runTaskStarted: startFCIOReader failed.\n");
+//        return;
+//    }
+    [self startFCIOReader:dataPacketForThread];
+//    NSLog(@"ORFlashCamListenerModel/runTaskStarted: startFCIoReader in Thread\n");
     
 
 
@@ -2211,7 +2232,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     // depending on what is called this order should switchf
 //    [self startReadoutAfterPing];
     
-    fprintf(stderr, "runTaskStarted: done with this listener, move on to the next one.\n");
+//    fprintf(stderr, "runTaskStarted: done with this listener, move on to the next one.\n");
     id obj;
     NSEnumerator* e = [[readOutList allObjects] objectEnumerator];
     while(obj = [e nextObject]) [obj runTaskStarted:aDataPacket userInfo:userInfo];
@@ -2219,7 +2240,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) runIsStopping:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "runIsStopping()\n");
+//    fprintf(stderr, "runIsStopping()\n");
     //-----------------------------------------------------
     //MAH 9/17/22... shut down the FlashCAM by sending an EOL
     //The periodic status read will be not be repeated if the global
@@ -2246,7 +2267,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         readWait = false;
         [readStateLock lock];
 //        timeToQuitReadoutThread = YES;
-        fprintf(stderr, "DEBUG runIsStopping: waiting for readout thread amd runTask to quit.\n");
+        fprintf(stderr, "DEBUG runIsStopping: waiting for fcio read thread and runTask to quit.\n");
         while(fcioReadThreadRunning || [runTask isRunning])
             ;
         
@@ -2290,7 +2311,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) runTaskStopped:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "DEBUG runTaskStopped\n");
+//    fprintf(stderr, "DEBUG runTaskStopped\n");
 //    if(reader) FCIODestroyStateReader(reader);
 //    reader = NULL;
 //    if(postprocessor) LPPDestroy(postprocessor);

@@ -727,10 +727,16 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         // selects top 10 bits and bottom 6 bits, reset inbetween,
         // so we keep event->type and the header lengths (orca nad ADCWFHeader)
         // but reset the wfSamples field
+        
         dataLengths = ((wfSamples&0xffff) << 6) | (((kFlashCamADCWFHeaderLength-3+1)&0x3f) << 22);
         dataLengths = dataLengths | ((kFlashCamADCOrcaHeaderLength&0xf) << 28);
+//        fprintf(stderr, "DEBUG ORFlashCamADCModel/setWFsamples: dataLength %d/0x%x\n",dataLengths, dataLengths);
         dataRecordLength = kFlashCamADCOrcaHeaderLength + (kFlashCamADCWFHeaderLength - 3 + 1) + wfSamples/2;
+        
         dataRecord = (uint32_t*) malloc(dataRecordLength * sizeof(uint32_t));
+        
+        fprintf(stderr, "DEBUG ORFlashCamADCModel/setWFsamples: card address 0x%x dataRecordLength %d dataLength %d/0x%x\n", [self cardAddress] ,dataRecordLength, dataLengths, dataLengths);
+        
     }
 }
 
@@ -880,14 +886,24 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         int fpgaEnergy = event->theader[index][1];
         if(fpgaEnergy > 0){
             trigCount[channel]++;
-            [self shipToInflux:channel energy:fpgaEnergy baseline:event->theader[index][0]];
+//            [self shipToInflux:channel energy:fpgaEnergy baseline:event->theader[index][0]];
         }
     }
     
+    /* from setWFsamples:
+    dataLengths = ((wfSamples&0xffff) << 6) | (((kFlashCamADCWFHeaderLength-3+1)&0x3f) << 22);
+    dataLengths = dataLengths | ((kFlashCamADCOrcaHeaderLength&0xf) << 28);
+    fprintf(stderr, "DEBUG ORFlashCamADCModel/setWFsamples: dataLength %d/0x%x\n",dataLengths, dataLengths);
+    dataRecordLength = kFlashCamADCOrcaHeaderLength + (kFlashCamADCWFHeaderLength - 3 + 1) + wfSamples/2;
+     */
+    
     //ship the data
     uint32_t lengths = dataLengths;
+    uint32_t recordLength = dataRecordLength;
     if(!includeWF) lengths &= 0xFFFC0003F;
-    dataRecord[0] = dataId   | (dataRecordLength&0x3ffff);
+    if(!includeWF) recordLength -= wfSamples/2;
+//    fprintf(stderr, "DEBUG ORFlashCamADCModel/shipEvent: includeWF %d lengths %u/0x%x recordLength %d\n", includeWF, lengths, lengths, recordLength);
+    dataRecord[0] = dataId   | (recordLength&0x3ffff);
     dataRecord[1] = lengths  | (event->type&0x3f);
     dataRecord[2] = location | ((channel&0x1f) << 9) | (index&0x1ff);
     int offset = 3;
@@ -898,7 +914,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     dataRecord[kFlashCamADCWFHeaderLength] |= (unsigned int)(*event->theader[index]);
     if(includeWF)
         memcpy(dataRecord+kFlashCamADCWFHeaderLength+1, event->trace[index], wfSamples*sizeof(unsigned short));
-    [aDataPacket addLongsToFrameBuffer:dataRecord length:dataRecordLength];
+    [aDataPacket addLongsToFrameBuffer:dataRecord length:recordLength];
 }
 
 - (void) shipToInflux:(int)aChan energy:(int)anEnergy baseline:(int)aBaseline

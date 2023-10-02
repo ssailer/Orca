@@ -53,14 +53,50 @@
 
 - (uint32_t) decodeData:(void*)someData fromDecoder:(ORDecoder*)aDecoder intoDataSet:(ORDataSet*)aDataSet
 {
+    /* from Model:shipEvents and Model:setWFSamples
+     
+     dataLengths = ((wfSamples&0xffff) << 6) | (((kFlashCamADCWFHeaderLength-3+1)&0x3f) << 22);
+     dataLengths = dataLengths | ((kFlashCamADCOrcaHeaderLength&0xf) << 28);
+     fprintf(stderr, "DEBUG ORFlashCamADCModel/setWFsamples: dataLength %d/0x%x\n",dataLengths, dataLengths);
+     dataRecordLength = kFlashCamADCOrcaHeaderLength + (kFlashCamADCWFHeaderLength - 3 + 1) + wfSamples/2;
+
+     
+     //ship the data
+     uint32_t lengths = dataLengths;
+     if(!includeWF) lengths &= 0xFFFC0003F;
+     fprintf(stderr, "DEBUG ORFlashCamADCModel/shipEvent: includeWF %d lengths %u/0x%x\n", includeWF, lengths, lengths);
+     dataRecord[0] = dataId   | (dataRecordLength&0x3ffff);
+     dataRecord[1] = lengths  | (event->type&0x3f);
+     dataRecord[2] = location | ((channel&0x1f) << 9) | (index&0x1ff);
+    
+     */
+     
     uint32* ptr = (uint32*) someData;
     uint32 length = ExtractLength(*ptr);
+    
+    /* from TypeAssigner.h
+     
+     #define kShortForm  YES
+     #define kLongForm   NO
+
+     #define kShortFormDataIdMask 0xfc000000
+     #define kLongFormDataIdMask 0xfffc0000
+     #define kLongFormLengthMask (~kLongFormDataIdMask)
+
+     #define IsShortForm(x) (((x)&0x80000000) >> 31)
+     #define IsLongForm(x) !IsShortForm(x)
+
+     #define ExtractDataId(x) (IsShortForm(x) ? ((x)&kShortFormDataIdMask) : ((x)&kLongFormDataIdMask))
+     #define ExtractLength(x) (IsShortForm(x) ? 1 : ((x) & ~kLongFormDataIdMask))
+     */
     
     // get the header and waveform lengths, check against ExtractLength above
     uint32_t dataLengths = *(ptr+1);
     uint32_t orcaHeaderLength = (dataLengths & 0xf0000000) >> 28;
     uint32_t fcwfHeaderLength = (dataLengths & 0x0fc00000) >> 22;
     uint32_t wfSamples        = (dataLengths & 0x003fffc0) >>  6;
+    // datatype is wrong here, should be int, but the info was thrown away when converting from FCIO to Orca.
+    uint32_t eventType        = (dataLengths & 0x0000003f); // not used but might contain information about the type of event we have here.
     if(length != orcaHeaderLength + fcwfHeaderLength + wfSamples/2){
         NSLog(@"ORFlashCamADCWaveformDecoder: sum of orca header length %u, FCWF header length %u, and WF smaples length/2 %u != data record length %u, skipping record!\n", orcaHeaderLength, fcwfHeaderLength, wfSamples/2, length);
         return length;
