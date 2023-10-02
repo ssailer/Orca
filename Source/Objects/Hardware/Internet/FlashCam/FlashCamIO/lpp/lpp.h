@@ -1,18 +1,14 @@
 #pragma once
 
+#include <dsp.h>
+#include <fcio.h>
+#include <lpp_buffer.h>
+#include <lpp_state.h>
 #include <stddef.h>
 #include <stdio.h>
-
-#include <fcio.h>
-#include <dsp.h>
 #include <timestamps.h>
-#include <lpp_state.h>
-#include <lpp_buffer.h>
 
 typedef struct LPPStats {
-
-
-
   double start_time;
   double log_time;
   double dt_logtime;
@@ -38,7 +34,6 @@ typedef struct LPPStats {
 } LPPStats;
 
 typedef struct PostProcessor {
-
   Timestamp pre_trigger_window;
   Timestamp post_trigger_window;
 
@@ -63,7 +58,7 @@ typedef struct PostProcessor {
   int sipm_prescaling_offset;
   int sipm_prescaling_counter;
   float sipm_prescaling_rate;
-  char* sipm_prescaling;
+  char *sipm_prescaling;
 
   Timestamp sipm_prescaling_timestamp;
   Timestamp ge_prescaling_timestamp;
@@ -72,8 +67,6 @@ typedef struct PostProcessor {
   float ge_prescaling_rate;
 
   int loglevel;
-
-  // int fast;
 
   LPPStats stats;
 
@@ -95,28 +88,28 @@ typedef struct PostProcessor {
     int tracemap_format;
   } aux;
 
-  LPPBuffer* buffer;
+  LPPBuffer *buffer;
   Timestamp minimum_buffer_window;
   int minimum_buffer_depth;
 
-  AnalogueSumCfg* analogue_sum_cfg;
-  FPGAMajorityCfg* fpga_majority_cfg;
+  AnalogueSumCfg *analogue_sum_cfg;
+  FPGAMajorityCfg *fpga_majority_cfg;
 
 } PostProcessor;
 
 /* Con-/Destructors and required setup. */
 
-PostProcessor* LPPCreate(void);
-void LPPDestroy(PostProcessor* processor);
-int LPPSetBufferSize(PostProcessor* processor, int buffer_depth);
+PostProcessor *LPPCreate(void);
+void LPPDestroy(PostProcessor *processor);
+int LPPSetBufferSize(PostProcessor *processor, int buffer_depth);
 
 /* Change defaults*/
 
-void LPPSetLogLevel(PostProcessor* processor, int loglevel);
-void LPPSetLogTime(PostProcessor* processor, double log_time);
+void LPPSetLogLevel(PostProcessor *processor, int loglevel);
+void LPPSetLogTime(PostProcessor *processor, double log_time);
 
-void LPPEnableTriggerFlags(PostProcessor* processor, unsigned int flags);
-void LPPEnableEventFlags(PostProcessor* processor, unsigned int flags);
+void LPPEnableTriggerFlags(PostProcessor *processor, unsigned int flags);
+void LPPEnableEventFlags(PostProcessor *processor, unsigned int flags);
 
 /* use in loop operations:
   - Feed FCIOStates via LPPInput asap
@@ -124,31 +117,27 @@ void LPPEnableEventFlags(PostProcessor* processor, unsigned int flags);
   - if states are null, buffer is flushed
 */
 
-void LPPFlags2char(LPPState* lpp_state, size_t strlen, char* cstring);
+void LPPFlags2char(LPPState *lpp_state, size_t strlen, char *cstring);
 
-int LPPInput(PostProcessor* processor, FCIOState* state);
-LPPState* LPPOutput(PostProcessor* processor);
-int LPPFlush(PostProcessor* processor);
-int LPPFreeStates(PostProcessor* processor);
-LPPState* LPPGetNextState(PostProcessor* processor, FCIOStateReader* reader, int* timedout);
-int LPPStatsUpdate(PostProcessor* processor, int force);
-int LPPStatsInfluxString(PostProcessor* processor, char* logstring, size_t logstring_size);
+int LPPInput(PostProcessor *processor, FCIOState *state);
+LPPState *LPPOutput(PostProcessor *processor);
+int LPPFlush(PostProcessor *processor);
+int LPPFreeStates(PostProcessor *processor);
+LPPState *LPPGetNextState(PostProcessor *processor, FCIOStateReader *reader, int *timedout);
+int LPPStatsUpdate(PostProcessor *processor, int force);
+int LPPStatsInfluxString(PostProcessor *processor, char *logstring, size_t logstring_size);
 
-int LPPSetAuxParameters(PostProcessor* processor, const char* channelmap_format,
-                        int digital_pulser_channel, int pulser_level_adc,
-                        int digital_baseline_channel, int baseline_level_adc,
-                        int digital_muon_channel, int muon_level_adc
-                        );
+int LPPSetAuxParameters(PostProcessor *processor, const char *channelmap_format, int digital_pulser_channel,
+                        int pulser_level_adc, int digital_baseline_channel, int baseline_level_adc,
+                        int digital_muon_channel, int muon_level_adc);
 
-int LPPSetGeParameters(PostProcessor* processor, int nchannels, int* channelmap, const char* channelmap_format, int majority_threshold,
-                       int skip_full_counting, unsigned short* ge_prescaling_threshold_adc, float ge_average_prescaling_rate_hz);
+int LPPSetGeParameters(PostProcessor *processor, int nchannels, int *channelmap, const char *channelmap_format,
+                       int majority_threshold, int skip_full_counting, unsigned short *ge_prescaling_threshold_adc,
+                       float ge_average_prescaling_rate_hz);
 
-int LPPSetSiPMParameters(PostProcessor* processor, int nchannels, int* channelmap, const char* channelmap_format,
-                         float* calibration_factors, float* channel_thresholds_pe,
-                         int* shaping_width_samples, float* lowpass_factors,
-                         int coincidence_pre_window_ns, int coincidence_post_window_ns,
-                         int coincidence_window_samples,
-                         int sum_window_start_sample, int sum_window_stop_sample,
-                         float sum_threshold_pe, float coincidence_sum_threshold_pe,
-                         float average_prescaling_rate_hz, int enable_muon_coincidence
-                         );
+int LPPSetSiPMParameters(PostProcessor *processor, int nchannels, int *channelmap, const char *channelmap_format,
+                         float *calibration_factors, float *channel_thresholds_pe, int *shaping_width_samples,
+                         float *lowpass_factors, int coincidence_pre_window_ns, int coincidence_post_window_ns,
+                         int coincidence_window_samples, int sum_window_start_sample, int sum_window_stop_sample,
+                         float sum_threshold_pe, float coincidence_sum_threshold_pe, float average_prescaling_rate_hz,
+                         int enable_muon_coincidence);

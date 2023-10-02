@@ -1,37 +1,36 @@
 #pragma once
 
 #include <fcio.h>
+#include <timestamps.h>
 
 #define ST_NSTATES 6
 typedef enum SoftwareTriggerFlags {
 
-  ST_NULL                       = 0,
-  ST_TRIGGER_FORCE              = 1 << 0,
-  ST_TRIGGER_SIPM_NPE           = 1 << 1,
+  ST_NULL = 0,
+  ST_TRIGGER_FORCE = 1 << 0,
+  ST_TRIGGER_SIPM_NPE = 1 << 1,
   ST_TRIGGER_SIPM_NPE_IN_WINDOW = 1 << 2,
-  ST_TRIGGER_SIPM_PRESCALED     = 1 << 3,
-  ST_TRIGGER_GE_PRESCALED       = 1 << 4,
+  ST_TRIGGER_SIPM_PRESCALED = 1 << 3,
+  ST_TRIGGER_GE_PRESCALED = 1 << 4,
 
 } SoftwareTriggerFlags;
-
 
 #define EVT_NSTATES 11
 typedef enum EventFlags {
 
-  EVT_NULL                           = 0,
-  EVT_AUX_PULSER                     = 1 << 0,
-  EVT_AUX_BASELINE                   = 1 << 1,
-  EVT_AUX_MUON                       = 1 << 2,
-  EVT_RETRIGGER                      = 1 << 3,
-  EVT_EXTENDED                       = 1 << 4,
-  EVT_FPGA_MULTIPLICITY              = 1 << 5,
-  EVT_ASUM_MIN_NPE                   = 1 << 6,
-  EVT_FORCE_PRE_WINDOW               = 1 << 7,
-  EVT_FORCE_POST_WINDOW              = 1 << 8,
+  EVT_NULL = 0,
+  EVT_AUX_PULSER = 1 << 0,
+  EVT_AUX_BASELINE = 1 << 1,
+  EVT_AUX_MUON = 1 << 2,
+  EVT_RETRIGGER = 1 << 3,
+  EVT_EXTENDED = 1 << 4,
+  EVT_FPGA_MULTIPLICITY = 1 << 5,
+  EVT_ASUM_MIN_NPE = 1 << 6,
+  EVT_FORCE_PRE_WINDOW = 1 << 7,
+  EVT_FORCE_POST_WINDOW = 1 << 8,
   EVT_FPGA_MULTIPLICITY_ENERGY_BELOW = 1 << 9,
 
 } EventFlags;
-
 
 typedef struct Flags {
   unsigned int trigger;
@@ -48,14 +47,17 @@ typedef struct LPPState {
 
   /* calculate observables if event */
   Flags flags;
-  int majority;
-  float largest_sum_pe;
-  int largest_sum_offset;
-  int channel_multiplicity;
-  float largest_pe;
+  // Peak Sum
+  float largest_sum_pe;    // what is the maximum PE within the integration windows
+  int largest_sum_offset;  // when is the total sum offset reached?
 
-  unsigned short ge_max_fpga_energy;
-  unsigned short ge_min_fpga_energy;
+  int channel_multiplicity;  // How many channels did have a peak above thresholds
+  float largest_pe;          // which one was the largest individual peak
+
+  // FPGA Majority
+  int majority;                       // how many channels have fpga_energy > 0
+  unsigned short ge_max_fpga_energy;  // what is the largest fpga_energy of those
+  unsigned short ge_min_fpga_energy;  // what is the smallest fpga_energy of those
 
   /* final write decision */
   int write;
