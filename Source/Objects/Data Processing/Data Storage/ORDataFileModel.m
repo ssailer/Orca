@@ -587,7 +587,11 @@ static const int currentVersion = 1;           // Current version
 			
 			NSLog(@"Opening dataFile: %@\n",[fullFileName stringByAbbreviatingWithTildeInPath]);
 			NSFileManager* fm = [NSFileManager defaultManager];
-			[fm createFileAtPath:fullFileName contents:nil attributes:nil];
+			bool create_successful = [fm createFileAtPath:fullFileName contents:nil attributes:nil];
+            if (!create_successful) {
+                NSLog(@"ORDataFileModel/runTaskStarted creation of %s unsuccessful with errno %d err: %s\n", [fullFileName UTF8String], errno, strerror(errno));
+            }
+            
 			NSFileHandle* fp = [NSFileHandle fileHandleForWritingAtPath:fullFileName];
             [fp seekToEndOfFile];
             [self setFilePointer:fp];
