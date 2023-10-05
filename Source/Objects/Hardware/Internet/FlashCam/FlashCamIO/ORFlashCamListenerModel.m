@@ -35,8 +35,8 @@ NSString* ORFlashCamListenerModelStatusChanged       = @"ORFlashCamListenerModel
 //NSString* ORFlashCamListenerModelDisconnected      = @"ORFlashCamListenerModelDisconnected";
 NSString* ORFlashCamListenerModelChanMapChanged      = @"ORFlashCamListenerModelChanMapChanged";
 NSString* ORFlashCamListenerModelCardMapChanged      = @"ORFlashCamListenerModelCardMapChanged";
-NSString* ORFlashCamListenerModelConfigBufferFull    = @"ORFlashCamListenerModelConfigBufferFull";
-NSString* ORFlashCamListenerModelStatusBufferFull    = @"ORFlashCamListenerModelStatusBufferFull";
+//NSString* ORFlashCamListenerModelConfigBufferFull    = @"ORFlashCamListenerModelConfigBufferFull";
+//NSString* ORFlashCamListenerModelStatusBufferFull    = @"ORFlashCamListenerModelStatusBufferFull";
 NSString* ORFlashCamListenerModelFCLogChanged        = @"ORFlashCamListenerModelFCLogChanged";
 NSString* ORFlashCamListenerModelFCRunLogChanged     = @"ORFlashCamListenerModelFCRunLogChanged";
 NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModelFCRunLogFlushed";
@@ -122,22 +122,22 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     // to the datafiles
     // same goes for the statusBuffer, why not sent the latest to the cards and the data
     // streams, although here it might make sense to buffer because of threading?
-    configBuffer       = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config) +
-                                             (sizeof(uint32_t)*(uint32_t)ceil([self maxADCCards]/4.0) +
-                                              sizeof(uint64_t))*[self maxADCCards]) * kFlashCamConfigBufferLength);
-    configBufferIndex  = 0;
-    takeDataConfigIndex= 0;
-    bufferedConfigCount= 0;
-    statusBuffer       = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)) * kFlashCamStatusBufferLength);
-    statusBufferIndex  = 0;
-    takeDataStatusIndex= 0;
-    bufferedStatusCount= 0;
+//    configBuffer       = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config) +
+//                                             (sizeof(uint32_t)*(uint32_t)ceil([self maxADCCards]/4.0) +
+//                                              sizeof(uint64_t))*[self maxADCCards]) * kFlashCamConfigBufferLength);
+//    configBufferIndex  = 0;
+//    takeDataConfigIndex= 0;
+//    bufferedConfigCount= 0;
+//    statusBuffer       = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)) * kFlashCamStatusBufferLength);
+//    statusBufferIndex  = 0;
+//    takeDataStatusIndex= 0;
+//    bufferedStatusCount= 0;
     runFailedAlarm     = nil;
     unrecognizedPacket = false;
     unrecognizedStates = nil;
     // this should be a predefined list to choose from
     // instead of defining randomly in the code, enums!
-    status             = @"disconnected";
+//    status             = @"disconnected";
     eventCount         = 0;
     runTime            = 0.0;
     readMB             = 0.0;
@@ -219,13 +219,6 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     [fcrunlog            release];
     [logDateFormatter    release];
     [ansieHelper         release];
-    
-    
-//    [lppDFChannelTypeTracker release];
-    
-//    free(lppDFChannelMap);
-//    free(lppDFChannelTypeTracker);
-//    free(lppDFChannelThreshold);
     
     free(lppPSChannelMap);
     free(lppPSChannelGains);
@@ -728,7 +721,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     ip = [tmp retain];
     [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelConfigChanged
                                                         object:self];
-    [self setStatus:@"disconnected"];
+//    [self setStatus:@"disconnected"];
 }
 
 - (void) setPort:(uint16_t)p
@@ -831,15 +824,15 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         int newType = [[self configParam:p] intValue];
         if(prevType > 0 && newType == 0)
             [self setConfigParam:@"retriggerLength" withValue:[self configParam:@"retriggerLength"]];
-        if(newType != prevType && (newType == 0 || prevType == 0)){
-            free(configBuffer);
-            configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config) +
-                                               (sizeof(uint32_t)*(uint32_t)ceil([self maxADCCards]/4.0) +
-                                                sizeof(uint64_t))*[self maxADCCards]) * kFlashCamConfigBufferLength);
-            configBufferIndex  = 0;
-            takeDataConfigIndex= 0;
-            bufferedConfigCount= 0;
-        }
+//        if(newType != prevType && (newType == 0 || prevType == 0)){
+//            free(configBuffer);
+//            configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config) +
+//                                               (sizeof(uint32_t)*(uint32_t)ceil([self maxADCCards]/4.0) +
+//                                                sizeof(uint64_t))*[self maxADCCards]) * kFlashCamConfigBufferLength);
+//            configBufferIndex  = 0;
+//            takeDataConfigIndex= 0;
+//            bufferedConfigCount= 0;
+//        }
     }
     else if([p isEqualToString:@"resetMode"])
         [configParams setObject:[NSNumber numberWithInt:MIN(MAX(0, [v intValue]), 2)] forKey:p];
@@ -1099,6 +1092,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             @autoreleasepool {
                 
                 if (![self fcioRead:aDataPacket]) {
+                    break;
 //                    if (fcio_last_tag == FCIOConfig) {
 //                        fprintf(stderr, "fcio stream closed with FCIOConfig?\n");
 //                    }
@@ -1107,17 +1101,19 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                     //                                            fprintf(stderr, "fcio stream closed without FCIOStatus.\n");
                     
                     //                }
-                    break;
                 }
                 // TODO: make sure that we don't need to empty the buffers here.. better just get rid of them.
+                
+                // As we read only one record, there can only be one config or status in the listener buffers..
+//                if (bufferedConfigCount > 0) {
+//                    [self sendConfigPacket:aDataPacket];
+//                }
+//                if (bufferedStatusCount > 0) {
+//                    [self sendStatusPacket:aDataPacket];
+//                }
+                // TODO: as far as I can see, this is the only place where the reading thread interacts with another object
+                // The dataPacket itself is thread-local only the queue is common between listeners, allowing for interleaved sections
                 @synchronized (self) {
-                    // As we read only one record, there can only be one config or status in the listener buffers..
-                    if (bufferedConfigCount > 0) {
-                        [self sendConfigPacket:aDataPacket];
-                    }
-                    if (bufferedStatusCount > 0) {
-                        [self sendStatusPacket:aDataPacket];
-                    }
                     [[aDataPacket dataTask] putDataInQueue:aDataPacket force:YES];
                 }
             }
@@ -1128,6 +1124,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         [self fcioClose];
         if (fcio_last_tag != FCIOStatus) {
             NSLog(@"ORFlashCamListenerModel: FCIO Stream ended with tag %d, while FCIOStatus (%d) is expected.\n", fcio_last_tag, FCIOStatus);
+//            [self runFailed];
         }
     } else {
         [self runFailed];
@@ -1241,7 +1238,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to connect to %@\n", [self streamDescription]);
             return NO;
         }
-    [self setStatus:@"connected"];
+//    [self setStatus:@"connected"];
     return YES;
 }
 
@@ -1280,7 +1277,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
     [self setChanMap:nil];
     [self setCardMap:nil];
-    [self setStatus:@"disconnected"];
+//    [self setStatus:@"disconnected"];
     return YES;
 }
 
@@ -1416,7 +1413,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         case FCIOConfig: {
             for(id obj in dataTakers) [obj setWFsamples:state->config->eventsamples];
             [self readConfig:state->config];
-//                    [self sendConfigPacket:aDataPacket]; // send outside of the locked function
+            [self sendConfigPacket:aDataPacket]; // send outside of the locked function
 //            fprintf(stderr, "DEBUG fcioRead: parsing Config\n");
             break;
         }
@@ -1434,12 +1431,12 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                     writeWaveforms = false;
                 }
                 state->event->type = 10; // LPP Event, use new EventType
-                state->event->timestamp[4] = (int)lppstate->flags.trigger;
-                state->event->timestamp[5] = (int)lppstate->flags.event;
-                state->event->timestamp[6] = (int)lppstate->largest_sum_pe;
-                state->event->timestamp[7] = (int)lppstate->largest_sum_offset;
-                state->event->timestamp[8] = (int)lppstate->channel_multiplicity;
-                state->event->timestamp[9] = (int)lppstate->largest_pe;
+                state->event->timestamp[4] = *(int*)(&lppstate->flags.trigger); // unsigned int
+                state->event->timestamp[5] = *(int*)(&lppstate->flags.event); // unsigned int
+                state->event->timestamp[6] = *(int*)(&lppstate->largest_sum_pe);  // float
+                state->event->timestamp[7] = lppstate->largest_sum_offset;
+                state->event->timestamp[8] = lppstate->channel_multiplicity;
+                state->event->timestamp[9] = *(int*)(&lppstate->largest_pe);  // float
                 state->event->timestamp_size = 10;
             }
             if(!chanMap){
@@ -1465,6 +1462,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             break;
         case FCIOStatus:
             [self readStatus:state->status];
+            [self sendStatusPacket:aDataPacket];
 //                    [self sendStatusPacket:aDataPacket]; // send outside of the locked function
 //            fprintf(stderr, "DEBUG fcioRead: parsing Status\n");
             break;
@@ -1526,7 +1524,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) taskDataAvailable:(NSNotification*)note
 {
-//    fprintf(stderr, "taskDataAvailable()\n");
+    fprintf(stderr, "DEBUG taskDataAvailable\n");
     if([note object] != [[runTask standardOutput] fileHandleForReading])
         return;
 //    NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -1565,7 +1563,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) taskData:(NSDictionary*)taskData
 {
-//    fprintf(stderr, "taskData() begin\n");
+    fprintf(stderr, "DEBUG taskData\n");
     if([taskData objectForKey:@"Task"] != runTask) return;
     NSString* incomingText = [taskData objectForKey:@"Text"];
     NSArray* incomingLines = [incomingText componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
@@ -1625,7 +1623,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             NSRange r = NSMakeRange(r0.location+r0.length+1, r1.location-r0.location-r0.length-2);
             NSArray* a = [[aLine substringWithRange:r] componentsSeparatedByString:@","];
             if([a count] != 6) continue;
-            [self setStatus:@"OK/running"];
+//            [self setStatus:@"OK/running"];
             eventCount = [[a objectAtIndex:0] intValue];
             runTime    = [self parseValueFromFCLog:[a objectAtIndex:1] withIdentifier:@"sec"];
             readMB     = [self parseValueFromFCLog:[a objectAtIndex:2] withIdentifier:@"MB"   andBreak:@"/"];
@@ -1653,7 +1651,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) taskCompleted:(NSNotification*)note
 {
-//    fprintf(stderr, "taskCompleted()\n");
+    fprintf(stderr, "DEBUG taskCompleted\n");
     // reset the hardare id to 0 since they will be read again at the start of the next run
     if([note object] == runTask){
         for(id obj in [readOutList children]){
@@ -1674,10 +1672,19 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         [[[runTask standardInput]  fileHandleForWriting] closeFile];
         [[[runTask standardOutput] fileHandleForReading] closeFile];
     }
+    
+    
     // if the readout process stops for some reason other than it being terminated in the run stopping,
     // there were errors, so stop the run
+    if ([runTask terminationStatus]) {
+        NSLog(@"ORFLashCamListener: readout process terminated unexpectedly exit code: %d\n",
+              [runTask terminationStatus]);
+        [self runFailed];
+    }
+
     uint32_t runState = [gOrcaGlobals runState];
-    if(runState != eRunStopped && runState != eRunStopping) [self runFailed];
+    if(runState != eRunStopped && runState != eRunStopping)
+        [self runFailed];
     // remove notification observers
     NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
     [nc removeObserver:self name:NSFileHandleReadCompletionNotification object:nil];
@@ -1688,7 +1695,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) startReadoutAfterPing
 {
-//    fprintf(stderr, "startReadoutAfterPing()\n");
+    fprintf(stderr, "startReadoutAfterPing\n");
     if([guardian pingRunning]){
         [self performSelector:@selector(startReadoutAfterPing) withObject:self afterDelay:0.01];
         return;
@@ -2042,10 +2049,12 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         [self runFailed];
     }
     // read the configuration packet
-    uint32_t index = configBufferIndex;
-    configBufferIndex = (configBufferIndex + 1) % kFlashCamConfigBufferLength;
-    bufferedConfigCount++;
-    uint32_t offset = 2 + (2 + sizeof(fcio_config)/sizeof(uint32_t)) * index;
+//    uint32_t index = configBufferIndex;
+    uint32_t index = 0;
+//    configBufferIndex = (configBufferIndex + 1) % kFlashCamConfigBufferLength;
+//    bufferedConfigCount++;
+//    uint32_t offset = 2 + (2 + sizeof(fcio_config)/sizeof(uint32_t)) * index;
+    uint32_t offset = 2;
     configBuffer[offset++] = (uint32_t) config->telid;
     configBuffer[offset++] = (uint32_t) config->adcs;
     configBuffer[offset++] = (uint32_t) config->triggers;
@@ -2058,7 +2067,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     configBuffer[offset++] = (uint32_t) config->adccards;
     configBuffer[offset++] = (uint32_t) config->gps;
     memcpy(configBuffer + offset, config->tracemap, config->adcs*sizeof(uint32_t));
-    offset += FCIOMaxChannels;
+    offset += FCIOMaxChannels; // TODO: what is going on here? why an offset of all channels? we do only copy the possible maximum in this datastream directly here!
     // append the board revision and main board ids to the configuration packet
     NSMutableArray* addresses = [NSMutableArray array];
     uint32 broffset = offset + (uint32_t) ceil([self maxADCCards]/4.0);
@@ -2086,17 +2095,17 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             [self runFailed];
         }
     }
-    if(bufferedConfigCount == kFlashCamConfigBufferLength){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error config buffer full on %@ at %@:%d\n",
-                   interface, ip, (int) port);
-        [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelConfigBufferFull
-                                                            object:self];
-    }
+//    if(bufferedConfigCount == kFlashCamConfigBufferLength){
+//        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error config buffer full on %@ at %@:%d\n",
+//                   interface, ip, (int) port);
+//        [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelConfigBufferFull
+//                                                            object:self];
+//    }
     // validate the channel map
     bool fail = false;
-    for(unsigned int i=0; i<FCIOMaxChannels; i++){
-        uint32_t addr  = (config->tracemap[i] & 0xffff0000) >> 16;
-        uint32_t input =  config->tracemap[i] & 0x0000ffff;
+    for(unsigned int i=0; i<config->adcs; i++){
+        uint32_t addr  = (config->tracemap[i] >> 16);
+        uint32_t input =  config->tracemap[i] & 0xffff;
         if(i >= (unsigned int) [chanMap count]){
             if(config->tracemap[i] == 0) continue;
             else{
@@ -2121,14 +2130,39 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     else NSLog(@"ORFlashCamListenerModel on %@ at %@:%d successfully validated channel map\n", interface, ip, (int) port);
 }
 
+- (void) sendConfigPacket:(ORDataPacket*)aDataPacket
+{
+    uint32_t blength = 2 + sizeof(fcio_config) / sizeof(uint32_t);
+    uint32_t dlength = blength;
+    blength += (uint32_t) ceil([self maxADCCards]/4.0) + 2*[self maxADCCards];
+//    uint32_t index = blength * takeDataConfigIndex;
+    uint32_t index = 0;
+    dlength -= FCIOMaxChannels - configBuffer[index+3];
+    uint32_t nadc = configBuffer[index+11];
+    dlength += (uint32_t) ceil(nadc/4.0) + 2*nadc;
+//    takeDataConfigIndex = (takeDataConfigIndex + 1) % kFlashCamConfigBufferLength;
+//    bufferedConfigCount --;
+    configBuffer[index]    = configId | (dlength & 0x3ffff);
+    configBuffer[index+1]  = ((unsigned short) [guardian uniqueIdNumber]) << 16;
+    configBuffer[index+1] |=  (unsigned short) [self uniqueIdNumber];
+    [aDataPacket addLongsToFrameBuffer:configBuffer+index
+                                length:dlength-(uint32_t)ceil(nadc/4.0)-2*nadc];
+    index += 2 + sizeof(fcio_config)/sizeof(uint32_t);
+    [aDataPacket addLongsToFrameBuffer:configBuffer+index length:(uint32_t)ceil(nadc/4.0)];
+    index += (uint32_t) ceil([self maxADCCards]/4.0);
+    [aDataPacket addLongsToFrameBuffer:configBuffer+index length:nadc*2];
+}
+
 - (void) readStatus:(fcio_status*)fcstatus
 {
 //    NSLog(@"readStatus() %@\n", [NSThread currentThread]);
 //    fprintf(stderr, "DEBUG ORFlashCamListener/readStatus: reading status into buffer.\n");
-    uint32_t index = statusBufferIndex;
-    statusBufferIndex = (statusBufferIndex + 1) % kFlashCamStatusBufferLength;
-    bufferedStatusCount++;
-    uint32_t offset = 2 + (2 + sizeof(fcio_status)/sizeof(uint32_t)) * index;
+//    uint32_t index = statusBufferIndex;
+    uint32_t index = 0;
+//    statusBufferIndex = (statusBufferIndex + 1) % kFlashCamStatusBufferLength;
+//    bufferedStatusCount++;
+//    uint32_t offset = 2 + (2 + sizeof(fcio_status)/sizeof(uint32_t)) * index;
+    uint32_t offset = 2;
     statusBuffer[offset++] = (uint32_t) fcstatus->status;
     memcpy(statusBuffer+offset, fcstatus->statustime, 10*sizeof(uint32_t));
     offset += 10;
@@ -2164,21 +2198,52 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             }
         }
     }
-    if(bufferedStatusCount == kFlashCamStatusBufferLength){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error status buffer full on %@ at %@:%d\n",
-                   interface, ip, (int) port);
-    }
+//    if(bufferedStatusCount == kFlashCamStatusBufferLength){
+//        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error status buffer full on %@ at %@:%d\n",
+//                   interface, ip, (int) port);
+//    }
+}
+
+- (void) sendStatusPacket:(ORDataPacket*)aDataPacket
+{
+//    uint32_t index = (2 + sizeof(fcio_status) / sizeof(uint32_t)) * takeDataStatusIndex;
+    uint32_t index = 0;
+//    takeDataStatusIndex = (takeDataStatusIndex + 1) % kFlashCamStatusBufferLength;
+//    bufferedStatusCount --;
+    int cards = (int) statusBuffer[index+13];
+    int dsize = (int) statusBuffer[index+14];
+    uint32_t length = 2 + (sizeof(fcio_status) -
+                           (256-cards)*(dsize+cards*sizeof(uint32_t))) / sizeof(uint32_t);
+    statusBuffer[index]    = statusId | (length & 0x3ffff);
+    statusBuffer[index+1]  = ((unsigned short) [guardian uniqueIdNumber]) << 16;
+    statusBuffer[index+1] |=  (unsigned short) [self uniqueIdNumber];
+    [aDataPacket addLongsToFrameBuffer:statusBuffer+index length:length];
 }
 
 - (void) takeData:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
+    /*
+     Monitor the state of the the runTask (readout process of FlashCam) here.
+     While takeData is being called and runIsStopping has not been fired, the
+     process should be running. runTaskStopped is called last and sets dataTakers to nil, so until then
+     */
+//    fprintf(stderr, "DEBUG takeData\n");
+//    if (runFailedAlarm && ![runFailedAlarm isPosted] && ![runTask isRunning]) {
+//        if ([runTask terminationStatus]) {
+//            NSLog(@"ORFLashCamListener: readout process terminated unexpectedly exit code: %d\n",
+//                  [runTask terminationStatus]
+//                  );
+//            [self runFailed];
+//        }
+////
+//    }
     //nothing to do... look at the readout thread. Put all the listeners in separate threads for
     //efficiency and use a separate datapacket
 }
 
 - (void) runTaskStarted:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-//    fprintf(stderr, "runTaskStarted()\n");
+    fprintf(stderr, "DEBUG runTaskStarted\n");
     // TODO switch the order around, first create the listener to receive data, then start the readout
     //
     if(runFailedAlarm) [runFailedAlarm clearAlarm];
@@ -2186,18 +2251,15 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     if(!unrecognizedStates) unrecognizedStates = [[NSMutableArray array] retain];
     [unrecognizedStates removeAllObjects];
     [readOutArgs removeAllObjects];
-    
-    memset(configBuffer, 0, kFlashCamConfigBufferLength * (2 + sizeof(fcio_config)/sizeof(uint32_t) + (uint32_t)
+    memset(configBuffer, 0, (2 + sizeof(fcio_config)/sizeof(uint32_t) + (uint32_t)
                                                            ceil([self maxADCCards]/4.0) + 2*[self maxADCCards]));
-    configBufferIndex   = 0;
-    takeDataConfigIndex = 0;
-    bufferedConfigCount = 0;
-    
-    memset(statusBuffer, 0, kFlashCamStatusBufferLength * (2 + sizeof(fcio_status)/sizeof(uint32_t)));
-    statusBufferIndex   = 0;
-    takeDataStatusIndex = 0;
-    bufferedStatusCount = 0;
-    
+//    configBufferIndex = 0;
+//    takeDataConfigIndex = 0;
+//    bufferedConfigCount = 0;
+    memset(statusBuffer, 0, (2 + sizeof(fcio_status)/sizeof(uint32_t)));
+//    statusBufferIndex = 0;
+//    takeDataStatusIndex = 0;
+//    bufferedStatusCount = 0;
     [aDataPacket addDataDescriptionItem:[self dataRecordDescription] forKey:@"ORFlashCamListenerModel"];
 //    fprintf(stderr, "DEBUGrunTaskStarted: startReadoutAfterPing\n");
     [self startReadoutAfterPing];
@@ -2238,8 +2300,47 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     while(obj = [e nextObject]) [obj runTaskStarted:aDataPacket userInfo:userInfo];
 }
 
+- (void) stopTaskAt:(double) delaySeconds
+{
+    double timeloop = 0.0;
+    double delta = delaySeconds/10;
+    while ([runTask isRunning] && timeloop < delaySeconds)
+        [ORTimer delay:delta];
+
+    [runTask terminate];
+}
+
 - (void) runIsStopping:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
+    fprintf(stderr, "DEBUG runIsStopping\n");
+    if ([runTask isRunning]) {
+        fprintf(stderr, "DEBUG runIsStopping: get filehandle\n");
+        NSFileHandle* fh = [[runTask standardInput] fileHandleForWriting];
+        fprintf(stderr, "DEBUG runIsStopping: write EOL\n");
+        bool writeSuccess = [fh writeData:[@"\n" dataUsingEncoding:NSASCIIStringEncoding] error:nil];
+        fprintf(stderr, "DEBUG runIsStopping: check sucesss\n");
+        if (!writeSuccess) {
+            [runTask terminate];
+        }
+        fprintf(stderr, "DEBUG runIsStopping: wait until exit\n");
+//        [runTask waitUntilExit]; // don't know if that is dangerous after sending \n or terminating.. I think this read thread is killed hard after 15 seconds anyway.
+        
+//        [self stopTaskAt:[[self configParam:@"logTime"] doubleValue] * 1.1];
+    }
+    
+//    int exitcode = [runTask terminationStatus];
+//    bool claimsSuccess = [[self fcrunlog:0] rangeOfString:@"clean termination done"].location != NSNotFound;
+    
+    while (fcioReadThreadRunning)
+        ;
+    
+//    if (exitcode) {
+//        NSLog(@"ORFlashCamListenerModel readout process exited with status code %d\n", exitcode);
+//        if (!claimsSuccess)
+//            NSLog(@"ORFlashCamListenerModel readout process last message: %s\n", [self fcrunlog:0]);
+//    }
+    
+    
 //    fprintf(stderr, "runIsStopping()\n");
     //-----------------------------------------------------
     //MAH 9/17/22... shut down the FlashCAM by sending an EOL
@@ -2247,62 +2348,25 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     //running flag is clear, but there might one pending.
     //this next line will ensure it doesn't get rescheduled at all after this point
 //    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(read) object:nil];
-    @try { //MAH just in case an exception is thrown in the following block
-        readWait = true;
-        NSFileHandle*  fh = [[runTask standardInput] fileHandleForWriting];
-        [fh writeData:[@"\n" dataUsingEncoding: NSASCIIStringEncoding]]; //shuts down FlashCam
-        NSTimeInterval     dfinterval = 0.0;
-        if(dataFileObject) dfinterval = [dataFileObject fileCheckTimeInterval];
-        for(int i=0; i<30; i++){
-            if([[self fcrunlog:0] rangeOfString:@"clean termination done"].location != NSNotFound) break;
-            if(dataFileObject){
-                while([[self configParam:@"logTime"] doubleValue]*i*0.101+1 > [dataFileObject fileCheckTimeInterval])
-                    [dataFileObject setFileCheckTimeInterval:[dataFileObject fileCheckTimeInterval]+1];
-            }
-            [ORTimer delay:[[self configParam:@"logTime"] doubleValue] * 0.101];
-        }
-        if(dataFileObject)
-            if(dfinterval != [dataFileObject fileCheckTimeInterval])
-                [dataFileObject setFileCheckTimeInterval:dfinterval];
-        readWait = false;
-        [readStateLock lock];
-//        timeToQuitReadoutThread = YES;
-        fprintf(stderr, "DEBUG runIsStopping: waiting for fcio read thread and runTask to quit.\n");
-        while(fcioReadThreadRunning || [runTask isRunning])
-            ;
-        
-        int status = [runTask terminationStatus];
-        if (status) {
-            NSLog(@"ORFlashCamListenerModel readout processes exited with status code %d\n", status);
-        }
-//        [runTask terminate];
-//        [readoutThread release];
-    }
-    @catch(NSException* e){
-        readWait = false;
-//        timeToQuitReadoutThread = YES;
-    }
-    @finally {
-        [readStateLock unlock];
-    }
     //-----------------------------------------------------
 //    [self disconnect];
-    [ORTimer delay:0.1];
+//    [ORTimer delay:0.1];
+    
+    /* Cleanup section
+     */
     [readOutArgs removeAllObjects];
     
-    memset(configBuffer, 0, kFlashCamConfigBufferLength * (2 + sizeof(fcio_config)/sizeof(uint32_t) + (uint32_t)
-                                                           ceil([self maxADCCards]/4.0) + 2*[self maxADCCards]));
-    configBufferIndex   = 0;
-    takeDataConfigIndex = 0;
-    bufferedConfigCount = 0;
-    
-    memset(statusBuffer, 0, kFlashCamStatusBufferLength * (2 + sizeof(fcio_status)/sizeof(uint32_t)));
-    statusBufferIndex   = 0;
-    takeDataStatusIndex = 0;
-    bufferedStatusCount = 0;
-    
+//    memset(configBuffer, 0, kFlashCamConfigBufferLength * (2 + sizeof(fcio_config)/sizeof(uint32_t) + (uint32_t)
+//                                                           ceil([self maxADCCards]/4.0) + 2*[self maxADCCards]));
+//    configBufferIndex = 0;
+//    takeDataConfigIndex = 0;
+//    bufferedConfigCount = 0;
+//    memset(statusBuffer, 0, kFlashCamStatusBufferLength * (2 + sizeof(fcio_status)/sizeof(uint32_t)));
+//    statusBufferIndex = 0;
+//    takeDataStatusIndex = 0;
+//    bufferedStatusCount = 0;
     // write the remaining config and status packets
-    while(bufferedConfigCount > 0 || bufferedStatusCount > 0) [self takeData:aDataPacket userInfo:userInfo];
+//    while(bufferedConfigCount > 0 || bufferedStatusCount > 0) [self takeData:aDataPacket userInfo:userInfo];
     // allow the connected data takers to write any remaining data
     NSEnumerator* e = [dataTakers objectEnumerator];
     id obj;
@@ -2311,7 +2375,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 - (void) runTaskStopped:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-//    fprintf(stderr, "DEBUG runTaskStopped\n");
+    fprintf(stderr, "DEBUG runTaskStopped\n");
 //    if(reader) FCIODestroyStateReader(reader);
 //    reader = NULL;
 //    if(postprocessor) LPPDestroy(postprocessor);
@@ -2324,42 +2388,9 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     dataTakers = nil;
 }
 
-- (void) sendConfigPacket:(ORDataPacket*)aDataPacket
-{
-    uint32_t blength = 2 + sizeof(fcio_config) / sizeof(uint32_t);
-    uint32_t dlength = blength;
-    blength += (uint32_t) ceil([self maxADCCards]/4.0) + 2*[self maxADCCards];
-    uint32_t index = blength * takeDataConfigIndex;
-    dlength -= FCIOMaxChannels - configBuffer[index+3];
-    uint32_t nadc = configBuffer[index+11];
-    dlength += (uint32_t) ceil(nadc/4.0) + 2*nadc;
-    takeDataConfigIndex = (takeDataConfigIndex + 1) % kFlashCamConfigBufferLength;
-    bufferedConfigCount --;
-    configBuffer[index]    = configId | (dlength & 0x3ffff);
-    configBuffer[index+1]  = ((unsigned short) [guardian uniqueIdNumber]) << 16;
-    configBuffer[index+1] |=  (unsigned short) [self uniqueIdNumber];
-    [aDataPacket addLongsToFrameBuffer:configBuffer+index
-                                length:dlength-(uint32_t)ceil(nadc/4.0)-2*nadc];
-    index += 2 + sizeof(fcio_config)/sizeof(uint32_t);
-    [aDataPacket addLongsToFrameBuffer:configBuffer+index length:(uint32_t)ceil(nadc/4.0)];
-    index += (uint32_t) ceil([self maxADCCards]/4.0);
-    [aDataPacket addLongsToFrameBuffer:configBuffer+index length:nadc*2];
-}
 
-- (void) sendStatusPacket:(ORDataPacket*)aDataPacket
-{
-    uint32_t index = (2 + sizeof(fcio_status) / sizeof(uint32_t)) * takeDataStatusIndex;
-    takeDataStatusIndex = (takeDataStatusIndex + 1) % kFlashCamStatusBufferLength;
-    bufferedStatusCount --;
-    int cards = (int) statusBuffer[index+13];
-    int dsize = (int) statusBuffer[index+14];
-    uint32_t length = 2 + (sizeof(fcio_status) -
-                           (256-cards)*(dsize+cards*sizeof(uint32_t))) / sizeof(uint32_t);
-    statusBuffer[index]    = statusId | (length & 0x3ffff);
-    statusBuffer[index+1]  = ((unsigned short) [guardian uniqueIdNumber]) << 16;
-    statusBuffer[index+1] |=  (unsigned short) [self uniqueIdNumber];
-    [aDataPacket addLongsToFrameBuffer:statusBuffer+index length:length];
-}
+
+
 
 
 - (void) saveReadOutList:(NSFileHandle*)aFile
@@ -2424,14 +2455,14 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     lppHWChannelMap = (int*)calloc(FCIOMaxChannels, sizeof(int));
     lppHWPrescalingThresholds = (unsigned short*)calloc(FCIOMaxChannels, sizeof(unsigned short));
     
-    if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)) * kFlashCamConfigBufferLength);
-    configBufferIndex = 0;
-    takeDataConfigIndex = 0;
-    bufferedConfigCount = 0;
-    if(!statusBuffer) statusBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)) * kFlashCamStatusBufferLength);
-    statusBufferIndex = 0;
-    takeDataStatusIndex = 0;
-    bufferedStatusCount = 0;
+    if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)));
+//    configBufferIndex = 0;
+//    takeDataConfigIndex = 0;
+//    bufferedConfigCount = 0;
+    if(!statusBuffer) statusBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)));
+//    statusBufferIndex = 0;
+//    takeDataStatusIndex = 0;
+//    bufferedStatusCount = 0;
     eventCount        = 0;
     runTime           = 0.0;
     readMB            = 0.0;

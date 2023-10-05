@@ -28,8 +28,8 @@
 //#import "bufio.h"
 #import "lpp.h"
 
-#define kFlashCamConfigBufferLength 64
-#define kFlashCamStatusBufferLength 256
+//#define kFlashCamConfigBufferLength 2
+//#define kFlashCamStatusBufferLength 2
 
 
 @interface ORFlashCamListenerModel : ORAuxHw <ORDataTaker>
@@ -49,14 +49,14 @@
 //    int bufferedRecords;
     uint32_t  configId;
     uint32_t* configBuffer;
-    uint32_t  configBufferIndex;
-    uint32_t  takeDataConfigIndex;
-    uint32_t  bufferedConfigCount;
+//    uint32_t  configBufferIndex;
+//    uint32_t  takeDataConfigIndex;
+//    uint32_t  bufferedConfigCount;
     uint32_t  statusId;
     uint32_t* statusBuffer;
-    uint32_t  statusBufferIndex;
-    uint32_t  takeDataStatusIndex;
-    uint32_t  bufferedStatusCount;
+//    uint32_t  statusBufferIndex;
+//    uint32_t  takeDataStatusIndex;
+//    uint32_t  bufferedStatusCount;
     NSString* status;
     ORAlarm* runFailedAlarm;
     bool unrecognizedPacket;
@@ -258,8 +258,8 @@ extern NSString* ORFlashCamListenerModelStatusChanged;
 //extern NSString* ORFlashCamListenerModelDisconnected;
 extern NSString* ORFlashCamListenerModelChanMapChanged;
 extern NSString* ORFlashCamListenerModelCardMapChanged;
-extern NSString* ORFlashCamListenerModelConfigBufferFull;
-extern NSString* ORFlashCamListenerModelStatusBufferFull;
+//extern NSString* ORFlashCamListenerModelConfigBufferFull;
+//extern NSString* ORFlashCamListenerModelStatusBufferFull;
 extern NSString* ORFlashCamListenerModelFCLogChanged;
 extern NSString* ORFlashCamListenerModelFCRunLogChanged;
 extern NSString* ORFlashCamListenerModelFCRunLogFlushed;
