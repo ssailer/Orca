@@ -350,34 +350,34 @@ int lpp_process_fcio_state(PostProcessor* processor, LPPState* lpp_state, FCIOSt
       // format == 0 is already converted to trace indices used by fcio
       if (processor->aux.tracemap_format) {
         if (processor->aux.pulser_trace_index > 0) {
-          convert_trace_idx(1, &processor->aux.pulser_trace_index, processor->aux.tracemap_format,
-                            state->config->tracemap);
+          if (!convert_trace_idx(1, &processor->aux.pulser_trace_index, processor->aux.tracemap_format,
+                                 state->config->tracemap)) {
+            fprintf(stderr, "CRITICAL lpp_process_fcio_state: aux pulser channel could not be mapped.\n");
+            return -1;
+          }
           if (processor->loglevel >= 4) {
             fprintf(stderr, "DEBUG conversion aux pulser trace index %d\n", processor->aux.pulser_trace_index);
           }
-        } else {
-          fprintf(stderr, "CRITICAL lpp_process_fcio_state: aux pulser channel could not be mapped.\n");
-          return -1;
         }
         if (processor->aux.baseline_trace_index > 0) {
-          convert_trace_idx(1, &processor->aux.baseline_trace_index, processor->aux.tracemap_format,
-                            state->config->tracemap);
+          if (!convert_trace_idx(1, &processor->aux.baseline_trace_index, processor->aux.tracemap_format,
+                                 state->config->tracemap)) {
+            fprintf(stderr, "CRITICAL lpp_process_fcio_state: aux baseline channel could not be mapped.\n");
+            return -1;
+          }
           if (processor->loglevel >= 4) {
             fprintf(stderr, "DEBUG conversion aux baseline trace index %d\n", processor->aux.baseline_trace_index);
           }
-        } else {
-          fprintf(stderr, "CRITICAL lpp_process_fcio_state: aux baseline channel could not be mapped.\n");
-          return -1;
         }
         if (processor->aux.muon_trace_index > 0) {
-          convert_trace_idx(1, &processor->aux.muon_trace_index, processor->aux.tracemap_format,
-                            state->config->tracemap);
+          if (!convert_trace_idx(1, &processor->aux.muon_trace_index, processor->aux.tracemap_format,
+                                 state->config->tracemap)) {
+            fprintf(stderr, "CRITICAL lpp_process_fcio_state: aux muon channel could not be mapped.\n");
+            return -1;
+          }
           if (processor->loglevel >= 4) {
             fprintf(stderr, "DEBUG conversion aux muon trace index %d\n", processor->aux.muon_trace_index);
           }
-        } else {
-          fprintf(stderr, "CRITICAL lpp_process_fcio_state: aux muon channel could not be mapped.\n");
-          return -1;
         }
       }
 
