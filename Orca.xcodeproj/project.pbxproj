@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15139,6 +15139,21 @@
 			path = ADEIControl;
 			sourceTree = "<group>";
 		};
+		A8E6693F2A702DD700A9775A /* fcio */ = {
+			isa = PBXGroup;
+			children = (
+				A8E669592A710BB200A9775A /* time_utils.c */,
+				A8E6695A2A710BB200A9775A /* time_utils.h */,
+				E63085CF2681057700687A6D /* bufio.h */,
+				E63085D32681057800687A6D /* bufio.c */,
+				E63085CE2681057700687A6D /* fcio.h */,
+				E63085D02681057700687A6D /* fcio.c */,
+				E63085C62681055800687A6D /* tmio.h */,
+				E63085CA2681056300687A6D /* tmio.c */,
+			);
+			path = fcio;
+			sourceTree = "<group>";
+		};
 		B3808A931700F85C0019C27D /* CouchDBListener */ = {
 			isa = PBXGroup;
 			children = (
@@ -15291,12 +15306,7 @@
 				E6C9759C26FE3F3300D6F792 /* FlashCamUtils.m */,
 				E684347929AFB666009067E2 /* FlashCamListener.xib */,
 				84707A1D290AC228008D33C2 /* flashcam_listener.jpg */,
-				E63085CF2681057700687A6D /* bufio.h */,
-				E63085D32681057800687A6D /* bufio.c */,
-				E63085CE2681057700687A6D /* fcio.h */,
-				E63085D02681057700687A6D /* fcio.c */,
-				E63085C62681055800687A6D /* tmio.h */,
-				E63085CA2681056300687A6D /* tmio.c */,
+				A8E6693F2A702DD700A9775A /* fcio */,
 			);
 			path = FlashCamIO;
 			sourceTree = "<group>";
@@ -17404,7 +17414,8 @@
 		2A37F4A9FDCFA73011CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1230;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					369E73371C7B5E6400A7F89E = {
 						CreatedOnToolsVersion = 6.1.1;
@@ -19886,8 +19897,12 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = OrcaTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -19932,8 +19947,12 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = OrcaTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -19977,8 +19996,12 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = OrcaTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -20022,7 +20045,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = "";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = RelaunchOrca;
 				SDKROOT = "";
@@ -20061,7 +20084,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = "";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = RelaunchOrca;
 				SDKROOT = "";
 				VALID_ARCHS = x86_64;
@@ -20099,7 +20122,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = "";
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = RelaunchOrca;
 				SDKROOT = "";
 				VALID_ARCHS = x86_64;
