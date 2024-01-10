@@ -1183,8 +1183,14 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             
             NSLog(@"ORFlashCamListenerModel: connected to %@\n", [self streamDescription]);
             
-            
-            FCIOSelectStateTag(reader, 0);
+            //  Deselect all tags, then select only the ones we know how to handle.
+            //
+            FCIODeselectStateTag(reader, 0); // deselect all
+            FCIOSelectStateTag(reader, FCIOConfig);
+            FCIOSelectStateTag(reader, FCIOStatus);
+            FCIOSelectStateTag(reader, FCIOEvent);
+            FCIOSelectStateTag(reader, FCIOSparseEvent);
+
             [self setUpImage];
 //            enablePostProcessor = YES;// TODO set from GUI
             enablePostProcessor = [self configParam:@"lppEnabled"];
@@ -1431,9 +1437,9 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                     writeWaveforms = false;
                 }
                 state->event->type = 10; // LPP Event, use new EventType
-                state->event->timestamp[4] = *(int*)(&lppstate->flags.trigger); // unsigned int
-                state->event->timestamp[5] = *(int*)(&lppstate->flags.event); // unsigned int
-                state->event->timestamp[6] = *(int*)(&lppstate->largest_sum_pe);  // float
+                state->event->timestamp[4] = (unsigned int)(lppstate->flags.trigger); // unsigned int
+                state->event->timestamp[5] = (unsigned int)(lppstate->flags.event); // unsigned int
+                state->event->timestamp[6] = (unsigned int)(lppstate->largest_sum_pe);  // float
                 state->event->timestamp[7] = lppstate->largest_sum_offset;
                 state->event->timestamp[8] = lppstate->channel_multiplicity;
                 state->event->timestamp[9] = *(int*)(&lppstate->largest_pe);  // float
@@ -1447,6 +1453,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 NSDictionary* dict = [chanMap objectAtIndex:state->event->trace_list[itr]];
                 ORFlashCamADCModel* card = [dict objectForKey:@"adc"];
                 unsigned int chan = [[dict objectForKey:@"channel"] unsignedIntValue];
+                fprintf(stderr, "DEBUG: itr %d trace_list %d chan %d trace_map 0x%x\n",itr,state->event->trace_list[itr], chan, state->config->tracemap[state->event->trace_list[itr]] );
                 [card shipEvent:state->event withIndex:state->event->trace_list[itr]
                      andChannel:chan use:aDataPacket includeWF:writeWaveforms];
             }

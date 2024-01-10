@@ -34,7 +34,7 @@
 #define kFlashCamADCOrcaHeaderLength 3
 #define kFlashCamADCTimeOffsetLength 7
 #define kFlashCamADCDeadRegionLength 5
-#define kFlashCamADCTimeStampLength 10
+#define kFlashCamADCTimeStampLength 4
 #define kFlashCamADCWFHeaderLength (kFlashCamADCOrcaHeaderLength+kFlashCamADCTimeOffsetLength+kFlashCamADCDeadRegionLength+kFlashCamADCTimeStampLength)
 
 #define kDeadBandTime 5

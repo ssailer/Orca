@@ -897,6 +897,16 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     dataRecordLength = kFlashCamADCOrcaHeaderLength + (kFlashCamADCWFHeaderLength - 3 + 1) + wfSamples/2;
      */
     
+    /*
+     what types would we need?
+     - previously event_type used in L200: 1 contains generic events
+     - contains lpp flags + 16bits
+     - is trimmed (for this we need removed samples information and new wfSamples information (2 ints)
+     - is zero suppressed (no new information needed; just change the tag to SparseEvent
+     -
+     
+     */
+    
     //ship the data
     uint32_t lengths = dataLengths;
     uint32_t recordLength = dataRecordLength;
