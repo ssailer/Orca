@@ -1499,7 +1499,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     NSMutableString* trigAddr = [NSMutableString string];
     for(id card in triggerCards){
         [trigAddr appendString:[NSString stringWithFormat:@"%x,", [card cardAddress]]];
-        [readoutArgs addObjectsFromArray:[card runFlagsForCardIndex:ntrig]];
+        if ([gtriggerCards count] > 0) // only add the submaster flags, if there is a global trigger card
+            [readoutArgs addObjectsFromArray:[card runFlagsForCardIndex:ntrig]];
         ntrig ++;
     }
     [addressList insertString:trigAddr atIndex:0];
@@ -1737,12 +1738,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             [self runFailed];
         }
     }
-//    if(bufferedConfigCount == kFlashCamConfigBufferLength){
-//        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error config buffer full on %@ at %@:%d\n",
-//                   interface, ip, (int) port);
-//        [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelConfigBufferFull
-//                                                            object:self];
-//    }
+    if(bufferedConfigCount == kFlashCamConfigBufferLength){
+        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error config buffer full on %@ at %@:%d\n",
+                   interface, ip, (int) port);
+        [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelConfigBufferFull
+                                                            object:self];
+    }
     // validate the channel map
     bool fail = false;
     for(unsigned int i=0; i<config->adcs; i++){
@@ -1777,13 +1778,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     uint32_t blength = 2 + sizeof(fcio_config) / sizeof(uint32_t);
     uint32_t dlength = blength;
     blength += (uint32_t) ceil([self maxADCCards]/4.0) + 2*[self maxADCCards];
-//    uint32_t index = blength * takeDataConfigIndex;
-    uint32_t index = 0;
+    uint32_t index = blength * takeDataConfigIndex;
     dlength -= FCIOMaxChannels - configBuffer[index+3];
     uint32_t nadc = configBuffer[index+11];
     dlength += (uint32_t) ceil(nadc/4.0) + 2*nadc;
-//    takeDataConfigIndex = (takeDataConfigIndex + 1) % kFlashCamConfigBufferLength;
-//    bufferedConfigCount --;
+    takeDataConfigIndex = (takeDataConfigIndex + 1) % kFlashCamConfigBufferLength;
+    bufferedConfigCount --;
     configBuffer[index]    = configId | (dlength & 0x3ffff);
     configBuffer[index+1]  = ((unsigned short) [guardian uniqueIdNumber]) << 16;
     configBuffer[index+1] |=  (unsigned short) [self uniqueIdNumber];
@@ -1836,18 +1836,17 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             }
         }
     }
-//    if(bufferedStatusCount == kFlashCamStatusBufferLength){
-//        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error status buffer full on %@ at %@:%d\n",
-//                   interface, ip, (int) port);
-//    }
+    if(bufferedStatusCount == kFlashCamStatusBufferLength){
+        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error status buffer full on %@ at %@:%d\n",
+                   interface, ip, (int) port);
+    }
 }
 
 - (void) sendStatusPacket:(ORDataPacket*)aDataPacket
 {
-//    uint32_t index = (2 + sizeof(fcio_status) / sizeof(uint32_t)) * takeDataStatusIndex;
-    uint32_t index = 0;
-//    takeDataStatusIndex = (takeDataStatusIndex + 1) % kFlashCamStatusBufferLength;
-//    bufferedStatusCount --;
+    uint32_t index = (2 + sizeof(fcio_status) / sizeof(uint32_t)) * takeDataStatusIndex;
+    takeDataStatusIndex = (takeDataStatusIndex + 1) % kFlashCamStatusBufferLength;
+    bufferedStatusCount --;
     int cards = (int) statusBuffer[index+13];
     int dsize = (int) statusBuffer[index+14];
     uint32_t length = 2 + (sizeof(fcio_status) -
@@ -2091,11 +2090,11 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     readerRecordCount = 0;
     bufferedRecords   = 0;
     
-    if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)));
+    if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)) * kFlashCamConfigBufferLength);
     configBufferIndex = 0;
     takeDataConfigIndex = 0;
     bufferedConfigCount = 0;
-    if(!statusBuffer) statusBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)));
+    if(!statusBuffer) statusBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)) * kFlashCamStatusBufferLength);
     statusBufferIndex = 0;
     takeDataStatusIndex = 0;
     bufferedStatusCount = 0;
