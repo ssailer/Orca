@@ -1775,6 +1775,29 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     else NSLog(@"ORFlashCamListenerModel on %@ at %@:%d successfully validated channel map\n", interface, ip, (int) port);
 }
 
+- (void) sendConfigPacket:(ORDataPacket*)aDataPacket
+{
+    uint32_t blength = 2 + sizeof(fcio_config) / sizeof(uint32_t);
+    uint32_t dlength = blength;
+    blength += (uint32_t) ceil([self maxADCCards]/4.0) + 2*[self maxADCCards];
+//    uint32_t index = blength * takeDataConfigIndex;
+    uint32_t index = 0;
+    dlength -= FCIOMaxChannels - configBuffer[index+3];
+    uint32_t nadc = configBuffer[index+11];
+    dlength += (uint32_t) ceil(nadc/4.0) + 2*nadc;
+//    takeDataConfigIndex = (takeDataConfigIndex + 1) % kFlashCamConfigBufferLength;
+//    bufferedConfigCount --;
+    configBuffer[index]    = configId | (dlength & 0x3ffff);
+    configBuffer[index+1]  = ((unsigned short) [guardian uniqueIdNumber]) << 16;
+    configBuffer[index+1] |=  (unsigned short) [self uniqueIdNumber];
+    [aDataPacket addLongsToFrameBuffer:configBuffer+index
+                                length:dlength-(uint32_t)ceil(nadc/4.0)-2*nadc];
+    index += 2 + sizeof(fcio_config)/sizeof(uint32_t);
+    [aDataPacket addLongsToFrameBuffer:configBuffer+index length:(uint32_t)ceil(nadc/4.0)];
+    index += (uint32_t) ceil([self maxADCCards]/4.0);
+    [aDataPacket addLongsToFrameBuffer:configBuffer+index length:nadc*2];
+}
+
 - (void) readStatus:(fcio_status*)fcstatus
 {
     uint32_t index = statusBufferIndex;
