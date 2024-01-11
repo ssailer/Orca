@@ -24,7 +24,6 @@
 #import "ORTimeRate.h"
 #import "ORDataFileModel.h"
 #import "fcio.h"
-#import "bufio.h"
 #import "ANSIEscapeHelper.h"
 
 #define kFlashCamConfigBufferLength 64

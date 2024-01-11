@@ -1140,8 +1140,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     int timedout;
     bool writeWaveforms = true;
     FCIOState* state = NULL;
-        state = FCIOGetNextState(reader, &timedout);
-        }
+    state = FCIOGetNextState(reader, &timedout);
     if (!state) {
         fprintf(stderr, "DEBUG ORFlashCamListener/fcioRead: finished with: timedout %d last received tag %d\n", timedout, fcio_last_tag);
         return NO;
@@ -1158,8 +1157,6 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         }
         case FCIOEvent:
         case FCIOSparseEvent: {
-                }
-            }
             if(!chanMap){
                 NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: channel mapping has not been specified, aborting connection\n");
                 return NO;
@@ -2091,25 +2088,17 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     if(configParams) [configParams release];
     configParams = [[decoder decodeObjectForKey:@"configParams"] retain];
     reader            = NULL;
-    postprocessor     = NULL;
-//    readerRecordCount = 0;
-//    bufferedRecords   = 0;
-    lppPSChannelMap = (int*)calloc(FCIOMaxChannels, sizeof(int));
-    lppPSChannelGains = (float*)calloc(FCIOMaxChannels, sizeof(float));
-    lppPSChannelThresholds = (float*)calloc(FCIOMaxChannels, sizeof(float));
-    lppPSChannelShapings = (int*)calloc(FCIOMaxChannels, sizeof(int));
-    lppPSChannelLowPass = (float*)calloc(FCIOMaxChannels, sizeof(float));
-    lppHWChannelMap = (int*)calloc(FCIOMaxChannels, sizeof(int));
-    lppHWPrescalingThresholds = (unsigned short*)calloc(FCIOMaxChannels, sizeof(unsigned short));
+    readerRecordCount = 0;
+    bufferedRecords   = 0;
     
     if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)));
-//    configBufferIndex = 0;
-//    takeDataConfigIndex = 0;
-//    bufferedConfigCount = 0;
+    configBufferIndex = 0;
+    takeDataConfigIndex = 0;
+    bufferedConfigCount = 0;
     if(!statusBuffer) statusBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)));
-//    statusBufferIndex = 0;
-//    takeDataStatusIndex = 0;
-//    bufferedStatusCount = 0;
+    statusBufferIndex = 0;
+    takeDataStatusIndex = 0;
+    bufferedStatusCount = 0;
     eventCount        = 0;
     runTime           = 0.0;
     readMB            = 0.0;
