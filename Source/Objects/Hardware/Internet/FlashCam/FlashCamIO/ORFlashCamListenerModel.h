@@ -70,14 +70,12 @@
     ORTimeRate* eventRateHistory;
     ORTimeRate* deadTimeHistory;
     NSTask*     runTask;            //added. MAH 9/17/22
-    NSThread* readoutThread;
     ORReadOutList* readOutList;
     NSArray* dataTakers;
     NSMutableArray* readOutArgs;
     NSMutableArray* chanMap;
     NSMutableArray* cardMap;
     NSLock* readStateLock; //MAH 9/18/22
-//    bool timeToQuitReadoutThread;
     bool fcioReadThreadRunning;
     int fcio_last_tag;
     bool readWait;
@@ -176,9 +174,6 @@
 #pragma mark •••Comparison methods
 - (BOOL) sameInterface:(NSString*)iface andPort:(uint16_t)p;
 - (BOOL) sameIP:(NSString*)address andPort:(uint16_t)p;
-
-//#pragma mark •••PostProcessor methods
-//- (void) updateConnectedDigitalFlagChannels;
 
 #pragma mark •••FCIO methods
 - (bool) startFCIOReader:(ORDataPacket*)aDataPacket;
