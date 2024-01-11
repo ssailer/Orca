@@ -71,13 +71,16 @@
     ORTimeRate* eventRateHistory;
     ORTimeRate* deadTimeHistory;
     NSTask*     runTask;            //added. MAH 9/17/22
+    NSThread* readoutThread;
     ORReadOutList* readOutList;
     NSArray* dataTakers;
     NSMutableArray* readOutArgs;
     NSMutableArray* chanMap;
     NSMutableArray* cardMap;
     NSLock* readStateLock; //MAH 9/18/22
-    bool timeToQuitReadoutThread;
+//    bool timeToQuitReadoutThread;
+    bool fcioReadThreadRunning;
+    int fcio_last_tag;
     bool readWait;
     ORDataPacket* dataPacketForThread;
     NSString* writeDataToFile;
@@ -175,10 +178,15 @@
 - (BOOL) sameInterface:(NSString*)iface andPort:(uint16_t)p;
 - (BOOL) sameIP:(NSString*)address andPort:(uint16_t)p;
 
+//#pragma mark •••PostProcessor methods
+//- (void) updateConnectedDigitalFlagChannels;
+
 #pragma mark •••FCIO methods
-- (bool) connect;
-- (void) disconnect:(bool)destroy;
-- (void) read:(ORDataPacket*)aDataPacket;
+- (bool) startFCIOReader:(ORDataPacket*)aDataPacket;
+- (bool) fcioOpen;
+- (bool) fcioClose;
+- (bool) fcioRead:(ORDataPacket*)aDataPacket;
+- (void) fcioReadInThread:(ORDataPacket*)aDataPacket;
 - (void) runFailed;
 
 #pragma mark •••Task methods
@@ -197,7 +205,7 @@
 - (void) loadReadOutList:(NSFileHandle*)aFile;
 - (void) reset;
 - (NSDictionary*) dataRecordDescription;
-- (void) readThread:(ORDataPacket*)aDataPacket;
+
 
 #pragma mark •••Archival
 - (id) initWithCoder:(NSCoder*)decoder;
