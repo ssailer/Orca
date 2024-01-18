@@ -76,7 +76,8 @@
     NSMutableArray* chanMap;
     NSMutableArray* cardMap;
     NSLock* readStateLock; //MAH 9/18/22
-    bool fcioReadThreadRunning;
+    bool listenerThreadRunning;
+    bool listenerRemoteIsFile;
     int fcio_last_tag;
     bool readWait;
     ORDataPacket* dataPacketForThread;
@@ -176,11 +177,11 @@
 - (BOOL) sameIP:(NSString*)address andPort:(uint16_t)p;
 
 #pragma mark •••FCIO methods
-- (bool) startFCIOReader:(ORDataPacket*)aDataPacket;
+- (void) startReadoutTask:(ORDataPacket*)aDataPacket;
 - (bool) fcioOpen;
-- (bool) fcioClose;
+- (void) fcioClose;
 - (bool) fcioRead:(ORDataPacket*)aDataPacket;
-- (void) fcioReadInThread:(ORDataPacket*)aDataPacket;
+- (void) startListenerThread:(ORDataPacket*)aDataPacket;
 - (void) runFailed;
 
 #pragma mark •••Task methods

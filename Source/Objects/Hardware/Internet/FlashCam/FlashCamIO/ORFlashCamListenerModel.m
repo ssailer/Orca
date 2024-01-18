@@ -102,6 +102,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     runFailedAlarm     = nil;
     unrecognizedPacket = false;
     unrecognizedStates = nil;
+    listenerRemoteIsFile = false;
     eventCount         = 0;
     runTime            = 0.0;
     readMB             = 0.0;
@@ -263,15 +264,19 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) dataFileNameChanged:(NSNotification*) aNote
 {
-    [writeDataToFile release];
     NSString* filename  = [[aNote object] fileName];
     NSString* extension = [[aNote object] fileStaticSuffix];
     if(![extension isEqualToString:@""]){
         NSRange r = [filename rangeOfString:extension options:NSBackwardsSearch];
         filename  = [filename substringWithRange:NSMakeRange(0, r.location)];
     }
+    [writeDataToFile release];
     writeDataToFile = [[[NSString stringWithFormat:@"%@/openFiles/%@",
                        [[[aNote object] dataFolder] finalDirectoryName], filename] stringByExpandingTildeInPath] retain];
+    
+    if (listenerRemoteIsFile) {
+        [self startReadoutAfterPing];
+    }
 }
 
 - (NSString*) streamDescription
@@ -938,93 +943,112 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 #pragma mark •••FCIO methods
 
-- (bool) startFCIOReader:(ORDataPacket *)aDataPacket
+- (void) readDataThread
 {
-    [NSThread detachNewThreadSelector:@selector(fcioReadInThread:) toTarget:self withObject:aDataPacket];
-    return YES;
-}
-
-
-
-- (void) fcioReadInThread:(ORDataPacket*)aDataPacket
-{
-    fcioReadThreadRunning = YES;
+    listenerThreadRunning = YES;
     
-    if ([self fcioOpen]) {
-        
-        while (true) {
-            
-            @autoreleasepool {
-                
-                if (![self fcioRead:aDataPacket]) {
-                    break;
-                }
-                // The dataPacket itself is thread-local, only the queue is common between listeners, allowing for interleaved sections
-                @synchronized (self) {
-                    [[aDataPacket dataTask] putDataInQueue:aDataPacket force:YES];
-                }
-            }
-            
-        }
-        // If we reach this section, the stream is closed already, and we would need to reconnect/reopen
-        // Time to clean up memory
-        [self fcioClose];
-        if (fcio_last_tag != FCIOStatus)
-            NSLog(@"ORFlashCamListenerModel: FCIO Stream ended with tag %d, while FCIOStatus (%d) is expected.\n", fcio_last_tag, FCIOStatus);
-    } else {
-        fcioReadThreadRunning = NO; // TODO: check what happens with runFailed and if the cleanup is proper, then we might not need setting fcioReadThreadRunning here
+    if (![self fcioOpen]) {
+        listenerThreadRunning = NO;
         [self runFailed];
+        return;
     }
-    fcioReadThreadRunning = NO;
+    while (true) {
+        @autoreleasepool {
+            if (![self fcioRead:dataPacketForThread]) {
+                // fcioRead checks itself why it failed, no need to report here
+                break;
+            }
+            // The dataPacket itself is thread-local, only the queue is common between listeners, allowing for interleaved sections
+            @synchronized (self) {
+                [[dataPacketForThread dataTask] putDataInQueue:dataPacketForThread force:YES];
+            }
+        }
+    }
+    // If we reach this section, the stream is closed already, and we would need to reconnect/reopen
+    // Time to clean up memory
+    [self fcioClose];
+
+    listenerThreadRunning = NO;
 }
 
 - (bool) fcioOpen
 {
-        if(reader) {
-            fprintf(stderr, "DEBUG ORFlashCamListener/fcioOpen: reader already allocated.\n");
-            return NO;
-        }
-        if(!chanMap){
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: channel mapping has not been specified, aborting connection\n");
-            return NO;
-        }
-        if(!interface || port == 0){
-            return NO;
-        }
+    while ( listenerRemoteIsFile && ! [runTask isRunning] )
+        ;
+    if(reader) {
+//        fprintf(stderr, "DEBUG ORFlashCamListener/fcioOpen: reader already allocated.\n");
+        return NO;
+    }
+    if(!chanMap){
+        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: channel mapping has not been specified, aborting connection\n");
+        return NO;
+    }
+    if(!interface || port == 0){
+        return NO;
+    }
 
-        [self updateIP];
-        if([ip isEqualToString:@""]){
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to obtain IP address for interface %@\n", interface);
-            return NO;
-        }
-        NSString* s;
-        if([[self configParam:@"extraFiles"] boolValue]) s = writeDataToFile; // dangerous if polling is faster and EOF is reached.
-        else s = [NSString stringWithFormat:@"tcp://listen/%d/%@", port, ip];
+    [self updateIP];
+    if([ip isEqualToString:@""]){
+        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to obtain IP address for interface %@\n", interface);
+        return NO;
+    }
 
-        fprintf(stderr, "ORFLashCamListenerModel: Reader connection to %s with timeout %d and buffersize %d and bufferdepth %d\n", [s UTF8String], timeout, ioBuffer, stateBuffer);
+    NSString* remote = (listenerRemoteIsFile) ? writeDataToFile : [NSString stringWithFormat:@"tcp://listen/%d/%@", port, ip];
 
-        reader = FCIOCreateStateReader([s UTF8String], timeout, ioBuffer, stateBuffer);
-        if(reader){
-            NSLog(@"ORFlashCamListenerModel: connected to %@\n", [self streamDescription]);
-            FCIOSelectStateTag(reader, 0);
-            [self setUpImage];
-        } else {
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to connect to %@\n", [self streamDescription]);
-            return NO;
+//    fprintf(stderr, "ORFLashCamListenerModel: Reader connection to %s with timeout %d and buffersize %d and bufferdepth %d\n", [remote UTF8String], timeout, ioBuffer, stateBuffer);
+    
+    if (listenerRemoteIsFile) {
+        int max_tries = 10;
+        double delay = MAX(timeout / 1000 / max_tries, 0.25); // TODO: is there a better way? in principle the reaout-fc250b timeout + task startup times is the maximum we have to try.
+        while (max_tries-- > 0) {
+            if ([[NSFileManager defaultManager] fileExistsAtPath: remote] )
+                break;
+            else {
+//                fprintf(stderr, "ORFlashCamListener waiting %f for %s to open\n", delay, [remote UTF8String]);
+                [ORTimer delay: delay];
+            }
         }
+    }
+    // if it's not found, opening it will fail, but we waited for the timeout
+    // and the normal error handling will take over from here
+    
+//    FCIODebug(5);
+    reader = FCIOCreateStateReader([remote UTF8String], timeout, ioBuffer, stateBuffer);
+    if(reader){
+        NSLog(@"ORFlashCamListenerModel: connected to %@\n", [self streamDescription]);
+        FCIOSelectStateTag(reader, 0);
+    } else {
+        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to connect to %@\n", [self streamDescription]);
+        return NO;
+    }
+    if (listenerRemoteIsFile)
+        FCIOTimeout(reader->stream, 100); // reduce the timeout to 100 ms, after opening the file we might run into EOF but keep polling until the runTask is finished.
     return YES;
 }
 
 
-- (bool) fcioClose
+- (void) fcioClose
 {
+    switch (fcio_last_tag) {
+        case FCIOStatus: {
+            NSLog(@"ORFlashCamListenerModel on %s FCIO Stream successfully closed.\n", [[self streamDescription] UTF8String]);
+            break;
+        }
+        case FCIOConfig: {
+            NSLog(@"ORFlashCamListenerMode on %s FCIO Stream ended early with FCIOConfig.\n", [[self streamDescription] UTF8String]);
+            break;
+        }
+        default: {
+            NSLog(@"ORFlashCamListenerModel on %s FCIO Stream ended with unexpected tag %d.\n", [[self streamDescription] UTF8String], fcio_last_tag);
+        }
+    }
+
     if(reader)
         FCIODestroyStateReader(reader);
     reader = NULL;
 
     [self setChanMap:nil];
     [self setCardMap:nil];
-    return YES;
 }
 
 
@@ -1034,12 +1058,33 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     bool writeWaveforms = true;
     FCIOState* state = NULL;
     state = FCIOGetNextState(reader, &timedout);
-    if (!state) {
-        fprintf(stderr, "DEBUG ORFlashCamListener/fcioRead: finished with: timedout %d last received tag %d\n", timedout, fcio_last_tag);
-        return NO;
-    }
-    fcio_last_tag = state->last_tag;
+    
 
+    if (!state) {
+        switch (timedout) {
+            case 1: // timedout
+            {
+                if (listenerRemoteIsFile && [runTask isRunning]) {
+                    // if we read from file, the timeout should have been set to a fixed value,
+                    // if additionally the readout task is still running, we try to read even though we get EOF
+//                    fprintf(stderr, "fcioRead: reached EOF but task is still running, repeat.\n");
+                    return YES;
+                }
+            }
+            case 2: // only non-selected tags arrived within timeout, as all records are selected we also stop, should never occur
+            {
+                return NO;
+            }
+            default: // no timeout -> stream closed or fcio reports unsupported timedout value.
+            {
+//                fprintf(stderr, "DEBUG ORFlashCamListener/fcioRead: remote stream was closed.\n");
+                return NO;
+            }
+        }
+    } else {
+        fcio_last_tag = state->last_tag;
+    }
+    
     switch(state->last_tag){
         case FCIOConfig: {
             for(id obj in dataTakers) [obj setWFsamples:state->config->eventsamples];
@@ -1063,17 +1108,20 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
             break;
         }
-        case FCIORecEvent:
+        case FCIORecEvent: {
             if(!unrecognizedPacket){
                 NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: skipping received FCIORecEvent packet on %@ - packet type not supported!\n", [self streamDescription]);
                 NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: WARNING - suppressing further instances of this message for this object in this run\n");
             }
             unrecognizedPacket = true;
             break;
-        case FCIOStatus:
+        }
+        case FCIOStatus: {
             [self readStatus:state->status];
             [self sendStatusPacket:aDataPacket];
+//            fprintf(stderr, "fcioRead: received status packet: %p\n",self);
             break;
+        }
         default: {
             bool found = false;
             // we don't pass unrecognized states, actually might be best to
@@ -1271,16 +1319,16 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         }
         [[[runTask standardInput]  fileHandleForWriting] closeFile];
         [[[runTask standardOutput] fileHandleForReading] closeFile];
+
+        // if the readout process stops for some reason other than it being terminated in the run stopping,
+        // there were errors, so stop the run
+        if ([runTask terminationStatus]) {
+            NSLog(@"ORFLashCamListener: readout process terminated unexpectedly exit code: %d\n",
+                  [runTask terminationStatus]);
+            [self runFailed];
+        }
     }
-    
-    
-    // if the readout process stops for some reason other than it being terminated in the run stopping,
-    // there were errors, so stop the run
-    if ([runTask terminationStatus]) {
-        NSLog(@"ORFLashCamListener: readout process terminated unexpectedly exit code: %d\n",
-              [runTask terminationStatus]);
-        [self runFailed];
-    }
+
 
     uint32_t runState = [gOrcaGlobals runState];
     if(runState != eRunStopped && runState != eRunStopping)
@@ -1293,12 +1341,13 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 #pragma mark •••Data taker methods
 
-- (void) startReadoutAfterPing
+- (bool) startReadoutAfterPing
 {
     if([guardian pingRunning]){
         [self performSelector:@selector(startReadoutAfterPing) withObject:self afterDelay:0.01];
-        return;
+        return NO;
     }
+
     [self updateIP];
     
     NSMutableArray*  readoutArgs   = [NSMutableArray array];
@@ -1348,7 +1397,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                    "of enabled channels %d exceeding the FCIO architectural limit of %d\n",
                    interface, ip, (int) port, [orcaChanMap count], FCIOMaxChannels);
         [self runFailed];
-        return;
+        return NO;
     }
     [self setChanMap:orcaChanMap];
     // make sure the shaping time and event samples are such that flashcam will silently change the waveform length
@@ -1360,7 +1409,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                        "set the event samples >= %d\n", interface, ip, (int) port, maxShapeTime, samples,
                        (int) ((samples-20)*16/2.5), (int) (20+maxShapeTime*2.5/16));
             [self runFailed];
-            return;
+            return NO;
         }
     }
     // if the trigger cards are connected to any global trigger cards, add those to the set
@@ -1394,7 +1443,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     if([gtriggerCards count] > 1){
         NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d failed to start run due to multiple connected global trigger cards\n", interface, ip, (int) port);
         [self runFailed];
-        return;
+        return NO;
     }
     else if([gtriggerCards count] == 1){
         for(id card in gtriggerCards){
@@ -1429,56 +1478,18 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     //-------added extra, manually entered Flags--------
     //-------MAH 02/1/22--------------------------------
     NSString* extraFlags = [self configParamString:@"extraFlags"];
-    
     if([extraFlags length]>0){
         extraFlags = [extraFlags removeExtraSpaces];
         extraFlags = [extraFlags removeNLandCRs];
         NSArray *extraFlagsArray = [extraFlags componentsSeparatedByString:@" "];
         [readoutArgs addObjectsFromArray:extraFlagsArray];
     }
-    //-----------------------------------------------
-
-    //-------added extra, manually entered Flags--------
-    //-------MAH 02/1/22--------------------------------
-    if([[self configParam:@"extraFiles"] boolValue]){
-        NSString* fileName = [NSString stringWithFormat:@"%@_FCIO_%lu.fcio",writeDataToFile,(unsigned long)[self tag]];
-        [readoutArgs addObjectsFromArray:@[@"-o", fileName]];
-        [writeDataToFile release];
-        writeDataToFile = [fileName copy];
-    }
-    else {
-        NSString* listen = [NSString stringWithFormat:@"tcp://connect/%d/%@", port, ip];
-        [readoutArgs addObjectsFromArray:@[@"-o", listen]];
-    }
-    //--------------------------------------------------
-    
-    [self setReadOutArgs:readoutArgs];
 
     //----------------------------------------------------------------------
     //MAH 9/17/22. Using just NSTask directly so we can get hold of the standard input pipe
     [runTask release];
     runTask = [[NSTask alloc] init];
-    
-    NSString* taskPath;
-    if([guardian localMode]){
-        taskPath = [[[guardian fcSourcePath] stringByExpandingTildeInPath] stringByAppendingString:@"/server/readout-fc250b"];
-    }
-    else {
-        taskPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/remote_run"];
-    }
-    
-    [runTask setLaunchPath:taskPath];
-    [runTask setArguments: [NSArray arrayWithArray:readoutArgs]];
 
-    for(NSString* line in fcrunlog) [self appendToFCLog:line andNotify:NO];
-    [fcrunlog removeAllObjects];
-    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelFCLogChanged    object:self];
-    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelFCRunLogFlushed object:self];
-    NSString* cmd = [NSString stringWithFormat:@"%@ %@\n", taskPath, [readoutArgs componentsJoinedByString:@" "]];
-    NSLog(cmd);
-
-    [self appendToFCRunLog:[NSString stringWithFormat:@"%@ %@\n", [[self logDateFormatter] stringFromDate:[NSDate now]], cmd]];
-   
     NSPipe* inpipe  = [NSPipe pipe];
     NSPipe* outpipe = [NSPipe pipe];
     NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
@@ -1498,19 +1509,63 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     [runTask setStandardOutput:outpipe];
     [runTask setStandardError:outpipe];
 
+    if (listenerRemoteIsFile && writeDataToFile != nil) {
+        NSString* fileName = [NSString stringWithFormat:@"%@_FCIO_%lu.fcio",writeDataToFile,(unsigned long)[self tag]];
+        [readoutArgs addObjectsFromArray:@[@"-o", fileName]];
+        [writeDataToFile release];
+        writeDataToFile = [fileName copy];
+    } else {
+        NSString* listen = [NSString stringWithFormat:@"tcp://connect/%d/%@", port, ip];
+        [readoutArgs addObjectsFromArray:@[@"-o", listen]];
+    }
+
+    [self setReadOutArgs:readoutArgs];
+    [runTask setArguments: [NSArray arrayWithArray:readoutArgs]];
+    
+    NSString* taskPath;
+    if([guardian localMode]){
+        taskPath = [[[guardian fcSourcePath] stringByExpandingTildeInPath] stringByAppendingString:@"/server/readout-fc250b"];
+    }
+    else {
+        taskPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/remote_run"];
+    }
+    
+    [runTask setLaunchPath:taskPath];
+    
+    for(NSString* line in fcrunlog) [self appendToFCLog:line andNotify:NO];
+    [fcrunlog removeAllObjects];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelFCLogChanged    object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelFCRunLogFlushed object:self];
+    NSString* cmd = [NSString stringWithFormat:@"%@ %@\n", taskPath, [readoutArgs componentsJoinedByString:@" "]];
+    NSLog(cmd);
+
+    [self appendToFCRunLog:[NSString stringWithFormat:@"%@ %@\n", [[self logDateFormatter] stringFromDate:[NSDate now]], cmd]];
+
     if(@available(macOS 10.13,*)){
         NSError *error =nil;
-        fprintf(stderr, "ORFlashCamListenerModel/startReadoutAfterPing: launching runTask\n");
+//        fprintf(stderr, "ORFlashCamListenerModel/startReadoutAfterPing: launching runTask\n");
         if(![runTask launchAndReturnError:(&error)]){
             NSLogColor([NSColor redColor],@"ORFlashCamListenerModel: RunTask failed with error :%@ \n",error);
             [self runFailed];
+            return NO;
         }
     }
     else {
         //older MacOS's
         [runTask launch];
     }
+    
+    
+    // finally, we launch also the listener thread
+    // readout-fc250b will try to connect to the socket
+    // that the listenerThread is opening
+    [NSThread detachNewThreadSelector:@selector(readDataThread) toTarget:self withObject:nil];
+    
+    [self setUpImage];
+    
+    return YES;
 }
+
 
 - (void) readConfig:(fcio_config*)config
 {
@@ -1526,6 +1581,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     configBufferIndex = (configBufferIndex + 1) % kFlashCamConfigBufferLength;
     bufferedConfigCount++;
     uint32_t offset = 2 + (2 + sizeof(fcio_config)/sizeof(uint32_t)) * index;
+    
     configBuffer[offset++] = (uint32_t) config->telid;
     configBuffer[offset++] = (uint32_t) config->adcs;
     configBuffer[offset++] = (uint32_t) config->triggers;
@@ -1692,7 +1748,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
      While takeData is being called and runIsStopping has not been fired, the
      process should be running. runTaskStopped is called last and sets dataTakers to nil, so until then
      */
-//    fprintf(stderr, "DEBUG takeData\n");
+//    fprintf(stderr, "DEBUG takeData, listener %p\n", self);
 //    if (runFailedAlarm && ![runFailedAlarm isPosted] && ![runTask isRunning]) {
 //        if ([runTask terminationStatus]) {
 //            NSLog(@"ORFLashCamListener: readout process terminated unexpectedly exit code: %d\n",
@@ -1708,7 +1764,6 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) runTaskStarted:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "DEBUG runTaskStarted\n");
 
     if(runFailedAlarm) [runFailedAlarm clearAlarm];
     unrecognizedPacket = false;
@@ -1728,51 +1783,52 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     bufferedStatusCount = 0;
     
     [aDataPacket addDataDescriptionItem:[self dataRecordDescription] forKey:@"ORFlashCamListenerModel"];
-    [self startReadoutAfterPing];
-    dataTakers = [[readOutList allObjects] retain];
-
-    if([[self configParam:@"extraFiles"] boolValue]) readWait = true;
-    else                                             readWait = false;
     
     if(!dataPacketForThread)dataPacketForThread = [[ORDataPacket alloc]init];
     [dataPacketForThread setDataTask:[aDataPacket dataTask]];
+
+    listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue];
+    if ( ! listenerRemoteIsFile)
+        [self startReadoutAfterPing];
+    // if it's a remote file we have to wait for the filename to arrive to start it
+    // this is happening in the notification observed dataFileNameChanged
+
     
-    [self startFCIOReader:dataPacketForThread];
+    dataTakers = [[readOutList allObjects] retain];
 
-    id obj;
     NSEnumerator* e = [[readOutList allObjects] objectEnumerator];
+    id obj;
+    // TODO understand why this was aDataPacket and not dataPacketForThread
     while(obj = [e nextObject]) [obj runTaskStarted:aDataPacket userInfo:userInfo];
-}
-
-- (void) stopTaskAt:(double) delaySeconds
-{
-    double timeloop = 0.0;
-    double delta = delaySeconds/10;
-    while ([runTask isRunning] && timeloop < delaySeconds)
-        [ORTimer delay:delta];
-
-    [runTask terminate];
 }
 
 - (void) runIsStopping:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "DEBUG runIsStopping\n");
+//    fprintf(stderr, "Listener %p: runIsStopping called.\n", self);
+    // Stop the fc250b-reader task
+    // if it accepts the EOL we wait until the reader closes
+    // otherwise it needs to be terminated
     if ([runTask isRunning]) {
-        fprintf(stderr, "DEBUG runIsStopping: get filehandle\n");
         NSFileHandle* fh = [[runTask standardInput] fileHandleForWriting];
-        fprintf(stderr, "DEBUG runIsStopping: write EOL\n");
         bool writeSuccess = [fh writeData:[@"\n" dataUsingEncoding:NSASCIIStringEncoding] error:nil];
-        fprintf(stderr, "DEBUG runIsStopping: check sucesss\n");
         if (!writeSuccess) {
+//            fprintf(stderr, "DEBUG runIsStopping: could not write EOL to runTask\n");
             [runTask terminate];
         }
-        fprintf(stderr, "DEBUG runIsStopping: wait until exit\n");
+//        fprintf(stderr, "DEBUG runIsStopping: fc250b-readout %p received EOL, waiting for it to exit.\n", self);
+        [runTask waitUntilExit];
+//        fprintf(stderr, "DEBUG runIsStopping: fc250b-readout %p finished with exit code %d\n", self, [runTask terminationStatus]);
+    } else {
+        NSLog(@"ORFlashCamListener: runIsStopping called, but runTask is already finished.\n");
+//        fprintf(stderr, "DEBUG runIsStopping: runTask is already finished, oops?\n");
     }
     
-    while (fcioReadThreadRunning)
+//    fprintf(stderr, "runIsStopping: waiting for reader thread to stop. %p\n", self);
+    while (listenerThreadRunning)
         ;
+//    fprintf(stderr, "runIsStopping: reader thread stopped. %p\n", self);
 
-    
+    /* Cleanup section */
     [readOutArgs removeAllObjects];
     
     memset(configBuffer, 0, kFlashCamConfigBufferLength * (2 + sizeof(fcio_config)/sizeof(uint32_t) + (uint32_t)
@@ -1785,9 +1841,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     statusBufferIndex   = 0;
     takeDataStatusIndex = 0;
     bufferedStatusCount = 0;
+    
+    [self setUpImage];
 
     // write the remaining config and status packets
-    while(bufferedConfigCount > 0 || bufferedStatusCount > 0) [self takeData:aDataPacket userInfo:userInfo];
+    // TODO: remove this.. there should never be anything buffered its put immediately into the dataqueue
+//    while(bufferedConfigCount > 0 || bufferedStatusCount > 0) [self takeData:aDataPacket userInfo:userInfo];
     // allow the connected data takers to write any remaining data
     NSEnumerator* e = [dataTakers objectEnumerator];
     id obj;
@@ -1796,10 +1855,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) runTaskStopped:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "DEBUG runTaskStopped\n");
     if(reader) FCIODestroyStateReader(reader);
     reader = NULL;
-    [self setUpImage];
+
+    [writeDataToFile release];
+    writeDataToFile = nil;
+
     NSEnumerator* e = [dataTakers objectEnumerator];
     id obj;
     while(obj = [e nextObject]) [obj runTaskStopped:aDataPacket userInfo:userInfo];
@@ -1860,6 +1921,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     reader            = NULL;
     readerRecordCount = 0;
     bufferedRecords   = 0;
+    listenerRemoteIsFile = false;
     
     if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)) * kFlashCamConfigBufferLength);
     configBufferIndex = 0;
