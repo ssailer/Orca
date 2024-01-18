@@ -279,7 +279,6 @@
 
 - (void) updateWindow
 {
-    @synchronized (self) {
         [super updateWindow];
         [self populatePopups];
         [self runStatusChanged:nil];
@@ -305,7 +304,6 @@
         [self numberOfWaitsChanged:nil];
         [groupView setNeedsDisplay:YES];
         [self selectedRunTypeScriptChanged:nil];
-    }
 }
 
 
