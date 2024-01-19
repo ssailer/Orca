@@ -76,16 +76,15 @@
     NSMutableArray* chanMap;
     NSMutableArray* cardMap;
     NSLock* readStateLock; //MAH 9/18/22
-    bool listenerThreadRunning;
     bool listenerRemoteIsFile;
     int fcio_last_tag;
-    bool readWait;
     ORDataPacket* dataPacketForThread;
     NSString* writeDataToFile;
     NSUInteger fclogIndex;
     NSMutableArray* fclog;
     NSMutableArray* fcrunlog;
     ORDataFileModel* dataFileObject;
+    NSThread* readerThread;
     
     //new
     NSDateFormatter*  logDateFormatter;
