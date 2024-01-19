@@ -1039,11 +1039,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (bool) fcioRead:(ORDataPacket*) aDataPacket
 {
-    int timedout;
-    bool writeWaveforms = true;
-    FCIOState* state = NULL;
     if (listenerRemoteIsFile && ![runTask isRunning] && reader->timeout) {
-        fprintf(stderr, "DEBUG: runTask stopped, reducing timeout for the next read.\n");
+//        fprintf(stderr, "DEBUG: runTask stopped, reducing timeout for the next read.\n");
         // Need to set it on the stream but also directly on the reader
         // set 0 because we know that new data can be written to a file
         // cannot do it in the runIsStopping because we would need to synchronize
@@ -1053,6 +1050,10 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         FCIOTimeout(reader->stream, 0);
         reader->timeout = 0;
     }
+
+    int timedout;
+    bool writeWaveforms = true;
+    FCIOState* state = NULL;
     if ( ! (state = FCIOGetNextState(reader, &timedout))) {
         if (timedout)
             NSLog(@"ORFlashCamListenerModel: stream closed due to timeout%s.\n", timedout==2?@", however deselected records arrived.":@"");
