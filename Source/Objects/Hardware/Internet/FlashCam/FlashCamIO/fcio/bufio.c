@@ -637,7 +637,7 @@ application code does not crash during writes to a broken pipe.
   stream->io_timeout_ms = -1;
 
   // Fill address information
-  static struct sockaddr_in address;
+  struct sockaddr_in address;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_family = AF_INET;
   address.sin_port = htons(port);
