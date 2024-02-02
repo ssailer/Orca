@@ -1137,11 +1137,19 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (bool) prepareReadoutAfterPing
 {
-    fprintf(stderr, "Listener %d: prepareReadoutAfterPing\n", [self port]);
-    if([guardian pingRunning]){
-        [self performSelector:@selector(prepareReadoutAfterPing) withObject:self afterDelay:0.01];
-        return NO;
+//    fprintf(stderr, "Listener %d: prepareReadoutAfterPing\n", [self port]);
+//    if([guardian pingRunning]){
+//        [self performSelector:@selector(prepareReadoutAfterPing) withObject:self afterDelay:0.01];
+//        return NO;
+//    }
+    double delay = 0.0;
+    while ([guardian pingRunning] && delay < timeout) {
+        [NSThread sleepForTimeInterval: 0.01];
+        delay += 0.01;
+        fprintf(stderr, "prepareReadout: delay %f\n", delay);
     }
+    if ([guardian pingRunning] && delay >= timeout)
+        return NO;
 
     [self updateIP];
     
@@ -1347,6 +1355,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
         [self appendToFCRunLog:[NSString stringWithFormat:@"%@ %@\n", [[self logDateFormatter] stringFromDate:[NSDate now]], cmd]];
         
+        fprintf(stderr, "Listener %d %s: startReadout launching runTask\n", [self port], [[[NSThread currentThread] description] UTF8String]);
         if(@available(macOS 10.13,*)){
             NSError *error = nil;
             if(![runTask launchAndReturnError:(&error)]){
@@ -1358,23 +1367,29 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             //older MacOS's
             [runTask launch];
         }
+        fprintf(stderr, "Listener %d %s: startReadout starting readerThread\n", [self port], [[[NSThread currentThread] description] UTF8String]);
+        if (readerThread != nil)
+            [readerThread start];
         
-        if (readerThread != nil) [readerThread start];
         readoutShouldStart = NO;
     }
 }
 
 - (void) stopReadout
 {
+    fprintf(stderr, "Listener %d: stopReadout\n", [self port]);
     if ([runTask isRunning]) {
         NSFileHandle* fh = [[runTask standardInput] fileHandleForWriting];
         bool writeSuccess = [fh writeData:[@"\n" dataUsingEncoding:NSASCIIStringEncoding] error:nil];
         if (!writeSuccess) {
             [runTask terminate];
+            fprintf(stderr, "Listener %d: stopReadout couldn't write EOL to runTask\n", [self port]);
         }
+        fprintf(stderr, "Listener %d: stopReadout waiting for runTask to stop\n", [self port]);
         [runTask waitUntilExit];
     }
     
+    fprintf(stderr, "Listener %d: stopReadout waiting for readerThread to disconnect\n", [self port]);
     while ([readerThread isExecuting])
         ;
     if ([readerThread isFinished]) {
@@ -1749,8 +1764,11 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 {
     //nothing to do... look at the readout thread. Put all the listeners in separate threads for
     //efficiency and use a separate datapacket
-    if (readoutShouldStart)
+    if (readoutShouldStart) {
         [self startReadout];
+    } else if (!readoutShouldStart && ![runTask isRunning]){
+        fprintf(stderr, "Listener %d: waiting for readoutShouldStart\n", [self port]);
+    }
 }
 
 - (void) runTaskStarted:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
@@ -1780,6 +1798,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 //    listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue];
 //    if ( !listenerRemoteIsFile )
+
     if (![self prepareReadoutAfterPing]) {
         [self runFailed];
     }
@@ -1801,11 +1820,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 - (void) runIsStopping:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
 //    fprintf(stderr, "Listener %d: runIsStopping called.\n", [self port]);
+    fprintf(stderr, "Listener %d: runIsStopping\n", [self port]);
     [self stopReadout];
 
     // write the remaining config and status packets
     // TODO: remove this.. there should never be anything buffered its put immediately into the dataqueue
-    while(bufferedConfigCount > 0 || bufferedStatusCount > 0) [self takeData:aDataPacket userInfo:userInfo];
+//    while(bufferedConfigCount > 0 || bufferedStatusCount > 0) [self takeData:aDataPacket userInfo:userInfo];
     // allow the connected data takers to write any remaining data
     NSEnumerator* e = [dataTakers objectEnumerator];
     id obj;
@@ -1814,6 +1834,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) runTaskStopped:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
+    fprintf(stderr, "Listener %d: runTaskStopped\n", [self port]);
     [dataFileName release];
     dataFileName = nil;
     listenerRemoteIsFile = NO;
