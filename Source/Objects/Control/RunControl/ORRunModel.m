@@ -1211,6 +1211,7 @@ static NSString *ORRunModelRunControlConnection = @"Run Control Connector";
 
 - (void) startRun:(BOOL)doInit
 {
+    fprintf(stderr, "RunModel %s: startRun\n",[[[NSThread currentThread] description] UTF8String]);
     //make sure to clear out any left overs
     [objectsRequestingRunStartAbort release];
     objectsRequestingRunStartAbort = nil;
@@ -1253,6 +1254,7 @@ static NSString *ORRunModelRunControlConnection = @"Run Control Connector";
 
 - (void) continueWithRunStart:(NSNumber*)doInitBool
 {
+    fprintf(stderr, "RunModel %s: continueWithRunStart\n",[[[NSThread currentThread] description] UTF8String]);
     if([objectsRequestingRunStartAbort count]){
         NSLog(@"Run was not started because one or more objects requested a run start abort\n");
         NSLog(@"%@\n",objectsRequestingRunStartAbort);
@@ -1281,6 +1283,7 @@ static NSString *ORRunModelRunControlConnection = @"Run Control Connector";
 
 - (void) startRunStage0:(NSNumber*)doInitBool
 {
+    fprintf(stderr, "RunModel %s: startRunStage0\n",[[[NSThread currentThread] description] UTF8String]);
     if(selectedRunTypeScript && !ignoreSelectedScript){
         savedRunType = runType; //run type scripts can changed the run type, but we need to change it back then at the end
         savedSelectedRunTypeScript = selectedRunTypeScript;
@@ -1300,6 +1303,7 @@ static NSString *ORRunModelRunControlConnection = @"Run Control Connector";
 
 - (void) startRunStage1:(NSNumber*)doInitBool
 {
+    fprintf(stderr, "RunModel %s: startRunStage1\n",[[[NSThread currentThread] description] UTF8String]);
     if(startScript){
         [startScript setSelectorOK:@selector(startRunStage2:) bad:@selector(runAbortFromScript) withObject:doInitBool target:self];
         [self setStartScriptState:@"Running"];
@@ -1318,6 +1322,7 @@ static NSString *ORRunModelRunControlConnection = @"Run Control Connector";
 
 - (void) startRunStage2:(NSNumber*)doInitBool
 {
+    fprintf(stderr, "RunModel %s: startRunStage2\n",[[[NSThread currentThread] description] UTF8String]);
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(startRunStage2:) object:doInitBool];
     if([self waitRequestersCount]==0){
         [[NSNotificationCenter defaultCenter] postNotificationName:ORRunAboutToChangeState
@@ -1339,6 +1344,7 @@ static NSString *ORRunModelRunControlConnection = @"Run Control Connector";
 
 - (void) startRunStage3:(NSNumber*)doInitBool
 {
+    fprintf(stderr, "RunModel %s: startRunStage3\n",[[[NSThread currentThread] description] UTF8String]);
 	if(startScript){
 		[self setShutDownScriptState:@"---"];
 		[self setStartScriptState:@"Done"];
@@ -1769,6 +1775,7 @@ static NSString *ORRunModelRunControlConnection = @"Run Control Connector";
 
 - (void) runStarted:(BOOL)doInit
 {
+    fprintf(stderr, "RunModel %s: runStarted\n",[[[NSThread currentThread] description] UTF8String]);
     [heartBeatTimer invalidate];
     [heartBeatTimer release];
     heartBeatTimer = nil;
