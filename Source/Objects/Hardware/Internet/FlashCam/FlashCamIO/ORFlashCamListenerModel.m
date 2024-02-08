@@ -180,6 +180,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     [eventRateHistory    release];
     [deadTimeHistory     release];
     [runTask             release];
+    [readerThread        release];
     [readOutList         release];
     [readOutArgs         release];
     [dataFileName        release];
@@ -960,8 +961,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             }
             [self fcioClose];
         }
-        // we rely on the takeData call to detect that the thread is not executing even though readoutIsRunning is set.
     }
+
+    // we rely on the takeData call to detect that the thread is not executing even though readoutIsRunning is set.
 }
 
 - (bool) fcioOpen
@@ -1286,11 +1288,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
     //----------------------------------------------------------------------
     //MAH 9/17/22. Using just NSTask directly so we can get hold of the standard input pipe
-    if (runTask != nil) {
-        NSLog(@"%@: runTask is not nil, where it should be. Stopping the run.\n", [self identifier]);
-        [self runFailed];
-        return;
-    }
+    [runTask release];
     runTask = [[NSTask alloc] init];
 
     NSPipe* inpipe  = [NSPipe pipe];
@@ -1324,12 +1322,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     
     [runTask setLaunchPath:taskPath];
     
-    
-    if (readerThread != nil) {
-        NSLog(@"%@: readerThread is not nil where it should be. Stopping the run.\n", [self identifier]);
-        [self runFailed];
-        return;
-    }
+
+    [readerThread release];
     readerThread = [[NSThread alloc] initWithTarget:self
                                             selector:@selector(readerThreadMain)
                                             object:nil];
@@ -1400,15 +1394,15 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 //        fprintf(stderr, "%s %s: stopReadout waiting for runTask to stop\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
         [runTask waitUntilExit];
     }
-    [runTask release];
-    runTask = nil;
+//    [runTask release];
+//    runTask = nil;
 
 //    fprintf(stderr, "%s %s: stopReadout waiting for readerThread to disconnect\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     while ([readerThread isExecuting])
         ;
 
-    [readerThread release];
-    readerThread = nil;
+//    [readerThread release];
+//    readerThread = nil;
 
     readoutIsRunning = NO;
 
