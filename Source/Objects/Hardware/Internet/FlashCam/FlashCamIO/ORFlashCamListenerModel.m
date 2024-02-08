@@ -137,6 +137,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     dataFileObject = nil;
     readerThread = nil;
     readoutShouldStart = NO;
+    readoutIsRunning = NO;
 
     [self registerNotificationObservers];
 
@@ -291,7 +292,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (NSString*) identifier
 {
-    return [NSString stringWithFormat:@"%@, listener %d/%d", [guardian identifier], [self uniqueIdNumber], [self port]];
+    return [NSString stringWithFormat:@"%@ listener %d:%d", [guardian identifier], [self uniqueIdNumber], [self port]];
 }
 
 - (NSString*) interface
@@ -336,7 +337,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         NSString* t = [guardian ethTypeAtIndex:[guardian indexOfInterface:eth]];
         if([type isEqualToString:@""]) type = [NSString stringWithString:t];
         else if(![t isEqualToString:type]){
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error getting ethernet type - all interfaces associated with the same listener must have identical type\n");
+            NSLogColor([NSColor redColor], @"%@: error getting ethernet type - all interfaces associated with the same listener must have identical type\n", [self identifier]);
             return @"";
         }
     }
@@ -406,7 +407,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     else if([p isEqualToString:@"writeFCIOLog"])
         return [NSNumber numberWithBool:[[configParams objectForKey:@"writeFCIOLog"] boolValue]];
     else{
-        NSLog(@"ORFlashCamListenerModel: unknown configuration parameter %@\n", p);
+        NSLog(@"%@: unknown configuration parameter %@\n",[self identifier], p);
         return nil;
     }
 }
@@ -440,7 +441,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     [f addObjectsFromArray:@[@"-bl",   [NSString stringWithFormat:@"%d", [[self configParam:@"baselineCalib"] intValue]]]];
     [f addObjectsFromArray:@[@"-gpr",  [NSString stringWithFormat:@"%.2f", [[self configParam:@"pileupRej"]  doubleValue]]]];
     [f addObjectsFromArray:@[@"-lt",   [NSString stringWithFormat:@"%.2f", [[self configParam:@"logTime"]    doubleValue]]]];
-    // -blinc is a debug hardware development parameter, should leave it to the extraFlags if ever needed.
+    // TODO: -blinc is a debug hardware development parameter, should leave it to the extraFlags if ever needed.
     [f addObjectsFromArray:@[@"-blinc",[NSString stringWithFormat:@"%d", [[self configParam:@"incBaseline"]   intValue]]]];
     if([[self configParam:@"gpsMode"] intValue] == 0)
         [f addObjectsFromArray:@[@"-gps", @"0"]];
@@ -808,7 +809,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         }
     }
     else{
-        NSLog(@"ORFlashCamListenerModel: unknown configuration parameter %@\n", p);
+        NSLog(@"%@: unknown configuration parameter %@\n",[self identifier], p);
         return;
     }
 }
@@ -947,8 +948,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 #pragma mark •••FCIO methods
 
-- (void) listenerThread
+- (void) readerThreadMain
 {
+    @autoreleasepool {
         if ( [self fcioOpen] ) {
             [self performSelectorOnMainThread:@selector(setUpImage) withObject:nil waitUntilDone:NO];
             while ( [self fcioRead:dataPacketForThread] ) {
@@ -957,20 +959,19 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
             }
             [self fcioClose];
-        } else {
-            fprintf(stderr, "%s %s: listenerThread -> runFailed\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
-            [self runFailed];
         }
+        // we rely on the takeData call to detect that the thread is not executing even though readoutIsRunning is set.
+    }
 }
 
 - (bool) fcioOpen
 {
-    fprintf(stderr, "%s %s: fcioOpen\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: fcioOpen\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     if(reader)
         return NO;
 
     if(!chanMap){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: channel mapping has not been specified, aborting connection\n");
+        NSLogColor([NSColor redColor], @"%@: channel mapping has not been specified, aborting connection\n", [self identifier]);
         return NO;
     }
     if(!interface || port == 0)
@@ -978,7 +979,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
     [self updateIP];
     if([ip isEqualToString:@""]){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to obtain IP address for interface %@\n", interface);
+        NSLogColor([NSColor redColor], @"%@: unable to obtain IP address for interface %@\n",[self identifier], interface);
         return NO;
     }
     
@@ -994,17 +995,16 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             [ORTimer delay: delay];
             total_delay += delay;
         }
+        // The CreateStateReader call will fail if there is no datafile to open anyway,
+        // so we won't exit explicitely here but let the error propagate from there.
     }
-    // if it's not found, opening it will fail, but we waited for the timeout
-    // and the normal error handling will take over from here
-//    FCIODebug(6);
     reader = FCIOCreateStateReader([fcioRemote UTF8String], timeout, ioBuffer, stateBuffer);
     if(reader){
-        NSLog(@"ORFlashCamListenerModel: opened %@\n", [self streamDescription]);
+        NSLog(@"%@: opened %@\n",[self identifier], [self streamDescription]);
         FCIOSelectStateTag(reader, 0);
         return YES;
     } else {
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to open %@\n", [self streamDescription]);
+        NSLogColor([NSColor redColor], @"%@: unable to open %@\n",[self identifier], [self streamDescription]);
         return NO;
     }
 }
@@ -1012,18 +1012,18 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) fcioClose
 {
-    fprintf(stderr, "%s %s: fcioClose\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: fcioClose\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     switch (fcio_last_tag) {
         case FCIOStatus: {
-            NSLog(@"ORFlashCamListenerModel: on %s FCIO Stream successfully closed.\n", [[self streamDescription] UTF8String]);
+            NSLog(@"%@: FCIO stream closed successfully.\n", [self identifier]);
             break;
         }
         case FCIOConfig: {
-            NSLog(@"ORFlashCamListenerModel: on %s FCIO Stream ended early with FCIOConfig.\n", [[self streamDescription] UTF8String]);
+            NSLog(@"%@: FCIO stream closed early with FCIOConfig.\n", [self identifier]);
             break;
         }
         default: {
-            NSLog(@"ORFlashCamListenerModel on %s FCIO Stream ended with unexpected tag %d.\n", [[self streamDescription] UTF8String], fcio_last_tag);
+            NSLog(@"%@: FCIO stream closed with unexpected tag %d.\n", [self identifier], fcio_last_tag);
         }
     }
 
@@ -1052,18 +1052,19 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     bool writeWaveforms = true;
     FCIOState* state = NULL;
     if ( ! (state = FCIOGetNextState(reader, &timedout))) {
-        fprintf(stderr, "%s %s: fcioRead: end-of-stream: timedout %d\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String], timedout);
+//        fprintf(stderr, "%s %s: fcioRead: end-of-stream: timedout %d\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String], timedout);
         if (timedout == 1 && !listenerRemoteIsFile)
-            NSLog(@"ORFlashCamListenerModel: stream closed due to timeout.\n");
+            NSLog(@"%@: FCIO stream closed due to timeout.\n", [self identifier]);
         else if (timedout == 2)
-            NSLog(@"ORFlashCamListenerModel: stream closed due to timeout, however deselected records arrived.\n");
+            NSLog(@"%@: FCIO stream closed due to timeout, however deselected records arrived.\n", [self identifier]);
+        readoutIsRunning = NO;
         return NO;
     }
     fcio_last_tag = state->last_tag;
     
     switch(state->last_tag){
         case FCIOConfig: {
-            fprintf(stderr, "%s %s: fcioRead: config\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//            fprintf(stderr, "%s %s: fcioRead: config\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
             for(id obj in dataTakers) [obj setWFsamples:state->config->eventsamples];
             [self readConfig:state->config];
             [self sendConfigPacket:aDataPacket]; // send outside of the locked function
@@ -1083,14 +1084,14 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         }
         case FCIORecEvent: {
             if(!unrecognizedPacket){
-                NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: skipping received FCIORecEvent packet on %@ - packet type not supported!\n", [self streamDescription]);
-                NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: WARNING - suppressing further instances of this message for this object in this run\n");
+                NSLogColor([NSColor redColor], @"%@: skipping received FCIORecEvent packet on %@ - packet type not supported!\n", [self identifier], [self streamDescription]);
+                NSLogColor([NSColor redColor], @"%@: WARNING - suppressing further instances of this message for this object in this run\n", [self identifier]);
             }
             unrecognizedPacket = true;
             break;
         }
         case FCIOStatus: {
-            fprintf(stderr, "%s %s: fcioRead: status\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//            fprintf(stderr, "%s %s: fcioRead: status\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
             [self readStatus:state->status];
             [self sendStatusPacket:aDataPacket];
             break;
@@ -1103,8 +1104,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                 if((int) state->last_tag == [n intValue]) found = true;
             if(!found){
                 [unrecognizedStates addObject:[NSNumber numberWithInt:(int)state->last_tag]];
-                NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unrecognized fcio state tag %d on %@\n", state->last_tag, [self streamDescription]);
-                NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: WARNING - suppressing further instances of this message for this object in this run\n");
+                NSLogColor([NSColor redColor], @"%: unrecognized fcio state tag %d on %@\n", [self identifier], state->last_tag, [self streamDescription]);
+                NSLogColor([NSColor redColor], @"%: WARNING - suppressing further instances of this message for this object in this run\n", [self identifier]);
             }
             break;
         }
@@ -1115,13 +1116,13 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) runFailed
 {
-    fprintf(stderr, "%s %s: runFailed\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: runFailed\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     [self performSelectorOnMainThread:@selector(runFailedMainThread) withObject:nil waitUntilDone:NO];
 }
 
 - (void) runFailedMainThread
 {
-    fprintf(stderr, "%s %s: runFailedMainThreaed\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: runFailedMainThreaed\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     [[NSNotificationCenter defaultCenter] postNotificationName:ORRequestRunHalt object:self];
     if(!runFailedAlarm){
         runFailedAlarm = [[ORAlarm alloc] initWithName:@"FlashCamListener run failed"
@@ -1137,21 +1138,14 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 #pragma mark •••Task methods
 
 
-- (bool) prepareReadoutAfterPing
+- (void) setupReadoutTask
 {
-//    fprintf(stderr, "%s: prepareReadoutAfterPing\n", [self port]);
-//    if([guardian pingRunning]){
-//        [self performSelector:@selector(prepareReadoutAfterPing) withObject:self afterDelay:0.01];
-//        return NO;
-//    }
-    double delay = 0.0;
-    while ([guardian pingRunning] && delay < timeout) {
-        [NSThread sleepForTimeInterval: 0.01];
-        delay += 0.01;
-        fprintf(stderr, "%s %s prepareReadout: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , delay);
+//    fprintf(stderr, "%s: setupReadoutTask\n", [[self identifier] UTF8String]);
+    if(guardian && ![guardian readoutReady]){
+//        fprintf(stderr, "%s %s prepareReadout: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , 0.01);
+        [self performSelector:@selector(setupReadoutTask) withObject:self afterDelay:0.01];
+        return;
     }
-    if ([guardian pingRunning] && delay >= timeout)
-        return NO;
 
     [self updateIP];
     
@@ -1198,21 +1192,23 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     }
     // check if the number of channels exceeds the hardware limit for flashcam
     if([orcaChanMap count] > FCIOMaxChannels){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d failed to start run due to number "
+        NSLogColor([NSColor redColor], @"%@: failed to start run due to number "
                    "of enabled channels %d exceeding the FCIO architectural limit of %d\n",
-                   interface, ip, (int) port, [orcaChanMap count], FCIOMaxChannels);
-        return NO;
+                   [self identifier], [orcaChanMap count], FCIOMaxChannels);
+        [self runFailed];
+        return;
     }
     [self setChanMap:orcaChanMap];
     // make sure the shaping time and event samples are such that flashcam will silently change the waveform length
     if([[self configParam:@"traceType"] intValue] != 0){
         if(MIN(8000, 20+maxShapeTime*2.5/16) > [[self configParam:@"eventSamples"] intValue]){
             int samples = [[self configParam:@"eventSamples"] intValue];
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d failed to start run due to max shaping "
+            NSLogColor([NSColor redColor], @"%@: failed to start run due to max shaping "
                        "time of %d ns with event samples set to %d. Set the shaping time for all channels <= %d ns or "
-                       "set the event samples >= %d\n", interface, ip, (int) port, maxShapeTime, samples,
+                       "set the event samples >= %d\n", [self identifier], maxShapeTime, samples,
                        (int) ((samples-20)*16/2.5), (int) (20+maxShapeTime*2.5/16));
-            return NO;
+            [self runFailed];
+            return;
         }
     }
     // if the trigger cards are connected to any global trigger cards, add those to the set
@@ -1244,8 +1240,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     mergeRunFlags(argCard);
     // make sure there is at most one global trigger card
     if([gtriggerCards count] > 1){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d failed to start run due to multiple connected global trigger cards\n", interface, ip, (int) port);
-        return NO;
+        NSLogColor([NSColor redColor], @"%@: failed to start run due to multiple connected global trigger cards\n", [self identifier]);
+        [self runFailed];
+        return;
     }
     else if([gtriggerCards count] == 1){
         for(id card in gtriggerCards){
@@ -1289,7 +1286,11 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
     //----------------------------------------------------------------------
     //MAH 9/17/22. Using just NSTask directly so we can get hold of the standard input pipe
-    [runTask release];
+    if (runTask != nil) {
+        NSLog(@"%@: runTask is not nil, where it should be. Stopping the run.\n", [self identifier]);
+        [self runFailed];
+        return;
+    }
     runTask = [[NSTask alloc] init];
 
     NSPipe* inpipe  = [NSPipe pipe];
@@ -1324,19 +1325,22 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     [runTask setLaunchPath:taskPath];
     
     
-    [readerThread release];
+    if (readerThread != nil) {
+        NSLog(@"%@: readerThread is not nil where it should be. Stopping the run.\n", [self identifier]);
+        [self runFailed];
+        return;
+    }
     readerThread = [[NSThread alloc] initWithTarget:self
-                                            selector:@selector(listenerThread)
+                                            selector:@selector(readerThreadMain)
                                             object:nil];
 
     listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue]; // need to remember if this is the case, and wait for the filename to be concretized
     readoutShouldStart = !listenerRemoteIsFile; // signal that we are ready
-    return YES;
 }
 
 - (void) startReadout
 {
-    if (readoutShouldStart) {
+    if (readoutShouldStart && !readoutIsRunning) {
         NSMutableArray* readoutArgs = [self readOutArgs];
         if (listenerRemoteIsFile && dataFileName != nil) {
             [readoutArgs addObjectsFromArray:@[@"-o", dataFileName]];
@@ -1357,11 +1361,11 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
         [self appendToFCRunLog:[NSString stringWithFormat:@"%@ %@\n", [[self logDateFormatter] stringFromDate:[NSDate now]], cmd]];
         
-        fprintf(stderr, "%s %s: startReadout launching runTask\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//        fprintf(stderr, "%s %s: startReadout launching runTask\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
         if(@available(macOS 10.13,*)){
             NSError *error = nil;
             if(![runTask launchAndReturnError:(&error)]){
-                NSLogColor([NSColor redColor],@"ORFlashCamListenerModel: RunTask failed with error :%@ \n",error);
+                NSLogColor([NSColor redColor],@"%@: RunTask failed with error:%@\n",[self identifier], error);
                 [self runFailed];
             }
         }
@@ -1369,35 +1373,45 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             //older MacOS's
             [runTask launch];
         }
-        fprintf(stderr, "%s %s: startReadout starting readerThread\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
-        if (readerThread != nil)
-            [readerThread start];
+//        fprintf(stderr, "%s %s: startReadout starting readerThread\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+
+        [readerThread start];
         
         readoutShouldStart = NO;
+        
+        while (![runTask isRunning] || ![readerThread isExecuting])
+            ;
+        
+//        fprintf(stderr, "DEBUG readoutIsRunning = YES, runTask %d, readerThread %d\n", [runTask isRunning], [readerThread isExecuting]);
+        readoutIsRunning = YES;
     }
 }
 
 - (void) stopReadout
 {
-    fprintf(stderr, "%s %s: stopReadout\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: stopReadout\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     if ([runTask isRunning]) {
         NSFileHandle* fh = [[runTask standardInput] fileHandleForWriting];
         bool writeSuccess = [fh writeData:[@"\n" dataUsingEncoding:NSASCIIStringEncoding] error:nil];
         if (!writeSuccess) {
             [runTask terminate];
-            fprintf(stderr, "%s %s: stopReadout couldn't write EOL to runTask\n",[[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//            fprintf(stderr, "%s %s: stopReadout couldn't write EOL to runTask\n",[[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
         }
-        fprintf(stderr, "%s %s: stopReadout waiting for runTask to stop\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//        fprintf(stderr, "%s %s: stopReadout waiting for runTask to stop\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
         [runTask waitUntilExit];
     }
-    
-    fprintf(stderr, "%s %s: stopReadout waiting for readerThread to disconnect\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+    [runTask release];
+    runTask = nil;
+
+//    fprintf(stderr, "%s %s: stopReadout waiting for readerThread to disconnect\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     while ([readerThread isExecuting])
         ;
-    if ([readerThread isFinished]) {
-        [readerThread release];
-        readerThread = nil;
-    }
+
+    [readerThread release];
+    readerThread = nil;
+
+    readoutIsRunning = NO;
+
     [self performSelectorOnMainThread:@selector(setUpImage) withObject:nil waitUntilDone:NO];
 }
 
@@ -1496,13 +1510,13 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                     }
                 }
                 @catch(NSException* e){
-                    NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: exception parsing address %@ "
-                               " or unique hardware ID %@\n", addr, hwid);
+                    NSLogColor([NSColor redColor], @"%@: exception parsing address %@ "
+                               " or unique hardware ID %@\n", [self identifier], addr, hwid);
                     [self runFailed];
                 }
             }
             if(!success){
-                NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: unable to parse mapping %@\n", aLine);
+                NSLogColor([NSColor redColor], @"%@: unable to parse mapping %@\n", [self identifier], aLine);
                 [self runFailed];
             }
         }
@@ -1564,10 +1578,11 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         // if the readout process stops for some reason other than it being terminated in the run stopping,
         // there were errors, so stop the run
         if ([runTask terminationStatus]) {
-            NSLog(@"ORFLashCamListener: readout process terminated unexpectedly with exit code: %d\n",
-                  [runTask terminationStatus]);
+            NSLog(@"%@: readout process terminated unexpectedly with exit code: %d\n",
+                  [self identifier], [runTask terminationStatus]);
             [self runFailed];
         }
+//        fprintf(stderr, "runTask terminationStatus == %d\n", [runTask terminationStatus]);
     }
 
 
@@ -1582,16 +1597,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 #pragma mark •••Data taker methods
 
-
-
-
-
 - (void) readConfig:(fcio_config*)config
 {
     // validate the number of waveform samples
     if(config->eventsamples != [[self configParam:@"eventSamples"] intValue]){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d user defined waveform length %d "
-                   " != waveform length from configuration packet %d\n", interface, ip, (int) port,
+        NSLogColor([NSColor redColor], @"%@: user defined waveform length %d "
+                   " != waveform length from configuration packet %d\n", [self identifier],
                    [[self configParam:@"eventSamples"] intValue], config->eventsamples);
         [self runFailed];
     }
@@ -1636,14 +1647,14 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             break;
         }
         if(!found){
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: adc mapping error for address 0x%hhx "
-                       " on %@ at %@:%d\n", addr, interface, ip, (int) port);
+            NSLogColor([NSColor redColor], @"%@: adc mapping error for address 0x%hhx\n",
+                       [self identifier], addr);
             [self runFailed];
         }
     }
     if(bufferedConfigCount == kFlashCamConfigBufferLength){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error config buffer full on %@ at %@:%d\n",
-                   interface, ip, (int) port);
+        NSLogColor([NSColor redColor], @"%@: error config buffer full\n",
+                   [self identifier]);
         [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamListenerModelConfigBufferFull
                                                             object:self];
     }
@@ -1655,9 +1666,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         if(i >= (unsigned int) [chanMap count]){
             if(config->tracemap[i] == 0) continue;
             else{
-                NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d failed to start run due to "
+                NSLogColor([NSColor redColor], @"%@: failed to start run due to "
                            "FCIO channel map entry (index %u card 0x%x input %u) not found in Orca channel map\n",
-                           interface, ip, (int) port, i, addr, input);
+                          [self identifier], i, addr, input);
                 fail = true;
                 continue;
             }
@@ -1665,15 +1676,15 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         NSDictionary* dict = [chanMap objectAtIndex:i];
         if([[dict objectForKey:@"adc"]          cardAddress] != addr ||
            [[dict objectForKey:@"channel"] unsignedIntValue] != input){
-            NSLogColor([NSColor redColor], @"ORFlashCamListenerModel on %@ at %@:%d failed to start run due to "
+            NSLogColor([NSColor redColor], @"%@: failed to start run due to "
                        "inconsistent channel map entry at index %u: FCIO - card 0x%x input %u, ORCA - card 0x%x input %u\n",
-                       interface, ip, (int) port, i, addr, input,
+                       [self identifier], i, addr, input,
                        [[dict objectForKey:@"adc"] cardAddress], [[dict objectForKey:@"channel"] unsignedIntValue]);
             fail = true;
         }
     }
     if(fail) [self runFailed];
-    else NSLog(@"ORFlashCamListenerModel on %@ at %@:%d successfully validated channel map\n", interface, ip, (int) port);
+    else NSLog(@"%@: successfully validated channel map\n", [self identifier]);
 }
 
 - (void) sendConfigPacket:(ORDataPacket*)aDataPacket
@@ -1741,8 +1752,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         }
     }
     if(bufferedStatusCount == kFlashCamStatusBufferLength){
-        NSLogColor([NSColor redColor], @"ORFlashCamListenerModel: error status buffer full on %@ at %@:%d\n",
-                   interface, ip, (int) port);
+        NSLogColor([NSColor redColor], @"%@: error status buffer full\n",
+                   [self identifier]);
     }
 }
 
@@ -1764,18 +1775,26 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) takeData:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    //nothing to do... look at the readout thread. Put all the listeners in separate threads for
-    //efficiency and use a separate datapacket
-    if (readoutShouldStart) {
+    if (readoutShouldStart)
         [self startReadout];
-    } else if (!readoutShouldStart && ![runTask isRunning]){
-        fprintf(stderr, "%s %s: waiting for readoutShouldStart or last call\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+
+    if (readoutIsRunning) {
+        if (![runTask isRunning]) {
+            NSLog(@"%@: runTask stopped unexpectedly\n", [self identifier]);
+            [self runFailed];
+            readoutIsRunning = NO;
+        }
+        if (![readerThread isExecuting]) {
+            NSLog(@"%@: readerThread stopped unexpectedly\n", [self identifier]);
+            [self runFailed];
+            readoutIsRunning = NO;
+        }
     }
 }
 
 - (void) runTaskStarted:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "%s %s: runTaskStarted\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: runTaskStarted\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     if(runFailedAlarm) [runFailedAlarm clearAlarm];
     unrecognizedPacket = false;
     if(!unrecognizedStates) unrecognizedStates = [[NSMutableArray array] retain];
@@ -1797,21 +1816,14 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     
     if(!dataPacketForThread)dataPacketForThread = [[ORDataPacket alloc]init];
     [dataPacketForThread setDataTask:[aDataPacket dataTask]];
+    
+    [self setupReadoutTask];
 
-//    listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue];
-//    if ( !listenerRemoteIsFile )
-
-    if (![self prepareReadoutAfterPing]) {
-        [self runFailed];
-    }
-    /* due to the threaded datataking in the listener, we cannot start the threads here,
-       as the startup order and ordering of datapackets would be wrong.
-       we have to wait until the takeData function is actually called from the connected
-       datatakers. for this reason prepareReadoutAfterPing will signal, that we should start
-       and first iteration of takeData will launch the task and thread.
+    /* due to the threaded datataking in the listener, we cannot start the thread and runTask here,
+       as they could start writing data before the full startup chain of runTaskStarted calls is completed.
+       We could either wait for some notification which depends on connected objects, or wait until the last
+       possible moment, which is when takeData is called, as then the system expects some data to arrive.
      */
-    // if it's a remote file we have to wait for the filename to arrive to start it
-    // this is happening in the notification observed dataFileNameChanged
 
     dataTakers = [[readOutList allObjects] retain];
     NSEnumerator* e = [[readOutList allObjects] objectEnumerator];
@@ -1821,12 +1833,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) runIsStopping:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "%s %s: runIsStopping\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: runIsStopping\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     [self stopReadout];
 
-    // write the remaining config and status packets
-    // TODO: remove this.. there should never be anything buffered its put immediately into the dataqueue
-//    while(bufferedConfigCount > 0 || bufferedStatusCount > 0) [self takeData:aDataPacket userInfo:userInfo];
     // allow the connected data takers to write any remaining data
     NSEnumerator* e = [dataTakers objectEnumerator];
     id obj;
@@ -1835,7 +1844,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) runTaskStopped:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    fprintf(stderr, "%s %s: runTaskStopped\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
+//    fprintf(stderr, "%s %s: runTaskStopped\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     [dataFileName release];
     dataFileName = nil;
     listenerRemoteIsFile = NO;
@@ -1953,6 +1962,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     dataFileObject = nil;
     readerThread = nil;
     readoutShouldStart = NO;
+    readoutIsRunning = NO;
 
     [self registerNotificationObservers];
 

@@ -86,6 +86,7 @@
 
     NSThread* readerThread;
     bool readoutShouldStart;
+    bool readoutIsRunning;
     
     //new
     NSDateFormatter*  logDateFormatter;
@@ -186,7 +187,7 @@
 - (void) taskDataAvailable:(NSNotification*)note;
 - (void) taskData:(NSDictionary*)taskData;
 - (void) taskCompleted:(NSNotification*)note;
-- (bool) prepareReadoutAfterPing;
+- (void) setupReadoutTask;
 - (void) startReadout;
 - (void) stopReadout;
 - (void) readConfig:(fcio_config*)config;
