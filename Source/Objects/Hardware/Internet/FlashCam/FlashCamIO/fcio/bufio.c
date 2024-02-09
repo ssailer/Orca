@@ -689,16 +689,25 @@ application code does not crash during writes to a broken pipe.
     // Handle client connection
     loginetadr(info, "connecting to", sa, address.sin_port);
 
-    struct sockaddr_in client_address;
-    socklen_t address_size = sizeof(client_address);
-
     int rc = -1;
     while (1) {
-      // TODO: Measure 'connect' time to properly decrease timeout
-      rc = connect(stream->fd, (struct sockaddr *) &address, address_size);
+      // TODO: Measure 'connect' (and 'close'/'socket') time to properly decrease timeout
+      rc = connect(stream->fd, (struct sockaddr *) &address, (socklen_t) sizeof(address));
+      // fprintf(stderr, "bufio_open: connect rc %d errno %d desc %s\n", rc, errno, strerror(errno));
       if (rc == 0 || (timeout >= 0 && timeout < 50))
         break;
 
+      if (rc == -1 && errno == ECONNREFUSED) {
+        // if the peer is not ready and refuses we try again
+        // linux would accept retrying the connect() call directly
+        // apple/bsd require closing and opening the socket again.
+        close(stream->fd);
+        if ( (stream->fd = socket(AF_INET, socket_type, 0)) == -1 ) {
+          logstring(info, "create socket failed");
+          goto free_and_out;
+        }
+        ignore_sigpipe(stream->fd);
+      }
       usleep(50000);
       timeout -= 50;
 #ifdef __APPLE__
