@@ -102,7 +102,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     runFailedAlarm     = nil;
     unrecognizedPacket = false;
     unrecognizedStates = nil;
-    listenerRemoteIsFile = false;
+    listenerRemoteIsFile = NO;
     eventCount         = 0;
     runTime            = 0.0;
     readMB             = 0.0;
@@ -138,6 +138,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     readerThread = nil;
     readoutShouldStart = NO;
     readoutIsRunning = NO;
+    dataFileName = nil;
 
     [self registerNotificationObservers];
 
@@ -268,19 +269,15 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) dataFileNameChanged:(NSNotification*) aNote
 {
-    if (listenerRemoteIsFile) {
-        NSString* filename  = [[aNote object] fileName];
-        NSString* extension = [[aNote object] fileStaticSuffix];
-        if(![extension isEqualToString:@""]){
-            NSRange r = [filename rangeOfString:extension options:NSBackwardsSearch];
-            filename  = [filename substringWithRange:NSMakeRange(0, r.location)];
-        }
-        [dataFileName release];
-        dataFileName = [[[NSString stringWithFormat:@"%@/openFiles/%@_FCIO_%lu.fcio",
-                           [[[aNote object] dataFolder] finalDirectoryName], filename,(unsigned long)[self tag]] stringByExpandingTildeInPath] retain];
-//        [NSString stringWithFormat:@"%@_FCIO_%lu.fcio",dataFileName,(unsigned long)[self tag]];
-        readoutShouldStart = YES;
+    NSString* filename  = [[aNote object] fileName];
+    NSString* extension = [[aNote object] fileStaticSuffix];
+    if(![extension isEqualToString:@""]){
+        NSRange r = [filename rangeOfString:extension options:NSBackwardsSearch];
+        filename  = [filename substringWithRange:NSMakeRange(0, r.location)];
     }
+    [dataFileName release];
+    dataFileName = [[[NSString stringWithFormat:@"%@/openFiles/%@_FCIO_%lu.fcio",
+                       [[[aNote object] dataFolder] finalDirectoryName], filename,(unsigned long)[self tag]] stringByExpandingTildeInPath] retain];
 }
 
 - (NSString*) streamDescription
@@ -1142,9 +1139,13 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) setupReadoutTask
 {
-//    fprintf(stderr, "%s: setupReadoutTask\n", [[self identifier] UTF8String]);
-    if(guardian && ![guardian readoutReady]){
-//        fprintf(stderr, "%s %s prepareReadout: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , 0.01);
+    listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue]; // need to remember if this is the case, and wait for the filename to be concretized
+    bool waitForFileName = listenerRemoteIsFile && !dataFileName;
+    fprintf(stderr, "%s: setupReadoutTask listenerRemoteIsFile %d dataFileName %s guardian_readoutReady %d waitForFileName %d\n", [[self identifier] UTF8String], listenerRemoteIsFile, [dataFileName UTF8String], [guardian readoutReady], waitForFileName);
+    if( (guardian && ![guardian readoutReady]) || waitForFileName ){
+        // need to know this here already
+        
+        fprintf(stderr, "%s %s prepareReadout: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , 0.01);
         [self performSelector:@selector(setupReadoutTask) withObject:self afterDelay:0.01];
         return;
     }
@@ -1327,9 +1328,11 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     readerThread = [[NSThread alloc] initWithTarget:self
                                             selector:@selector(readerThreadMain)
                                             object:nil];
-
-    listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue]; // need to remember if this is the case, and wait for the filename to be concretized
-    readoutShouldStart = !listenerRemoteIsFile; // signal that we are ready
+    readoutShouldStart = YES;
+//    listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue]; // need to remember if this is the case, and wait for the filename to be concretized
+    
+//    readoutShouldStart = !listenerRemoteIsFile; // signal that we are ready
+    fprintf(stderr, "%s %s: readoutShouldStart with listenerRemoteIsFile %d\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String], listenerRemoteIsFile);
 }
 
 - (void) startReadout
@@ -1337,12 +1340,15 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     if (readoutShouldStart && !readoutIsRunning) {
         NSMutableArray* readoutArgs = [self readOutArgs];
         if (listenerRemoteIsFile && dataFileName != nil) {
+            fprintf(stderr, "startReadout, remote is file and dataFileName is %s\n", [dataFileName UTF8String]);
             [readoutArgs addObjectsFromArray:@[@"-o", dataFileName]];
         } else {
             NSString* listen = [NSString stringWithFormat:@"tcp://connect/%d/%@", port, ip];
             [readoutArgs addObjectsFromArray:@[@"-o", listen]];
         }
         [runTask setArguments: [NSArray arrayWithArray:readoutArgs]];
+        NSString* ccc = [NSString stringWithFormat:@"%@ %@\n", [runTask launchPath], [[runTask arguments] componentsJoinedByString:@" "]];
+        fprintf(stderr, "StartReadout %s\n", [ccc UTF8String]);
         [self setReadOutArgs:readoutArgs]; // store final readout args
         
         for(NSString* line in fcrunlog) [self appendToFCLog:line andNotify:NO];
@@ -1769,8 +1775,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) takeData:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-    if (readoutShouldStart)
-        [self startReadout];
+    if (readoutShouldStart && !readoutIsRunning)
+        [self performSelectorOnMainThread:@selector(startReadout) withObject:nil waitUntilDone:NO];
 
     if (readoutIsRunning) {
         if (![runTask isRunning]) {
@@ -1919,7 +1925,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     reader            = NULL;
     readerRecordCount = 0;
     bufferedRecords   = 0;
-    listenerRemoteIsFile = false;
+    listenerRemoteIsFile = NO;
     
     if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)) * kFlashCamConfigBufferLength);
     configBufferIndex = 0;
@@ -1957,6 +1963,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     readerThread = nil;
     readoutShouldStart = NO;
     readoutIsRunning = NO;
+    dataFileName = nil;
 
     [self registerNotificationObservers];
 
