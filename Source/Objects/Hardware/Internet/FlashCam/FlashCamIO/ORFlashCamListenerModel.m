@@ -1373,6 +1373,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             ;
 
         readoutIsRunning = YES;
+        [self setStatus:@"running"];
     }
 }
 
@@ -1391,6 +1392,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         ;
 
     readoutIsRunning = NO;
+    [self setStatus:@"stopped"];
 
     [self performSelectorOnMainThread:@selector(setUpImage) withObject:nil waitUntilDone:NO];
 }
