@@ -53,7 +53,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     port               = 4000;
     ip                 = @"";
     timeout            = 2000;
-    ioBuffer           = 0; // 0 uses default;
+    ioBuffer           = 0; // 0 uses default BUFIO_BUFSIZE = 256 kB
     stateBuffer        = 20;
     configParams       = [[NSMutableDictionary dictionary] retain];
     [self setConfigParam:@"maxPayload"      withValue:[NSNumber numberWithInt:0]];
@@ -275,7 +275,10 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         NSRange r = [filename rangeOfString:extension options:NSBackwardsSearch];
         filename  = [filename substringWithRange:NSMakeRange(0, r.location)];
     }
-    [dataFileName release];
+    if (dataFileName != nil) {
+        fprintf(stderr, "ERROR %s dataFileName already set. %s.", [[self identifier] UTF8String], [dataFileName UTF8String]);
+        [dataFileName release];
+    }
     dataFileName = [[[NSString stringWithFormat:@"%@/openFiles/%@_FCIO_%lu.fcio",
                        [[[aNote object] dataFolder] finalDirectoryName], filename,(unsigned long)[self tag]] stringByExpandingTildeInPath] retain];
 }
@@ -954,13 +957,10 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             while ( [self fcioRead:dataPacketForThread] ) {
                 // putDataInQueue is self-locking for thread safety
                 [[dataPacketForThread dataTask] putDataInQueue:dataPacketForThread force:YES];
-
             }
             [self fcioClose];
         }
     }
-
-    // we rely on the takeData call to detect that the thread is not executing even though readoutIsRunning is set.
 }
 
 - (bool) fcioOpen
@@ -983,7 +983,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     }
     
     NSString* fcioRemote = (listenerRemoteIsFile) ? dataFileName : [NSString stringWithFormat:@"tcp://listen/%d/%@", port, ip];
-
+    
+    // If the remote is a file, FCIOCreateStateReader will fail, if it doesn't exist yet.
+    // We use the same timeout as for TCP connections to wait for it's existance.
     if (listenerRemoteIsFile && timeout > 0) {
         double delay = 0.5;
         double total_delay = 0.0;
@@ -994,8 +996,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             [ORTimer delay: delay];
             total_delay += delay;
         }
-        // The CreateStateReader call will fail if there is no datafile to open anyway,
-        // so we won't exit explicitely here but let the error propagate from there.
+        // The CreateStateReader call will fail if there is no datafile to open,
+        // so we won't exit here but let the error propagate from there.
     }
     reader = FCIOCreateStateReader([fcioRemote UTF8String], timeout, ioBuffer, stateBuffer);
     if(reader){
@@ -1013,6 +1015,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 {
 //    fprintf(stderr, "%s %s: fcioClose\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     switch (fcio_last_tag) {
+        // fcio_last_tag contains the last valid tag
+        // The readout-fc250b binary should always send an FCIOStatus record and normal exit.
+        // If it exits early, it might send an FCIOConfig.
         case FCIOStatus: {
             NSLog(@"%@: FCIO stream closed successfully.\n", [self identifier]);
             break;
@@ -1035,19 +1040,18 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 - (bool) fcioRead:(ORDataPacket*) aDataPacket
 {
     if (listenerRemoteIsFile && ![runTask isRunning] && reader->timeout) {
-        // if the remote is a file, we EOF is a signal that we might not have any more data to read
+        // if the remote is a file, reading EOF is a signal that we might not have any more data to read
         // and FCIOGetNextState will wait for its timeout to try to read more
         // if the runTask is not running anymore, no more data will come
-        // and we can savely reduce the timeout to 0 if it's not already
+        // and we can savely reduce the timeout to 0
         // This will reduce waiting times at the end of run. Especially important
         // if multiple listeners are connected with high timeouts (a few seconds)
-        // as the total allowed time to stop the run is 15seconds due to the ORRunModel timeout itself.
-        
-        FCIOTimeout(reader->stream, 0);
-        reader->timeout = 0;
+        // as the total allowed time to stop the run is 15 seconds due to the ORRunModel timeout itself.
+        FCIOTimeout(reader->stream, 0); // set the library timeout
+        reader->timeout = 0; // unfortunately the timeout variable has to be set explicitely for now
     }
 
-    int timedout = 0;
+    int timedout = 0; // contains timeout reason
     bool writeWaveforms = true;
     FCIOState* state = NULL;
     if ( ! (state = FCIOGetNextState(reader, &timedout))) {
@@ -1103,7 +1107,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                 if((int) state->last_tag == [n intValue]) found = true;
             if(!found){
                 [unrecognizedStates addObject:[NSNumber numberWithInt:(int)state->last_tag]];
-                NSLogColor([NSColor redColor], @"%: unrecognized fcio state tag %d on %@\n", [self identifier], state->last_tag, [self streamDescription]);
+                NSLogColor([NSColor redColor], @"%: unrecognized fcio record tag %d on %@\n", [self identifier], state->last_tag, [self streamDescription]);
                 NSLogColor([NSColor redColor], @"%: WARNING - suppressing further instances of this message for this object in this run\n", [self identifier]);
             }
             break;
@@ -1136,17 +1140,17 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 #pragma mark •••Task methods
 
-
 - (void) setupReadoutTask
 {
+    bool waitForGuardianReady = (guardian && ![guardian readoutReady]);
+    
     listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue]; // need to remember if this is the case, and wait for the filename to be concretized
     bool waitForFileName = listenerRemoteIsFile && !dataFileName;
-    fprintf(stderr, "%s: setupReadoutTask listenerRemoteIsFile %d dataFileName %s guardian_readoutReady %d waitForFileName %d\n", [[self identifier] UTF8String], listenerRemoteIsFile, [dataFileName UTF8String], [guardian readoutReady], waitForFileName);
-    if( (guardian && ![guardian readoutReady]) || waitForFileName ){
-        // need to know this here already
-        
-        fprintf(stderr, "%s %s prepareReadout: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , 0.01);
-        [self performSelector:@selector(setupReadoutTask) withObject:self afterDelay:0.01];
+
+    fprintf(stderr, "%s: setupReadoutTask waitForGuardianReady %d waitForFileName %d\n", [[self identifier] UTF8String], waitForGuardianReady, waitForFileName);
+    if( waitForGuardianReady || waitForFileName ){
+       fprintf(stderr, "%s %s prepareReadout: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , 0.01);
+        [self performSelector:@selector(setupReadoutTask) withObject:self afterDelay:0.05];
         return;
     }
 
@@ -1323,20 +1327,16 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     
     [runTask setLaunchPath:taskPath];
     
-
     [readerThread release];
     readerThread = [[NSThread alloc] initWithTarget:self
                                             selector:@selector(readerThreadMain)
                                             object:nil];
-    readoutShouldStart = YES;
-//    listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue]; // need to remember if this is the case, and wait for the filename to be concretized
-    
-//    readoutShouldStart = !listenerRemoteIsFile; // signal that we are ready
-    fprintf(stderr, "%s %s: readoutShouldStart with listenerRemoteIsFile %d\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String], listenerRemoteIsFile);
+    readoutShouldStart = YES; // signal to takeData that we are ready
 }
 
 - (void) startReadout
 {
+    // execute startReadout only from the main Thread! otherwise the notifications and gui updates of the controller might not work.
     if (readoutShouldStart && !readoutIsRunning) {
         NSMutableArray* readoutArgs = [self readOutArgs];
         if (listenerRemoteIsFile && dataFileName != nil) {
@@ -1373,7 +1373,6 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             //older MacOS's
             [runTask launch];
         }
-//        fprintf(stderr, "%s %s: startReadout starting readerThread\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
 
         [readerThread start];
         
@@ -1381,8 +1380,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
         
         while (![runTask isRunning] || ![readerThread isExecuting])
             ;
-        
-//        fprintf(stderr, "DEBUG readoutIsRunning = YES, runTask %d, readerThread %d\n", [runTask isRunning], [readerThread isExecuting]);
+
         readoutIsRunning = YES;
     }
 }
@@ -1400,15 +1398,10 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 //        fprintf(stderr, "%s %s: stopReadout waiting for runTask to stop\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
         [runTask waitUntilExit];
     }
-//    [runTask release];
-//    runTask = nil;
 
 //    fprintf(stderr, "%s %s: stopReadout waiting for readerThread to disconnect\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     while ([readerThread isExecuting])
         ;
-
-//    [readerThread release];
-//    readerThread = nil;
 
     readoutIsRunning = NO;
 
@@ -1468,11 +1461,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) taskData:(NSDictionary*)taskData
 {
-//    fprintf(stderr, "Listener %d: taskData\n", [self port]);
     if([taskData objectForKey:@"Task"] != runTask) return;
     NSString* incomingText = [taskData objectForKey:@"Text"];
     NSArray* incomingLines = [incomingText componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-    
 
     for(NSString* aLine in incomingLines){
         if([aLine isEqualToString:@""]) continue;
@@ -1554,7 +1545,6 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) taskCompleted:(NSNotification*)note
 {
-//    fprintf(stderr, "Listener %d: taskCompleted\n", [self port]);
     // reset the hardare id to 0 since they will be read again at the start of the next run
     if([note object] == runTask){
         for(id obj in [readOutList children]){
@@ -1582,9 +1572,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                   [self identifier], [runTask terminationStatus]);
             [self runFailed];
         }
-//        fprintf(stderr, "runTask terminationStatus == %d\n", [runTask terminationStatus]);
     }
-
 
     uint32_t runState = [gOrcaGlobals runState];
     if(runState != eRunStopped && runState != eRunStopping)
@@ -1817,12 +1805,13 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     if(!dataPacketForThread)dataPacketForThread = [[ORDataPacket alloc]init];
     [dataPacketForThread setDataTask:[aDataPacket dataTask]];
     
-    [self setupReadoutTask];
+    [self setupReadoutTask]; // will wait asynchronously until all the needed information from other objects is ready
 
     /* due to the threaded datataking in the listener, we cannot start the thread and runTask here,
        as they could start writing data before the full startup chain of runTaskStarted calls is completed.
        We could either wait for some notification which depends on connected objects, or wait until the last
        possible moment, which is when takeData is called, as then the system expects some data to arrive.
+       For simplicitly we use the second approach.
      */
 
     dataTakers = [[readOutList allObjects] retain];
@@ -1833,7 +1822,6 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) runIsStopping:(ORDataPacket*)aDataPacket userInfo:(NSDictionary*)userInfo
 {
-//    fprintf(stderr, "%s %s: runIsStopping\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
     [self stopReadout];
 
     // allow the connected data takers to write any remaining data
@@ -1864,6 +1852,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     
     [self setChanMap:nil];
     [self setCardMap:nil];
+
+    // we keep the readerThread and runTask objects alive
+    // so we can check on their state between runs.
 
     NSEnumerator* e = [dataTakers objectEnumerator];
     id obj;
