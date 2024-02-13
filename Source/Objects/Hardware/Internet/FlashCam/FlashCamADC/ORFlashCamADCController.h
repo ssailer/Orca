@@ -37,6 +37,9 @@
     IBOutlet NSMatrix* postTriggerMatrix;
     IBOutlet NSMatrix* baselineSlewMatrix;
     IBOutlet NSMatrix* swTrigIncludeMatrix;
+    IBOutlet NSMatrix* swTrigGainMatrix;
+    IBOutlet NSMatrix* swTrigThresholdMatrix;
+    IBOutlet NSMatrix* swTrigShapingMatrix;
     IBOutlet NSTextField* baseBiasTextField;
     IBOutlet NSTextField* shapingLabel;
     IBOutlet NSTextField* flatTopLabel;
@@ -88,6 +91,9 @@
 - (void) postTriggerChanged:(NSNotification*)note;
 - (void) baselineSlewChanged:(NSNotification*)note;
 - (void) swTrigIncludeChanged:(NSNotification*)note;
+- (void) swTrigGainChanged:(NSNotification*)note;
+- (void) swTrigThresholdChanged:(NSNotification*)note;
+- (void) swTrigShapingChanged:(NSNotification*)note;
 - (void) baseBiasChanged:(NSNotification*)note;
 - (void) majorityLevelChanged:(NSNotification*)note;
 - (void) majorityWidthChanged:(NSNotification*)note;
@@ -116,6 +122,9 @@
 - (IBAction) postTriggerAction:(id)sender;
 - (IBAction) baselineSlewAction:(id)sender;
 - (IBAction) swTrigIncludeAction:(id)sender;
+- (IBAction) swTrigGainAction:(id)sender;
+- (IBAction) swTrigThresholdAction:(id)sender;
+- (IBAction) swTrigShapingAction:(id)sender;
 - (IBAction) baseBiasAction:(id)sender;
 - (IBAction) majorityLevelAction:(id)sender;
 - (IBAction) majorityWidthAction:(id)sender;

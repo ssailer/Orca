@@ -57,15 +57,25 @@
         [[cell itemAtIndex:2] setTitle:@"Cusp"];
     }
     [filterTypeMatrix setEnabled:YES];
+    for(unsigned int i = 0; i < [model numberOfChannels]; i++){
+        id cell = [swTrigIncludeMatrix cellWithTag:i];
+        [[cell itemAtIndex:0] setTitle:@"Off"];
+        [[cell itemAtIndex:1] setTitle:@"Analog Sum"];
+        [[cell itemAtIndex:2] setTitle:@"HW Multiplicity"];
+        [[cell itemAtIndex:3] setTitle:@"Digital Flag"];
+//        [[cell itemAtIndex:4] setTitle:@"Baseline Flag"];
+//        [[cell itemAtIndex:5] setTitle:@"Muon Trigger Flag"];
+        
+    }
     NSArray* m = [NSArray arrayWithObjects:baselineMatrix, thresholdMatrix, adcGainMatrix, trigGainMatrix,
                   shapeTimeMatrix, flatTopTimeMatrix, poleZeroTimeMatrix, postTriggerMatrix, baselineSlewMatrix,
-                  swTrigIncludeMatrix, rateTextFields,
+                  swTrigGainMatrix, swTrigThresholdMatrix, swTrigShapingMatrix, rateTextFields,
                   trigRateTextFields, nil];
     for(NSMatrix* matrix in m){
         for(NSUInteger i=0; i<[matrix numberOfRows]; i++)
             [[matrix cellAtRow:i column:0] setFormatter:[[[NSNumberFormatter alloc] init] autorelease]];
     }
-    m = [NSArray arrayWithObjects:rateTextFields, trigRateTextFields, nil];
+    m = [NSArray arrayWithObjects:rateTextFields, trigRateTextFields, swTrigThresholdMatrix, swTrigGainMatrix, flatTopTimeMatrix, trigGainMatrix, poleZeroTimeMatrix, postTriggerMatrix, nil];
     for(NSMatrix* matrix in m){
         for(NSUInteger i=0; i<[matrix numberOfRows]; i++){
             NSNumberFormatter* nf = [[matrix cellAtRow:i column:0] formatter];
@@ -143,6 +153,18 @@
     [notifyCenter addObserver : self
                      selector : @selector(swTrigIncludeChanged:)
                          name : ORFlashCamADCModelSWTrigIncludeChanged
+                       object : nil];
+    [notifyCenter addObserver : self
+                     selector : @selector(swTrigGainChanged:)
+                         name : ORFlashCamADCModelSWTrigGainChanged
+                       object : nil];
+    [notifyCenter addObserver : self
+                     selector : @selector(swTrigShapingChanged:)
+                         name : ORFlashCamADCModelSWTrigShapingChanged
+                       object : nil];
+    [notifyCenter addObserver : self
+                     selector : @selector(swTrigThresholdChanged:)
+                         name : ORFlashCamADCModelSWTrigThresholdChanged
                        object : nil];
     [notifyCenter addObserver : self
                      selector : @selector(majorityLevelChanged:)
@@ -274,6 +296,9 @@
     [self postTriggerChanged:nil];
     [self baselineSlewChanged:nil];
     [self swTrigIncludeChanged:nil];
+    [self swTrigGainChanged:nil];
+    [self swTrigThresholdChanged:nil];
+    [self swTrigShapingChanged:nil];
     [self majorityLevelChanged:nil];
     [self majorityWidthChanged:nil];
     [self rateGroupChanged:nil];
@@ -394,14 +419,14 @@
 {
     if(note == nil){
         for(int i=0; i<[model numberOfChannels]; i++){
-            [[filterTypeMatrix cellWithTag:i] setIntValue:[model filterType:i]];
+            [[filterTypeMatrix cellWithTag:i] selectItemAtIndex:[model filterType:i]];
             if([model filterType:i] == 0) [[flatTopTimeMatrix cellWithTag:i] setEnabled:NO];
             else [[flatTopTimeMatrix cellWithTag:i] setEnabled:YES];
         }
     }
     else{
         int chan = [[[note userInfo] objectForKey:@"Channel"] intValue];
-        [[filterTypeMatrix cellWithTag:chan] setIntValue:[model filterType:chan]];
+        [[filterTypeMatrix cellWithTag:chan] selectItemAtIndex:[model filterType:chan]];
         if([model filterType:chan] == 0) [[flatTopTimeMatrix cellWithTag:chan] setEnabled:NO];
         else [[flatTopTimeMatrix cellWithTag:chan] setEnabled:YES];
     }
@@ -457,13 +482,66 @@
 
 - (void) swTrigIncludeChanged:(NSNotification*)note
 {
+    int chan = 0;
+    int maxChan = [model numberOfChannels];
+    if(note != nil){
+        chan = [[[note userInfo] objectForKey:@"Channel"] intValue];
+        maxChan = chan+1;
+    }
+//    fprintf(stderr, "IncludeChanged chan %d max %d/%d\n", chan, maxChan, [model numberOfChannels]);
+    for(int i = chan; i < maxChan; i++){
+        [[swTrigIncludeMatrix cellWithTag:i] selectItemAtIndex:[model swTrigInclude:i]];
+//        bool isOff = [model swTrigInclude:i] == 0;
+        bool isAnalogSum = [model swTrigInclude:i] == 1;
+        bool isHWMultiplicity = [model swTrigInclude:i] == 2;
+        bool isDigitalSignal = [model swTrigInclude:i] == 3;
+//        fprintf(stderr, "  setEnabled chan %d = %d,%d,%d,%d\n",i, isOff, isAnalogSum, isHWMultiplicity, isDigitalSignal);
+        [[swTrigGainMatrix cellWithTag:i] setEnabled:isAnalogSum||isDigitalSignal];
+        [[swTrigThresholdMatrix cellWithTag:i] setEnabled:isAnalogSum||isHWMultiplicity||isDigitalSignal];
+        [[swTrigShapingMatrix cellWithTag:i] setEnabled:isAnalogSum||isDigitalSignal];
+        
+//        if (isDigitalSignal) {
+//            // Code here to add this channel to the ReadoutController options
+//        }
+    }
+}
+
+- (void) swTrigGainChanged:(NSNotification*)note
+{
     if(note == nil){
-        for(int i=0; i<[model numberOfChannels]; i++)
-            [[swTrigIncludeMatrix cellWithTag:i] setIntValue:[model swTrigInclude:i]];
+        for(int i=0; i<[model numberOfChannels]; i++){
+            [[swTrigGainMatrix cellWithTag:i] setFloatValue:[model swTrigGain:i]];
+        }
     }
     else{
         int chan = [[[note userInfo] objectForKey:@"Channel"] intValue];
-        [[swTrigIncludeMatrix cellWithTag:chan] setIntValue:[model swTrigInclude:chan]];
+        [[swTrigGainMatrix cellWithTag:chan] setFloatValue:[model swTrigGain:chan]];
+    }
+}
+
+- (void) swTrigThresholdChanged:(NSNotification*)note
+{
+    if(note == nil){
+        for(int i=0; i<[model numberOfChannels]; i++){
+            [[swTrigThresholdMatrix cellWithTag:i] setFloatValue:[model swTrigThreshold:i]];
+        }
+    }
+    else{
+        int chan = [[[note userInfo] objectForKey:@"Channel"] intValue];
+        [[swTrigThresholdMatrix cellWithTag:chan] setFloatValue:[model swTrigThreshold:chan]];
+    }
+}
+
+- (void) swTrigShapingChanged:(NSNotification*)note
+{
+    if(note == nil){
+        for(int i=0; i<[model numberOfChannels]; i++){
+            [[swTrigShapingMatrix cellWithTag:i] setIntValue:[model swTrigShaping:i]];
+        }
+    }
+    else{
+        int chan = [[[note userInfo] objectForKey:@"Channel"] intValue];
+        [[swTrigShapingMatrix cellWithTag:chan] setIntValue:[model swTrigShaping:chan]];
     }
 }
 
@@ -667,6 +745,9 @@
     [postTriggerMatrix      setEnabled:!lock];
     [baselineSlewMatrix     setEnabled:!lock];
     [swTrigIncludeMatrix    setEnabled:!lock];
+    [swTrigGainMatrix       setEnabled:!lock];
+    [swTrigThresholdMatrix  setEnabled:!lock];
+    [swTrigShapingMatrix    setEnabled:!lock];
     [baseBiasTextField      setEnabled:!lock];
     [majorityLevelPUButton  setEnabled:!lock];
     [majorityWidthTextField setEnabled:!lock];
@@ -720,8 +801,8 @@
 
 - (IBAction) filterTypeAction:(id)sender
 {
-    if([sender intValue] != [model filterType:(unsigned int)[[sender selectedCell] tag]])
-        [model setFilterType:(unsigned int)[[sender selectedCell] tag] withValue:[sender intValue]];
+    if([[sender selectedCell] indexOfSelectedItem] != [model filterType:(unsigned int)[[sender selectedCell] tag]])
+        [model setFilterType:(unsigned int)[[sender selectedCell] tag] withValue:(int)[[sender selectedCell] indexOfSelectedItem]];
 }
 
 - (IBAction) flatTopTimeAction:(id)sender
@@ -750,8 +831,26 @@
 
 - (IBAction) swTrigIncludeAction:(id)sender
 {
-    if([sender intValue] != [model swTrigInclude:(unsigned int)[[sender selectedCell] tag]])
-        [model setSWTrigInclude:(unsigned int)[[sender selectedCell] tag] withValue:[sender intValue]];
+    if([[sender selectedCell] indexOfSelectedItem] != [model swTrigInclude:(unsigned int)[[sender selectedCell] tag]])
+        [model setSWTrigInclude:(unsigned int)[[sender selectedCell] tag] withValue:(int)[[sender selectedCell] indexOfSelectedItem]];
+}
+
+- (IBAction) swTrigGainAction:(id)sender
+{
+    if([sender floatValue] != [model swTrigGain:(unsigned int)[[sender selectedCell] tag]])
+        [model setSWTrigGain:(unsigned int)[[sender selectedCell] tag] withValue:[sender floatValue]];
+}
+
+- (IBAction) swTrigThresholdAction:(id)sender
+{
+    if([sender floatValue] != [model swTrigThreshold:(unsigned int)[[sender selectedCell] tag]])
+        [model setSWTrigThreshold:(unsigned int)[[sender selectedCell] tag] withValue:[sender floatValue]];
+}
+
+- (IBAction) swTrigShapingAction:(id)sender
+{
+    if([sender intValue] != [model swTrigShaping:(unsigned int)[[sender selectedCell] tag]])
+        [model setSWTrigShaping:(unsigned int)[[sender selectedCell] tag] withValue:[sender intValue]];
 }
 
 - (IBAction) baseBiasAction:(id)sender
@@ -868,6 +967,8 @@
     for(unsigned int i=0; i<[model numberOfChannels]; i++){
         id cell = [filterTypeMatrix cellWithTag:i];
         for(unsigned int j=0; j<3; j++) [[cell itemAtIndex:j] setTitle:@"N/A"];
+//        id cell = [swTrigIncludeMatrix cellWithTag:i];
+//        for(unsigned int j=0; j<3; j++) [[cell itemAtIndex:j] setTitle:@"N/A"];
     }
     [filterTypeMatrix setEnabled:NO];
 }

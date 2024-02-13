@@ -40,6 +40,9 @@ NSString* ORFlashCamADCModelPoleZeroTimeChanged          = @"ORFlashCamADCModelP
 NSString* ORFlashCamADCModelPostTriggerChanged           = @"ORFlashCamADCModelPostTriggerChanged";
 NSString* ORFlashCamADCModelBaselineSlewChanged          = @"ORFlashCamADCModelBaselineSlewChanged";
 NSString* ORFlashCamADCModelSWTrigIncludeChanged         = @"ORFlashCamADCModelSWTrigIncludeChanged";
+NSString* ORFlashCamADCModelSWTrigGainChanged            = @"ORFlashCamADCModelSWTrigGainChanged";
+NSString* ORFlashCamADCModelSWTrigThresholdChanged       = @"ORFlashCamADCModelSWTrigThresholdChanged";
+NSString* ORFlashCamADCModelSWTrigShapingChanged         = @"ORFlashCamADCModelSWTrigShapingChanged";
 NSString* ORFlashCamADCModelMajorityLevelChanged         = @"ORFLashCamADCModelMajorityLevelChanged";
 NSString* ORFlashCamADCModelMajorityWidthChanged         = @"ORFlashCamADCModelMajorityWidthChanged";
 NSString* ORFlashCamADCModelRateGroupChanged             = @"ORFlashCamADCModelRateGroupChanged";
@@ -59,19 +62,22 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     enableBaselineHistory = true;
     baselineSampleTime = 10.0;
     for(int i=0; i<[self numberOfChannels]; i++){
-        [self setChanEnabled:i    withValue:false];
-        [self setTrigOutEnabled:i withValue:false];
-        [self setBaseline:i       withValue:-1];
-        [self setThreshold:i      withValue:5000];
-        [self setADCGain:i        withValue:0];
-        [self setTrigGain:i       withValue:0.0];
-        [self setShapeTime:i      withValue:16*256];
-        [self setFilterType:i     withValue:1];
-        [self setFlatTopTime:i    withValue:16.0*128];
-        [self setPoleZeroTime:i   withValue:16.0*4096*6];
-        [self setPostTrigger:i    withValue:0.0];
-        [self setBaselineSlew:i   withValue:0];
-        [self setSWTrigInclude:i  withValue:false];
+        [self setChanEnabled:i      withValue:false];
+        [self setTrigOutEnabled:i   withValue:false];
+        [self setBaseline:i         withValue:-1];
+        [self setThreshold:i        withValue:5000];
+        [self setADCGain:i          withValue:0];
+        [self setTrigGain:i         withValue:0.0];
+        [self setShapeTime:i        withValue:16*256];
+        [self setFilterType:i       withValue:1];
+        [self setFlatTopTime:i      withValue:16.0*128];
+        [self setPoleZeroTime:i     withValue:16.0*4096*6];
+        [self setPostTrigger:i      withValue:0.0];
+        [self setBaselineSlew:i     withValue:0];
+        [self setSWTrigInclude:i    withValue:0];
+        [self setSWTrigGain:i       withValue:20];
+        [self setSWTrigThreshold:i  withValue:0.5];
+        [self setSWTrigShaping:i    withValue:7];
         wfCount[i]   = 0;
         trigCount[i] = 0;
         baselineHistory[i] = [[ORTimeRate alloc] init];
@@ -336,10 +342,28 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     return baselineSlew[chan];
 }
 
-- (bool) swTrigInclude:(unsigned int)chan
+- (int) swTrigInclude:(unsigned int)chan
 {
-    if(chan >= [self numberOfChannels]) return false;
+    if(chan >= [self numberOfChannels]) return 0;
     return swTrigInclude[chan];
+}
+
+- (float) swTrigGain:(unsigned int)chan
+{
+    if(chan >= [self numberOfChannels]) return 0.0;
+    return swTrigGain[chan];
+}
+
+- (float) swTrigThreshold:(unsigned int)chan
+{
+    if(chan >= [self numberOfChannels]) return 0.0;
+    return swTrigThreshold[chan];
+}
+
+- (int) swTrigShaping:(unsigned int)chan
+{
+    if(chan >= [self numberOfChannels]) return 0;
+    return swTrigShaping[chan];
 }
 
 - (int) baseBias
@@ -584,13 +608,68 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
                                                       userInfo:info];
 }
 
-- (void) setSWTrigInclude:(unsigned int)chan withValue:(bool)include
+- (void) setSWTrigInclude:(unsigned int)chan withValue:(int)swTrigType
 {
     if(chan >= [self numberOfChannels]) return;
+    if(swTrigInclude[chan] == swTrigType) return;
     [[[self undoManager] prepareWithInvocationTarget:self] setSWTrigInclude:chan withValue:swTrigInclude[chan]];
-    swTrigInclude[chan] = include;
+    swTrigInclude[chan] = MIN(MAX(0, swTrigType), 3);
+    if (swTrigInclude[chan] == 3) {
+        [self setSWTrigShaping:chan withValue:0];
+    }
+    if (swTrigInclude[chan] == 2) {
+        [self setSWTrigThreshold:chan withValue:0];
+    }
+//    unsigned int identifier = ((unsigned int)[self cardAddress] << 16) + chan;
     NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+//    NSDictionary* info = [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedInt:chan], @"Channel",[NSNumber numberWithUnsignedInt:identifier], swTrigInclude[chan]==3?@"DFChannelAdded":@"DFChannelRemoved", nil];
+//    [info ]
     [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelSWTrigIncludeChanged
+                                                        object:self
+                                                      userInfo:info];
+}
+
+- (void) setSWTrigGain:(unsigned int)chan withValue:(float)swTrigGainChannel
+{
+    if(chan >= [self numberOfChannels]) return;
+    if(swTrigGain[chan] == swTrigGainChannel) return;
+    [[[self undoManager] prepareWithInvocationTarget:self] setSWTrigGain:chan withValue:swTrigGain[chan]];
+    swTrigGain[chan] = MIN(MAX(0, swTrigGainChannel), 65536); // 16 bit
+    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelSWTrigGainChanged
+                                                        object:self
+                                                      userInfo:info];
+}
+
+- (void) setSWTrigThreshold:(unsigned int)chan withValue:(float)swTrigThresholdChannel
+{
+    if(chan >= [self numberOfChannels]) return;
+    if(swTrigThreshold[chan] == swTrigThresholdChannel) return;
+    [[[self undoManager] prepareWithInvocationTarget:self] setSWTrigThreshold:chan withValue:swTrigThreshold[chan]];
+    int max = 1000;
+    if (swTrigInclude[chan] == 2) {
+        max = 65536;
+        swTrigThresholdChannel = floorf(swTrigThresholdChannel);
+    }
+    swTrigThreshold[chan] = MIN(MAX(0, swTrigThresholdChannel), max); //TODO Is there a maximum?
+    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelSWTrigThresholdChanged
+                                                        object:self
+                                                      userInfo:info];
+}
+
+- (void) setSWTrigShaping:(unsigned int)chan withValue:(int)swTrigShapingChannel
+{
+    if(chan >= [self numberOfChannels]) return;
+    if(swTrigShaping[chan] == swTrigShapingChannel) return;
+    [[[self undoManager] prepareWithInvocationTarget:self] setSWTrigShaping:chan withValue:swTrigShaping[chan]];
+    int max = 400;
+    if (swTrigInclude[chan] == 3)
+        max = 3;
+
+    swTrigShaping[chan] = MIN(MAX(0, swTrigShapingChannel), max); //TODO Is there a maximum?
+    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelSWTrigShapingChanged
                                                         object:self
                                                       userInfo:info];
 }
@@ -779,7 +858,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     //nothing to yet. A call from the Listener ships the data.
 }
 
-- (void) shipEvent:(fcio_event*)event withIndex:(int)index andChannel:(unsigned int)channel use:(ORDataPacket*)aDataPacket includeWF:(bool)includeWF;
+- (void) shipEvent:(fcio_event*)event withIndex:(int)index andChannel:(unsigned int)channel use:(ORDataPacket*)aDataPacket includeWF:(bool)includeWF
 {
     if(channel >= [self numberOfChannels]){
         NSLog(@"ORFlashCamADCModel: invalid channel passed to event:withIndex:andChannel:, skipping packet\n");
@@ -820,10 +899,14 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         
         ORInFluxDBMeasurement* aCmd = [ORInFluxDBMeasurement measurementForBucket:@"L200" org:[inFlux org]];
         [aCmd start   : @"flashCamADC"];
-        [aCmd addTag  : @"location"     withString:[NSString stringWithFormat:@"%02d_%02d_%02d",[self crateNumber],[self slot],aChan]];
+        [aCmd addTag :  @"crate"        withString:[NSString stringWithFormat:@"%02d",[self crateNumber]]];
+        [aCmd addTag :  @"slot"        withString:[NSString stringWithFormat:@"%02d",[self slot]]];
+        [aCmd addTag :  @"chan"        withString:[NSString stringWithFormat:@"%02d",aChan]];
+        [aCmd addTag :  @"addr"        withString:[NSString stringWithFormat:@"0x%03x",[self cardAddress]]];
         [aCmd addField: @"fpgaEnergy"   withLong:anEnergy];
         [aCmd addField: @"fpgaBaseline" withLong:aBaseline];
-        [aCmd setTimeStamp:[NSDate timeIntervalSinceReferenceDate]];
+        double aTimeStamp = [[NSDate date]timeIntervalSince1970];
+        [aCmd setTimeStamp:aTimeStamp];
         [inFlux executeDBCmd:aCmd];
     }
 }
@@ -966,7 +1049,13 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [self setBaselineSlew:i
                     withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"baselineSlew%i", i]]];
         [self setSWTrigInclude:i
-                     withValue:[decoder decodeBoolForKey:[NSString stringWithFormat:@"swTrigInclude%i", i]]];
+                     withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"swTrigType%i", i]]];
+        [self setSWTrigGain:i
+                     withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"swTrigGain%i", i]]];
+        [self setSWTrigThreshold:i
+                     withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"swTrigThreshold%i", i]]];
+        [self setSWTrigShaping:i
+                     withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"swTrigShaping%i", i]]];
         if(!baselineHistory[i]){
             baselineHistory[i] = [[ORTimeRate alloc] init];
             [baselineHistory[i] setLastAverageTime:[NSDate date]];
@@ -1016,7 +1105,10 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [encoder encodeFloat:poleZeroTime[i]  forKey:[NSString stringWithFormat:@"poleZeroTime%i",    i]];
         [encoder encodeFloat:postTrigger[i]   forKey:[NSString stringWithFormat:@"postTrigger%i",     i]];
         [encoder encodeInt:baselineSlew[i]    forKey:[NSString stringWithFormat:@"baselineSlew%i",    i]];
-        [encoder encodeBool:swTrigInclude[i]  forKey:[NSString stringWithFormat:@"swTrigInclude%i",   i]];
+        [encoder encodeInt:swTrigInclude[i]  forKey:[NSString stringWithFormat:@"swTrigType%i",   i]];
+        [encoder encodeFloat:swTrigGain[i]     forKey:[NSString stringWithFormat:@"swTrigGain%i",      i]];
+        [encoder encodeFloat:swTrigThreshold[i]  forKey:[NSString stringWithFormat:@"swTrigThreshold%i",   i]];
+        [encoder encodeInt:swTrigShaping[i]  forKey:[NSString stringWithFormat:@"swTrigShaping%i",   i]];
     }
     [encoder encodeInt:baseBias               forKey:@"baseBias"];
     [encoder encodeInt:majorityLevel          forKey:@"majorityLevel"];
@@ -1043,7 +1135,10 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [self addCurrentState:dict floatArray:poleZeroTime       forKey:@"PoleZeroTime"];
     [self addCurrentState:dict floatArray:postTrigger        forKey:@"PostTrigger"];
     [self addCurrentState:dict intArray:baselineSlew         forKey:@"BaselineSlew"];
-    [self addCurrentState:dict boolArray:swTrigInclude       forKey:@"SWTrigInclude"];
+    [self addCurrentState:dict intArray:swTrigInclude        forKey:@"SWTrigType"];
+    [self addCurrentState:dict floatArray:swTrigGain         forKey:@"SWTrigGain"];
+    [self addCurrentState:dict floatArray:swTrigThreshold    forKey:@"SWTrigThreshold"];
+    [self addCurrentState:dict intArray:swTrigShaping        forKey:@"SWTrigShaping"];
     [dict setObject:[NSNumber numberWithInt:baseBias]        forKey:@"BaseBias"];
     [dict setObject:[NSNumber numberWithInt:majorityLevel]   forKey:@"MajorityLevel"];
     [dict setObject:[NSNumber numberWithInt:majorityWidth]   forKey:@"MajorityWidth"];
@@ -1174,9 +1269,30 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [a addObject:p];
     
     p = [[[ORHWWizParam alloc] init] autorelease];
-    [p setName:@"SW Trigger Include"];
-    [p setFormat:@"##0" upperLimit:1 lowerLimit:0 stepSize:1 units:@""];
+    [p setName:@"SW Trigger Type"];
+    [p setFormat:@"##0" upperLimit:3 lowerLimit:0 stepSize:1 units:@""];
     [p setSetMethod:@selector(setSWTrigInclude:withValue:) getMethod:@selector(swTrigInclude:)];
+    [p setCanBeRamped:YES];
+    [a addObject:p];
+    
+    p = [[[ORHWWizParam alloc] init] autorelease];
+    [p setName:@"SW Trigger Gain"];
+    [p setFormat:@"##0.00" upperLimit:65536 lowerLimit:0 stepSize:1 units:@"LSB"];
+    [p setSetMethod:@selector(setSWTrigGain:withValue:) getMethod:@selector(swTrigGain:)];
+    [p setCanBeRamped:YES];
+    [a addObject:p];
+    
+    p = [[[ORHWWizParam alloc] init] autorelease];
+    [p setName:@"SW Trigger Threshold"];
+    [p setFormat:@"##0.00" upperLimit:65536 lowerLimit:0 stepSize:0.1 units:@""];
+    [p setSetMethod:@selector(setSWTrigThreshold:withValue:) getMethod:@selector(swTrigThreshold:)];
+    [p setCanBeRamped:YES];
+    [a addObject:p];
+    
+    p = [[[ORHWWizParam alloc] init] autorelease];
+    [p setName:@"SW Trigger Shaping"];
+    [p setFormat:@"##0" upperLimit:400 lowerLimit:0 stepSize:1 units:@"samples"];
+    [p setSetMethod:@selector(setSWTrigShaping:withValue:) getMethod:@selector(swTrigShaping:)];
     [p setCanBeRamped:YES];
     [a addObject:p];
     
@@ -1227,19 +1343,22 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [values setObject:[NSNumber numberWithBool:isRunning]                  forKey:@"isRunning"];
     for(int i=0; i<[self numberOfChannels]; i++){
         NSMutableDictionary* chval = [NSMutableDictionary dictionary];
-        [chval setObject:[NSNumber numberWithBool:[self chanEnabled:i]]    forKey:@"chanEnabled"];
-        [chval setObject:[NSNumber numberWithBool:[self trigOutEnabled:i]] forKey:@"trigOutEnabled"];
-        [chval setObject:[NSNumber numberWithInt:[self baseline:i]]        forKey:@"baseline"];
-        [chval setObject:[NSNumber numberWithInt:[self threshold:i]]       forKey:@"threshold"];
-        [chval setObject:[NSNumber numberWithInt:[self shapeTime:i]]       forKey:@"shapeTime"];
-        [chval setObject:[NSNumber numberWithInt:[self filterType:i]]      forKey:@"filterType"];
-        [chval setObject:[NSNumber numberWithInt:[self adcGain:i]]         forKey:@"adcGain"];
-        [chval setObject:[NSNumber numberWithFloat:[self trigGain:i]]      forKey:@"trigGain"];
-        [chval setObject:[NSNumber numberWithFloat:[self flatTopTime:i]]   forKey:@"flatTopTime"];
-        [chval setObject:[NSNumber numberWithFloat:[self poleZeroTime:i]]  forKey:@"poleZeroTime"];
-        [chval setObject:[NSNumber numberWithFloat:[self postTrigger:i]]   forKey:@"postTrigger"];
-        [chval setObject:[NSNumber numberWithInt:[self baselineSlew:i]]    forKey:@"baselineSlew"];
-        [chval setObject:[NSNumber numberWithBool:[self swTrigInclude:i]]  forKey:@"swTrigInclude:"];
+        [chval setObject:[NSNumber numberWithBool:[self chanEnabled:i]]     forKey:@"chanEnabled"];
+        [chval setObject:[NSNumber numberWithBool:[self trigOutEnabled:i]]  forKey:@"trigOutEnabled"];
+        [chval setObject:[NSNumber numberWithInt:[self baseline:i]]         forKey:@"baseline"];
+        [chval setObject:[NSNumber numberWithInt:[self threshold:i]]        forKey:@"threshold"];
+        [chval setObject:[NSNumber numberWithInt:[self shapeTime:i]]        forKey:@"shapeTime"];
+        [chval setObject:[NSNumber numberWithInt:[self filterType:i]]       forKey:@"filterType"];
+        [chval setObject:[NSNumber numberWithInt:[self adcGain:i]]          forKey:@"adcGain"];
+        [chval setObject:[NSNumber numberWithFloat:[self trigGain:i]]       forKey:@"trigGain"];
+        [chval setObject:[NSNumber numberWithFloat:[self flatTopTime:i]]    forKey:@"flatTopTime"];
+        [chval setObject:[NSNumber numberWithFloat:[self poleZeroTime:i]]   forKey:@"poleZeroTime"];
+        [chval setObject:[NSNumber numberWithFloat:[self postTrigger:i]]    forKey:@"postTrigger"];
+        [chval setObject:[NSNumber numberWithInt:[self baselineSlew:i]]     forKey:@"baselineSlew"];
+        [chval setObject:[NSNumber numberWithBool:[self swTrigInclude:i]]   forKey:@"swTrigType:"];
+        [chval setObject:[NSNumber numberWithFloat:[self swTrigGain:i]]      forKey:@"swTrigGain:"];
+        [chval setObject:[NSNumber numberWithFloat:[self swTrigThreshold:i]] forKey:@"swTrigThreshold:"];
+        [chval setObject:[NSNumber numberWithInt:[self swTrigShaping:i]] forKey:@"swTrigShaping:"];
         if([self enableBaselineHistory]){
             NSArray* baselines = [[self baselineHistory:i] ratesAsArray];
             int start = MAX(0, (int) [baselines count]-1024);
