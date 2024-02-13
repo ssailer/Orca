@@ -1904,12 +1904,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
     if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)) * kFlashCamConfigBufferLength);
     configBufferIndex = 0;
-    takeDataConfigIndex=0;
-    bufferedConfigCount=0;
+    takeDataConfigIndex = 0;
+    bufferedConfigCount = 0;
     if(!statusBuffer) statusBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_status)) * kFlashCamStatusBufferLength);
     statusBufferIndex = 0;
-    takeDataStatusIndex=0;
-    bufferedStatusCount=0;
+    takeDataStatusIndex = 0;
+    bufferedStatusCount = 0;
     eventCount        = 0;
     runTime           = 0.0;
     readMB            = 0.0;
