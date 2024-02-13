@@ -53,7 +53,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     port               = 4000;
     ip                 = @"";
     timeout            = 2000;
-    ioBuffer           = BUFIO_BUFSIZE/1024;
+    ioBuffer           = 0; // 0 uses default BUFIO_BUFSIZE = 256 kB
     stateBuffer        = 20;
     configParams       = [[NSMutableDictionary dictionary] retain];
     [self setConfigParam:@"maxPayload"      withValue:[NSNumber numberWithInt:0]];
