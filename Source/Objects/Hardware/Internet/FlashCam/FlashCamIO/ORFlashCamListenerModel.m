@@ -1280,7 +1280,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     if([extraFlags length]>0){
         extraFlags = [extraFlags removeExtraSpaces];
         extraFlags = [extraFlags removeNLandCRs];
-        [readoutArgs addObject:extraFlags];
+        NSArray *extraFlagsArray = [extraFlags componentsSeparatedByString:@" "];
+        [readoutArgs addObjectsFromArray:extraFlagsArray];
     }
 
     //----------------------------------------------------------------------
