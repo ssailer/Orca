@@ -1232,7 +1232,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     NSMutableString* trigAddr = [NSMutableString string];
     for(id card in triggerCards){
         [trigAddr appendString:[NSString stringWithFormat:@"%x,", [card cardAddress]]];
-        [readoutArgs addObjectsFromArray:[card runFlagsForCardIndex:ntrig]];
+        if ([gtriggerCards count] > 0) // only add the submaster flags, if there is a global trigger card
+            [readoutArgs addObjectsFromArray:[card runFlagsForCardIndex:ntrig]];
         ntrig ++;
     }
     [addressList insertString:trigAddr atIndex:0];
