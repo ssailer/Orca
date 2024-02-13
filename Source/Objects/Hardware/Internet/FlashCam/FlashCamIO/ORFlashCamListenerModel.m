@@ -1634,9 +1634,9 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     }
     // validate the channel map
     bool fail = false;
-    for(unsigned int i=0; i<FCIOMaxChannels; i++){
         uint32_t addr  = (config->tracemap[i] & 0xffff0000) >> 16;
         uint32_t input =  config->tracemap[i] & 0x0000ffff;
+    for(unsigned int i=0; i<config->adcs; i++){
         if(i >= (unsigned int) [chanMap count]){
             if(config->tracemap[i] == 0) continue;
             else{
