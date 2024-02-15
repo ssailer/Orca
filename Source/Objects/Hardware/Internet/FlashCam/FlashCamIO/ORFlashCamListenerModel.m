@@ -1218,6 +1218,12 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
             }
         }
     }
+    if (adcCount == 0) {
+        NSLogColor([NSColor redColor], @"%@: no ADC Card in the readout list.\n", [self identifier]);
+        [self runFailed];
+        return;
+    }
+
     // check if the number of channels exceeds the hardware limit for flashcam
     if([orcaChanMap count] > FCIOMaxChannels){
         NSLogColor([NSColor redColor], @"%@: failed to start run due to number "
@@ -1296,7 +1302,13 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     }
     [self setCardMap:orcaCardMap];
     // fixme: check for no cards and no enabled channels here
-    [argCard addObjectsFromArray:@[@"-a", [addressList substringWithRange:NSMakeRange(0, [addressList length]-1)]]];
+    if ([addressList length] > 0)
+        [argCard addObjectsFromArray:@[@"-a", [addressList substringWithRange:NSMakeRange(0, [addressList length]-1)]]];
+    else {
+        NSLogColor([NSColor redColor], @"%@: setupReadoutTask: addressList is empty - check if all addresses are set correctly.\n", [self identifier]);
+        [self runFailed];
+        return;
+    }
     [readoutArgs addObjectsFromArray:@[@"-ei", [[self remoteInterfaces] componentsJoinedByString:@","]]];
     [readoutArgs addObjectsFromArray:@[@"-et", [self ethType]]];
     [readoutArgs addObjectsFromArray:[self runFlags:NO]];
