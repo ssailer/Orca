@@ -84,6 +84,8 @@
     NSMutableArray* fcrunlog;
     ORDataFileModel* dataFileObject;
 
+    int currentStartupTime;
+
     NSThread* readerThread;
     bool readoutShouldStart;
     bool readoutIsRunning;

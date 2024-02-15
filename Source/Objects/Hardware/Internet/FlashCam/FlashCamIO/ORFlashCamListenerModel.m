@@ -143,6 +143,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     readoutIsRunning = NO;
     dataFileName = nil;
 
+    currentStartupTime = 0;
+
     [self registerNotificationObservers];
 
     [[self undoManager] enableUndoRegistration];
@@ -1145,17 +1147,33 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 - (void) setupReadoutTask
 {
+
     bool waitForGuardianReady = (guardian && ![guardian readoutReady]);
-    
+
     listenerRemoteIsFile = [[self configParam:@"extraFiles"] boolValue]; // need to remember if this is the case, and wait for the filename to be concretized
     bool waitForFileName = listenerRemoteIsFile && !dataFileName;
 
-    DEBUG_PRINT( "%s: setupReadoutTask waitForGuardianReady %d waitForFileName %d\n", [[self identifier] UTF8String], waitForGuardianReady, waitForFileName);
+    if (currentStartupTime > timeout) {
+        if (waitForGuardianReady) {
+            NSLogColor([NSColor redColor], @"%@: setupReadoutTask guardian (ADCCard) not ready after %dms.\n", [self identifier], currentStartupTime);
+            [self runFailed];
+            return;
+        }
+        if (waitForFileName) {
+            NSLogColor([NSColor redColor], @"%@: setupReadoutTask Filename not know after %dms.\n", [self identifier], currentStartupTime);
+            [self runFailed];
+            return;
+        }
+    }
+
+    DEBUG_PRINT( "%s: setupReadoutTask waitForGuardianReady %d waitForFileName %d %dms/%dms\n", [[self identifier] UTF8String], waitForGuardianReady, waitForFileName, currentStartupTime, timeout);
     if( waitForGuardianReady || waitForFileName ){
-       DEBUG_PRINT( "%s %s setupReadoutTask: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , 0.01);
+        DEBUG_PRINT( "%s %s setupReadoutTask: delay %f\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String] , 0.05);
+        currentStartupTime += 50; // milliseconds // this is just approximate, but is sufficient to track the success/failure of the startup.
         [self performSelector:@selector(setupReadoutTask) withObject:self afterDelay:0.05];
         return;
     }
+    currentStartupTime = 0.0; // reset the counter
 
     [self updateIP];
     
@@ -1841,6 +1859,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     dataFileName = nil;
     listenerRemoteIsFile = NO;
 
+    currentStartupTime = 0;
+
     [readOutArgs removeAllObjects];
     
     memset(configBuffer, 0, kFlashCamConfigBufferLength * (2 + sizeof(fcio_config)/sizeof(uint32_t) + (uint32_t)
@@ -1958,6 +1978,8 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
     readoutShouldStart = NO;
     readoutIsRunning = NO;
     dataFileName = nil;
+
+    currentStartupTime = 0;
 
     [self registerNotificationObservers];
 
