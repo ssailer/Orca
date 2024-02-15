@@ -492,13 +492,14 @@
     for(int i = chan; i < maxChan; i++){
         [[swTrigIncludeMatrix cellWithTag:i] selectItemAtIndex:[model swTrigInclude:i]];
 //        bool isOff = [model swTrigInclude:i] == 0;
-        bool isAnalogSum = [model swTrigInclude:i] == 1;
+        bool isPeakSum = [model swTrigInclude:i] == 1;
         bool isHWMultiplicity = [model swTrigInclude:i] == 2;
         bool isDigitalSignal = [model swTrigInclude:i] == 3;
+//        fprintf(stderr, "DEBUG swTrigIncludeChanged %d %d %d\n", isPeakSum, isHWMultiplicity, isDigitalSignal);
 //        fprintf(stderr, "  setEnabled chan %d = %d,%d,%d,%d\n",i, isOff, isAnalogSum, isHWMultiplicity, isDigitalSignal);
-        [[swTrigGainMatrix cellWithTag:i] setEnabled:isAnalogSum||isDigitalSignal];
-        [[swTrigThresholdMatrix cellWithTag:i] setEnabled:isAnalogSum||isHWMultiplicity||isDigitalSignal];
-        [[swTrigShapingMatrix cellWithTag:i] setEnabled:isAnalogSum||isDigitalSignal];
+        [[swTrigGainMatrix cellWithTag:i] setEnabled:isPeakSum||isDigitalSignal];
+        [[swTrigThresholdMatrix cellWithTag:i] setEnabled:isPeakSum||isHWMultiplicity||isDigitalSignal];
+        [[swTrigShapingMatrix cellWithTag:i] setEnabled:isPeakSum||isDigitalSignal];
         
 //        if (isDigitalSignal) {
 //            // Code here to add this channel to the ReadoutController options
@@ -730,7 +731,9 @@
 
 - (void) settingsLock:(bool)lock
 {
-    lock |= [gOrcaGlobals runInProgress] || [gSecurity isLocked:ORFlashCamCardSettingsLock];
+    //    lock |= [gOrcaGlobals runInProgress] || [gSecurity isLocked:ORFlashCamCardSettingsLock];
+    bool runInProgress = [[ORGlobal sharedGlobal] runInProgress];
+    lock |= runInProgress || [gSecurity isLocked:ORFlashCamCardSettingsLock];
     [super settingsLock:lock];
     [chanEnabledMatrix      setEnabled:!lock];
     [trigOutEnabledMatrix   setEnabled:!lock];
@@ -745,9 +748,13 @@
     [postTriggerMatrix      setEnabled:!lock];
     [baselineSlewMatrix     setEnabled:!lock];
     [swTrigIncludeMatrix    setEnabled:!lock];
-    [swTrigGainMatrix       setEnabled:!lock];
-    [swTrigThresholdMatrix  setEnabled:!lock];
-    [swTrigShapingMatrix    setEnabled:!lock];
+    if (lock) {
+            [swTrigGainMatrix       setEnabled:!lock];
+            [swTrigThresholdMatrix  setEnabled:!lock];
+            [swTrigShapingMatrix    setEnabled:!lock];
+    } else {
+        [self swTrigIncludeChanged:nil];
+    }
     [baseBiasTextField      setEnabled:!lock];
     [majorityLevelPUButton  setEnabled:!lock];
     [majorityWidthTextField setEnabled:!lock];
