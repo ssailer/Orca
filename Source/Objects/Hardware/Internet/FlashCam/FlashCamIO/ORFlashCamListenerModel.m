@@ -91,6 +91,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     [self setConfigParam:@"extraFiles"      withValue:[NSNumber numberWithBool:NO]];
     
     [self setConfigParam:@"lppEnabled"      withValue:[NSNumber numberWithBool:NO]];
+    [self setConfigParam:@"lppWriteNonTriggered" withValue:[NSNumber numberWithBool:NO]];
     [self setConfigParam:@"lppLogTime"      withValue:[NSNumber numberWithDouble:3.0]];
     [self setConfigParam:@"lppLogLevel"      withValue:[NSNumber numberWithInt:0]];
     [self setConfigParam:@"lppPulserChan"   withValue:[NSNumber numberWithInt:-1]];
@@ -98,7 +99,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     [self setConfigParam:@"lppMuonChan"     withValue:[NSNumber numberWithInt:-1]];
     [self setConfigParam:@"lppHWMajThreshold"  withValue:[NSNumber numberWithInt:-1]];
     [self setConfigParam:@"lppHWPreScalingRate"  withValue:[NSNumber numberWithDouble:0.01]];
-    [self setConfigParam:@"lppHWSkipFullCounting"  withValue:[NSNumber numberWithBool:NO]];
+    [self setConfigParam:@"lppHWCheckAll"  withValue:[NSNumber numberWithBool:YES]];
     [self setConfigParam:@"lppPSPreWindow"   withValue:[NSNumber numberWithInt:2000000]];
     [self setConfigParam:@"lppPSPostWindow"   withValue:[NSNumber numberWithInt:2000000]];
     [self setConfigParam:@"lppPSPreScalingRate"  withValue:[NSNumber numberWithDouble:0.01]];
@@ -120,6 +121,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     statusBufferIndex  = 0;
     takeDataStatusIndex= 0;
     bufferedStatusCount= 0;
+    enablePostProcessor = NO;
     postprocessor      = NULL;
     lppPSChannelMap = (int*)calloc(FCIOMaxChannels, sizeof(int));
     lppPSChannelGains = (float*)calloc(FCIOMaxChannels, sizeof(float));
@@ -451,6 +453,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         return [NSNumber numberWithBool:[[configParams objectForKey:@"writeFCIOLog"] boolValue]];
     else if([p isEqualToString:@"lppEnabled"])
         return [NSNumber numberWithBool:[[configParams objectForKey:p] boolValue]];
+    else if([p isEqualToString:@"lppWriteNonTriggered"])
+        return [NSNumber numberWithBool:[[configParams objectForKey:p] boolValue]];
     else if([p isEqualToString:@"lppLogTime"])
         return [NSNumber numberWithDouble:[[configParams objectForKey:p] doubleValue]];
     else if([p isEqualToString:@"lppLogLevel"])
@@ -465,7 +469,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         return [NSNumber numberWithInt:[[configParams objectForKey:p] intValue]];
     else if([p isEqualToString:@"lppHWPreScalingRate"])
         return [NSNumber numberWithDouble:[[configParams objectForKey:p] doubleValue]];
-    else if([p isEqualToString:@"lppHWSkipFullCounting"])
+    else if([p isEqualToString:@"lppHWCheckAll"])
         return [NSNumber numberWithBool:[[configParams objectForKey:p] boolValue]];
     else if([p isEqualToString:@"lppPSPreWindow"])
         return [NSNumber numberWithInt:[[configParams objectForKey:p] intValue]];
@@ -888,6 +892,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
     else if([p isEqualToString:@"lppEnabled"])
         [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
+    else if([p isEqualToString:@"lppWriteNonTriggered"])
+        [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
     else if([p isEqualToString:@"lppLogTime"])
         [configParams setObject:[NSNumber numberWithDouble:MIN(MAX(1.0,[v doubleValue]),60.0)] forKey:p];
     else if([p isEqualToString:@"lppLogLevel"])
@@ -902,7 +908,9 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         [configParams setObject:[NSNumber numberWithInt:MIN(MAX(1,[v intValue]),2304)] forKey:p];
     else if([p isEqualToString:@"lppHWPreScalingRate"])
         [configParams setObject:[NSNumber numberWithDouble:MAX(0.0,[v doubleValue])] forKey:p];
-    else if([p isEqualToString:@"lppHWSkipFullCounting"])
+    else if([p isEqualToString:@"lppHWPreScalingThreshold"])
+        [configParams setObject:[NSNumber numberWithInt:MAX(0,[v intValue])] forKey:p];
+    else if([p isEqualToString:@"lppHWCheckAll"])
         [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
     else if([p isEqualToString:@"lppPSPreWindow"])
         [configParams setObject:[NSNumber numberWithInt:MIN(MAX(0,[v intValue]),1e9)] forKey:p];
@@ -924,6 +932,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         NSLog(@"%@: unknown configuration parameter %@\n",[self identifier], p);
         return;
     }
+    NSLog(@"%@: set parameter %@ to %@\n",[self identifier], p, v);
 }
 
 - (void) setTimeout:(int)to
@@ -1127,6 +1136,127 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     }
 }
 
+- (bool) setupPostProcessor
+{
+    if ([[self configParam:@"daqMode"] intValue] == 12) {
+        NSLogColor([NSColor redColor],@"%s: Cannot use software trigger in singles mode!\n", [self identifier]);
+    }
+    nlppPSChannels = 0;
+    nlppHWChannels = 0;
+    lppPulserChannel = -1;
+    lppBaselineChannel = -1;
+    lppMuonChannel = -1;
+    for(ORReadOutObject* obj in [readOutList children]){
+        if(![[obj object] isKindOfClass:NSClassFromString(@"ORFlashCamCard")]) continue;
+        ORFlashCamCard* card = (ORFlashCamCard*) [obj object];
+        if([card isKindOfClass:NSClassFromString(@"ORFlashCamADCModel")]){
+            ORFlashCamADCModel* adc = (ORFlashCamADCModel*) card;
+//             LPP Parameters from ADCCardModel Objects:
+            for (unsigned int ich = 0; ich < [adc numberOfChannels]; ich++) {
+                int identifier = ([adc cardAddress] << 16) + ich;
+                switch([adc swTrigInclude:ich]) {
+                    case 1: { // Peak Sum
+                        lppPSChannelMap[nlppPSChannels] = identifier;
+                        lppPSChannelGains[nlppPSChannels] = [adc swTrigGain:ich];
+                        lppPSChannelThresholds[nlppPSChannels] = [adc swTrigThreshold:ich];
+                        lppPSChannelShapings[nlppPSChannels] = [adc swTrigShaping:ich];
+                        lppPSChannelLowPass[nlppPSChannels] = 0.0; // TODO: should we enable lowpass?
+                        nlppPSChannels++;
+                        break;
+                    }
+                    case 2: { // HW Multiplicity
+                        lppHWChannelMap[nlppHWChannels] = identifier;
+                        lppHWPrescalingThresholds[nlppHWChannels] = (unsigned short)[adc swTrigThreshold:ich];
+                        nlppHWChannels++;
+                        break;
+                    }
+                    case 3: { // Digital Flag
+                        switch([adc swTrigShaping:ich]) {
+                            case 1: {
+                                if (lppPulserChannel == -1) {
+                                    lppPulserChannel = identifier;
+                                    lppPulserChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
+                                } else {
+                                    NSLog(@"%s: setupReadoutTask: Trying to overwrite Pulser Channel setting 0x%x with 0x%x. Skipping.\n", [self identifier], lppPulserChannel, identifier );
+                                }
+                                break;
+                            }
+                            case 2: {
+                                if (lppBaselineChannel == -1) {
+                                    lppBaselineChannel = identifier;
+                                    lppBaselineChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
+                                } else {
+                                    NSLog(@"%s: setupReadoutTask: Trying to overwrite Baseline Channel setting 0x%x with 0x%x. Skipping.\n", [self identifier], lppBaselineChannel, identifier );
+                                }
+                                break;
+                            }
+                            case 3: {
+                                if (lppMuonChannel == -1) {
+                                    lppMuonChannel = identifier;
+                                    lppMuonChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
+                                } else {
+                                    NSLog(@"%s: setupReadoutTask: Trying to overwrite Muon Channel setting 0x%x with 0x%x. Skipping.\n", [self identifier], lppMuonChannel, identifier );
+                                }
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        // either 0 or new unknown tag values in the Controller
+                        // Don't add to the correspondig list.
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!(postprocessor = LPPCreate())) {
+        NSLog(@"%@: Couldn't allocate software trigger.\n", [self identifier]);
+        return NO;
+    }
+    LPPSetBufferSize(postprocessor, stateBuffer);
+    LPPSetLogTime(postprocessor, [[self configParam:@"lppLogTime"] doubleValue]);
+    LPPSetLogLevel(postprocessor, [[self configParam:@"lppLogLevel"] intValue]);
+
+    
+    const char* channelmap_format = "fcio-tracemap";
+    LPPSetAuxParameters(postprocessor, channelmap_format,
+                        lppPulserChannel, lppPulserChannelThreshold,
+                        lppBaselineChannel, lppBaselineChannelThreshold,
+                        lppMuonChannel, lppMuonChannelThreshold
+                    );
+
+    LPPSetGeParameters(postprocessor, nlppHWChannels, lppHWChannelMap, channelmap_format,
+                       [[self configParam:@"lppHWMajThreshold"] intValue],
+                       ![[self configParam:@"lppHWCheckAll"] intValue],
+                       lppHWPrescalingThresholds,
+                       [[self configParam:@"lppHWPreScalingRate"] doubleValue]);
+    
+    LPPSetSiPMParameters(postprocessor, nlppPSChannels, lppPSChannelMap, channelmap_format,
+                         lppPSChannelGains, lppPSChannelThresholds,
+                         lppPSChannelShapings, lppPSChannelLowPass,
+                         [[self configParam:@"lppPSPreWindow"] intValue],
+                         [[self configParam:@"lppPSPostWindow"] intValue],
+                         [[self configParam:@"lppPSSumWindowSize"] intValue],
+                         [[self configParam:@"lppPSSumWindowStart"] intValue],
+                         [[self configParam:@"lppPSSumWindowStart"] intValue] + [[self configParam:@"lppPSSumWindowSize"] intValue],
+                         [[self configParam:@"lppPSAbsoluteThreshold"] floatValue],
+                         [[self configParam:@"lppPSCoincidenceThreshold"] floatValue],
+                         [[self configParam:@"lppPSPreScalingRate"] floatValue],
+                         [[self configParam:@"lppPSMuonCoincidence"] intValue]);
+
+//                const char* filepath = "<path_to_config>/lppconfig_local.txt";
+//                LPPSetParametersFromFile(postprocessor, filepath);
+    NSLog(@"%@: Software trigger initialized.\n", [self identifier]);
+    // Push the Config into the postprocessor, so it's ready when read() is being called.
+    return YES;
+}
+
 - (bool) fcioOpen
 {
     DEBUG_PRINT( "%s %s: fcioOpen\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
@@ -1172,51 +1302,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 //        FCIOSelectStateTag(reader, FCIOStatus);
 //        FCIOSelectStateTag(reader, FCIOEvent);
 //        FCIOSelectStateTag(reader, FCIOSparseEvent);
-        enablePostProcessor = [self configParam:@"lppEnabled"];
-        
-        if (enablePostProcessor) {
-            
-            if (!(postprocessor = LPPCreate())) {
-                NSLog(@"ORFlashCamListenerModel: Couldn't allocate PostProcessor.\n");
-                FCIODestroyStateReader(reader);
-                reader = NULL;
-                return NO;
-            }
-            LPPSetBufferSize(postprocessor, stateBuffer);
-            LPPSetLogTime(postprocessor, [[self configParam:@"lppLogTime"] doubleValue]);
-            LPPSetLogLevel(postprocessor, [[self configParam:@"lppLogLevel"] intValue]);
-
-            
-//                const char* channelmap_format = "fcio-tracemap";
-#define LPPChannelMapFormat "fcio-tracemap"
-            LPPSetAuxParameters(postprocessor, LPPChannelMapFormat,
-                                lppPulserChannel, lppPulserChannelThreshold,
-                                lppBaselineChannel, lppBaselineChannelThreshold,
-                                lppMuonChannel, lppMuonChannelThreshold
-                            );
-
-            LPPSetGeParameters(postprocessor, nlppHWChannels, lppHWChannelMap, LPPChannelMapFormat,
-                               [[self configParam:@"lppHWMajThreshold"] intValue], [[self configParam:@"lppHWSkipFullCounting"] intValue],
-                               lppHWPrescalingThresholds, [[self configParam:@"lppHWPreScalingRate"] doubleValue]);
-            
-            LPPSetSiPMParameters(postprocessor, nlppPSChannels, lppPSChannelMap, LPPChannelMapFormat,
-                                 lppPSChannelGains, lppPSChannelThresholds,
-                                 lppPSChannelShapings, lppPSChannelLowPass,
-                                     [[self configParam:@"lppPSPreWindow"] intValue],
-                                 [[self configParam:@"lppPSPostWindow"] intValue],
-                                 [[ self configParam:@"lppPSSumWindowSize"] intValue],
-                                 [[ self configParam:@"lppPSSumWindowStart"] intValue],
-                                 [[ self configParam:@"lppPSSumWindowStart"] intValue] + [[self configParam:@"lppPSSumWindowSize"] intValue],
-                                 [[ self configParam:@"lppPSAbsoluteThreshold"] floatValue],
-                                 [[ self configParam:@"lppPSCoincidenceThreshold"] floatValue],
-                                 [[ self configParam:@"lppPSPreScalingRate"] floatValue],
-                                 [[ self configParam:@"lppPSMuonCoincidence"] intValue]);
-
-//                const char* filepath = "<path_to_config>/lppconfig_local.txt";
-//                LPPSetParametersFromFile(postprocessor, filepath);
-            NSLog(@"ORFlashCamListenerMode: L200 PostProcessor initialized.\n");
-            // Push the Config into the postprocessor, so it's ready when read() is being called.
-        }
+        if (enablePostProcessor && ![self setupPostProcessor])
+            return NO;
         return YES;
     } else {
         NSLogColor([NSColor redColor], @"%@: unable to open %@\n",[self identifier], [self streamDescription]);
@@ -1276,11 +1363,12 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
     int timedout = 0; // contains timeout reason
     bool writeWaveforms = true;
+    bool writeNonTriggered = [[self configParam:@"lppWriteNonTriggered"] boolValue];
     FCIOState* state = NULL;
     LPPState* lppstate = NULL;
     if (!postprocessor) {
         if ( ! (state = FCIOGetNextState(reader, &timedout))) {
-        DEBUG_PRINT( "%s %s: fcioRead: end-of-stream: timedout %d\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String], timedout);
+            DEBUG_PRINT( "%s %s: fcioRead: end-of-stream: timedout %d\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String], timedout);
             if (timedout == 1 && !listenerRemoteIsFile)
                 NSLog(@"%@: FCIO stream closed due to timeout.\n", [self identifier]);
             else if (timedout == 2)
@@ -1289,20 +1377,19 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         }
         
     } else {
-        lppstate = LPPGetNextState(postprocessor, reader, &timedout);
-        if (!lppstate) {
+        if (!(lppstate = LPPGetNextState(postprocessor, reader, &timedout))) {
+            DEBUG_PRINT( "%s %s: fcioRead: end-of-stream: timedout %d\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String], timedout);
             if (timedout == 1 && !listenerRemoteIsFile)
-                NSLog(@"ORFlashCamListenerModel: stream closed due to timeout.\n");
+                NSLog(@"%@: FCIO stream closed due to timeout.\n", [self identifier]);
             else if (timedout == 2)
-                NSLog(@"ORFlashCamListenerModel: stream closed due to timeout, however deselected records arrived.\n");
+                NSLog(@"%@: FCIO stream closed due to timeout, however deselected records arrived.\n", [self identifier]);
             else if (timedout == 3)
-                NSLog(@"ORFlashCamListenerModel: post processor buffer is fulll Try increasing the ReadoutModel State Buffer size.\n");
+                NSLogColor([NSColor redColor], @"%@: post processor buffer overflow. Increase the ReadoutModel state buffer size.\n",[self identifier]);
             return NO;
         }
         
         state = lppstate->state;
 
-        //        while ((lppstate = LPPGetNextState(postprocessor, reader, &timedout))){
         if (LPPStatsUpdate(postprocessor, !lppstate)) {
             // returns one if logtime set in postprocessor has been reached.
             // Force if lppstate == NULL
@@ -1313,6 +1400,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 fprintf(stderr, "DEBUG postprocessor %s\n", logstring);
             //                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
         }
+        if (!lppstate->write || !writeNonTriggered)
+            return YES; // skip non-triggered event, but keep running, except if we want to write everything.
     }
     fcio_last_tag = state->last_tag;
             // TODO Handle what to do with non-triggered records here!
@@ -1457,8 +1546,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 if((int) state->last_tag == [n intValue]) found = true;
             if(!found){
                 [unrecognizedStates addObject:[NSNumber numberWithInt:(int)state->last_tag]];
-                NSLogColor([NSColor redColor], @"%: unrecognized fcio record tag %d on %@\n", [self identifier], state->last_tag, [self streamDescription]);
-                NSLogColor([NSColor redColor], @"%: WARNING - suppressing further instances of this message for this object in this run\n", [self identifier]);
+                NSLogColor([NSColor redColor], @"%@: unrecognized fcio record tag %d on %@\n", [self identifier], state->last_tag, [self streamDescription]);
+                NSLogColor([NSColor redColor], @"%@: WARNING - suppressing further instances of this message for this object in this run\n", [self identifier]);
             }
             break;
         }
@@ -1565,11 +1654,6 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     // add the adc cards to the address list and their arguments to the list
     unsigned int adcCardCount = 0;
     int maxShapeTime = 0;
-    nlppPSChannels = 0;
-    nlppHWChannels = 0;
-    lppPulserChannel = -1;
-    lppBaselineChannel = -1;
-    lppMuonChannel = -1;
     for(ORReadOutObject* obj in [readOutList children]){
         if(![[obj object] isKindOfClass:NSClassFromString(@"ORFlashCamCard")]) continue;
         ORFlashCamCard* card = (ORFlashCamCard*) [obj object];
@@ -1596,71 +1680,6 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 NSString* cname = [conobj className];
                 if([cname isEqualToString:@"ORFlashCamGlobalTriggerModel"]) [gtriggerCards addObject:conobj];
                 else if([cname isEqualToString:@"ORFlashCamTriggerModel"])  [triggerCards  addObject:conobj];
-            }
-//             LPP Parameters from ADCCardModel Objects:
-            for (unsigned int ich = 0; ich < [adc numberOfChannels]; ich++) {
-                int identifier = ([adc cardAddress] << 16) + ich;
-                switch([adc swTrigInclude:ich]) {
-                    case 1: {
-                        lppPSChannelMap[nlppPSChannels] = identifier;
-                        lppPSChannelGains[nlppPSChannels] = [adc swTrigGain:ich];
-                        lppPSChannelThresholds[nlppPSChannels] = [adc swTrigThreshold:ich];
-                        lppPSChannelShapings[nlppPSChannels] = [adc swTrigShaping:ich];
-                        lppPSChannelLowPass[nlppPSChannels] = 0.0; // TODO: should we enable lowpass?
-
-//                       lppPSChannelLowPasses[nlppPSChannels] =   [adc swTrigLowPass:ich] : placeholder, not implemented yet, but might be necessary in the future
-                        // Analog Sum
-                        nlppPSChannels++;
-                        break;
-                    }
-                    case 2: {
-                        lppHWChannelMap[nlppHWChannels] = identifier;
-                        lppHWPrescalingThresholds[nlppHWChannels] = (unsigned short)[adc swTrigThreshold:ich];
-                        // HW Multiplicity
-                        nlppHWChannels++;
-                        break;
-                    }
-                    case 3: {
-                        switch([adc swTrigShaping:ich]) {
-                            case 1: {
-                                if (lppPulserChannel == -1) {
-                                    lppPulserChannel = identifier;
-                                    lppPulserChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
-                                } else {
-                                    NSLog(@"ORFlashCamListenerModel/startReadoutAfterPing: Trying to overwrite Pulser Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
-                                }
-                                break;
-                            }
-                            case 2: {
-                                if (lppBaselineChannel == -1) {
-                                    lppBaselineChannel = identifier;
-                                    lppBaselineChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
-                                } else {
-                                    NSLog(@"ORFlashCamListenerModel/startReadoutAfterPing: Trying to overwrite Baseline Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
-                                }
-                                break;
-                            }
-                            case 3: {
-                                if (lppMuonChannel == -1) {
-                                    lppMuonChannel = identifier;
-                                    lppMuonChannelThreshold = [adc swTrigGain:ich] * [adc swTrigThreshold:ich];
-                                } else {
-                                    NSLog(@"ORFlashCamListenerModel/startReadoutAfterPing: Trying to overwrite Muon Channel setting 0x%x with 0x%x. Skipping.\n", lppPulserChannel, identifier );
-                                }
-                                break;
-                            }
-                            default: {
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    default: {
-                        // either 0 or new unknown tag values in the Controller/XIB stuff
-                        // Don't add to the correspondig list.
-                        break;
-                    }
-                }
             }
         }
     }
@@ -2134,8 +2153,10 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             fail = true;
         }
     }
-    if(fail) [self runFailed];
-    else NSLog(@"%@: successfully validated channel map\n", [self identifier]);
+    if(fail) {
+        NSLogColor([NSColor redColor], @"%@: failed to validated channel map\n", [self identifier]);
+        [self runFailed];
+    }
 }
 
 - (void) sendConfigPacket:(ORDataPacket*)aDataPacket
@@ -2379,6 +2400,14 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     readerRecordCount = 0;
     bufferedRecords   = 0;
     listenerRemoteIsFile = NO;
+
+    lppPSChannelMap = (int*)calloc(FCIOMaxChannels, sizeof(int));
+    lppPSChannelGains = (float*)calloc(FCIOMaxChannels, sizeof(float));
+    lppPSChannelThresholds = (float*)calloc(FCIOMaxChannels, sizeof(float));
+    lppPSChannelShapings = (int*)calloc(FCIOMaxChannels, sizeof(int));
+    lppPSChannelLowPass = (float*)calloc(FCIOMaxChannels, sizeof(float));
+    lppHWChannelMap = (int*)calloc(FCIOMaxChannels, sizeof(int));
+    lppHWPrescalingThresholds = (unsigned short*)calloc(FCIOMaxChannels, sizeof(unsigned short));
 
     if(!configBuffer) configBuffer = (uint32_t*) malloc((2*sizeof(uint32_t) + sizeof(fcio_config)) * kFlashCamConfigBufferLength);
     configBufferIndex = 0;
