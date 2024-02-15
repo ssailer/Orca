@@ -63,21 +63,21 @@
         <window title="FlashCam ADC" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="0.0" y="0.0" width="890" height="858"/>
+            <rect key="contentRect" x="0.0" y="0.0" width="890" height="864"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="823" height="858"/>
             <value key="maxSize" type="size" width="823" height="858"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="890" height="858"/>
+                <rect key="frame" x="0.0" y="0.0" width="890" height="864"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="N7r-HQ-JuK">
-                        <rect key="frame" x="8" y="654" width="16" height="195"/>
+                        <rect key="frame" x="8" y="660" width="16" height="195"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="flashcam_adc" id="KYZ-a0-0MS"/>
                     </imageView>
                     <tabView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8TT-Ak-qPR">
-                        <rect key="frame" x="31" y="2" width="846" height="842"/>
+                        <rect key="frame" x="31" y="8" width="846" height="842"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <font key="font" metaFont="label"/>
                         <tabViewItems>
@@ -3051,7 +3051,7 @@
                         </tabViewItems>
                     </tabView>
                     <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qNv-yV-9gx">
-                        <rect key="frame" x="5" y="5" width="33" height="36"/>
+                        <rect key="frame" x="5" y="11" width="33" height="36"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="bevel" bezelStyle="regularSquare" image="Unlocked" imagePosition="only" alignment="center" alternateImage="Locked" state="on" inset="2" id="9aT-jI-vtd">
                             <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
@@ -3066,7 +3066,7 @@
             <connections>
                 <outlet property="delegate" destination="-2" id="I8k-sV-s6Y"/>
             </connections>
-            <point key="canvasLocation" x="181" y="76"/>
+            <point key="canvasLocation" x="181" y="79"/>
         </window>
         <customFormatter id="Ioz-Qe-6S1" customClass="OHexFormatter"/>
     </objects>
