@@ -950,14 +950,15 @@
         }
         else if(view == listenerLPPGeneralView){
             if(col == 1)      return [l configParam:@"lppEnabled"];
-            else if(col == 2) return [l configParam:@"lppLogTime"];
-            else if(col == 3) return [l configParam:@"lppLogLevel"];
+            else if(col == 2) return [l configParam:@"lppWriteNonTriggered"];
+            else if(col == 3) return [l configParam:@"lppLogTime"];
+            else if(col == 4) return [l configParam:@"lppLogLevel"];
         }
         else if(view == listenerLPPHWMultiplicityView){
             if(col == 1)      return [l configParam:@"lppHWMajThreshold"];
             else if(col == 2) return [l configParam:@"lppHWPreScalingRate"];
-            else if(col == 3) return [l configParam:@"lppHWPreScalingThreshold"];
-            else if(col == 4) return [l configParam:@"lppHWSkipFullCounting"];
+//            else if(col == 3) return [l configParam:@"lppHWPreScalingThreshold"];
+            else if(col == 3) return [l configParam:@"lppHWCheckAll"];
         }
         else if(view == listenerLPPPeakSumTriggerView){
             if(col == 1)      return [l configParam:@"lppPSPreWindow"];
@@ -1075,9 +1076,11 @@
         else if(view == listenerLPPGeneralView){
             if(col == 1)      [l setConfigParam:@"lppEnabled"
                                       withValue:[NSNumber numberWithBool:[object boolValue]]];
-            else if(col == 2) [l setConfigParam:@"lppLogTime"
+            else if(col == 2) [l setConfigParam:@"lppWriteNonTriggered"
+                                      withValue:[NSNumber numberWithBool:[object boolValue]]];
+            else if(col == 3) [l setConfigParam:@"lppLogTime"
                                       withValue:[NSNumber numberWithDouble:[object doubleValue]]];
-            else if(col == 3) [l setConfigParam:@"lppLogLevel"
+            else if(col == 4) [l setConfigParam:@"lppLogLevel"
                                       withValue:[NSNumber numberWithInt:[object intValue]]];
         }
         else if(view == listenerLPPHWMultiplicityView){
@@ -1085,9 +1088,9 @@
                                       withValue:[NSNumber numberWithInt:[object intValue]]];
             else if(col == 2) [l setConfigParam:@"lppHWPreScalingRate"
                                       withValue:[NSNumber numberWithDouble:[object doubleValue]]];
-            else if(col == 3) [l setConfigParam:@"lppHWPreScalingThreshold"
-                                      withValue:[NSNumber numberWithInt:[object intValue]]];
-            else if(col == 4) [l setConfigParam:@"lppHWSkipFullCounting"
+//            else if(col == 3) [l setConfigParam:@"lppHWPreScalingThreshold"
+//                                      withValue:[NSNumber numberWithInt:[object intValue]]];
+            else if(col == 3) [l setConfigParam:@"lppHWCheckAll"
                                       withValue:[NSNumber numberWithBool:[object boolValue]]];
         }
         else if(view == listenerLPPPeakSumTriggerView){
