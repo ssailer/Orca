@@ -1093,22 +1093,22 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
 {
     [super encodeWithCoder:encoder];
     for(int i=0; i<[self numberOfChannels]; i++){
-        [encoder encodeBool:chanEnabled[i]    forKey:[NSString stringWithFormat:@"chanEnabled%i",     i]];
-        [encoder encodeBool:trigOutEnabled[i] forKey:[NSString stringWithFormat:@"trigOutEnabled%i", i]];
-        [encoder encodeInt:baseline[i]        forKey:[NSString stringWithFormat:@"baseline%i",        i]];
-        [encoder encodeInt:threshold[i]       forKey:[NSString stringWithFormat:@"threshold%i",       i]];
-        [encoder encodeInt:adcGain[i]         forKey:[NSString stringWithFormat:@"adcGain%i",         i]];
-        [encoder encodeFloat:trigGain[i]      forKey:[NSString stringWithFormat:@"trigGain%i",        i]];
-        [encoder encodeInt:shapeTime[i]       forKey:[NSString stringWithFormat:@"shapeTime%i",       i]];
-        [encoder encodeInt:filterType[i]      forKey:[NSString stringWithFormat:@"filterType%i",      i]];
-        [encoder encodeFloat:flatTopTime[i]   forKey:[NSString stringWithFormat:@"flatTopTime%i",     i]];
-        [encoder encodeFloat:poleZeroTime[i]  forKey:[NSString stringWithFormat:@"poleZeroTime%i",    i]];
-        [encoder encodeFloat:postTrigger[i]   forKey:[NSString stringWithFormat:@"postTrigger%i",     i]];
-        [encoder encodeInt:baselineSlew[i]    forKey:[NSString stringWithFormat:@"baselineSlew%i",    i]];
-        [encoder encodeInt:swTrigInclude[i]  forKey:[NSString stringWithFormat:@"swTrigType%i",   i]];
-        [encoder encodeFloat:swTrigGain[i]     forKey:[NSString stringWithFormat:@"swTrigGain%i",      i]];
-        [encoder encodeFloat:swTrigThreshold[i]  forKey:[NSString stringWithFormat:@"swTrigThreshold%i",   i]];
-        [encoder encodeInt:swTrigShaping[i]  forKey:[NSString stringWithFormat:@"swTrigShaping%i",   i]];
+        [encoder encodeBool:chanEnabled[i]      forKey:[NSString stringWithFormat:@"chanEnabled%i",     i]];
+        [encoder encodeBool:trigOutEnabled[i]   forKey:[NSString stringWithFormat:@"trigOutEnabled%i",  i]];
+        [encoder encodeInt:baseline[i]          forKey:[NSString stringWithFormat:@"baseline%i",        i]];
+        [encoder encodeInt:threshold[i]         forKey:[NSString stringWithFormat:@"threshold%i",       i]];
+        [encoder encodeInt:adcGain[i]           forKey:[NSString stringWithFormat:@"adcGain%i",         i]];
+        [encoder encodeFloat:trigGain[i]        forKey:[NSString stringWithFormat:@"trigGain%i",        i]];
+        [encoder encodeInt:shapeTime[i]         forKey:[NSString stringWithFormat:@"shapeTime%i",       i]];
+        [encoder encodeInt:filterType[i]        forKey:[NSString stringWithFormat:@"filterType%i",      i]];
+        [encoder encodeFloat:flatTopTime[i]     forKey:[NSString stringWithFormat:@"flatTopTime%i",     i]];
+        [encoder encodeFloat:poleZeroTime[i]    forKey:[NSString stringWithFormat:@"poleZeroTime%i",    i]];
+        [encoder encodeFloat:postTrigger[i]     forKey:[NSString stringWithFormat:@"postTrigger%i",     i]];
+        [encoder encodeInt:baselineSlew[i]      forKey:[NSString stringWithFormat:@"baselineSlew%i",    i]];
+        [encoder encodeInt:swTrigInclude[i]     forKey:[NSString stringWithFormat:@"swTrigType%i",      i]];
+        [encoder encodeFloat:swTrigGain[i]      forKey:[NSString stringWithFormat:@"swTrigGain%i",      i]];
+        [encoder encodeFloat:swTrigThreshold[i] forKey:[NSString stringWithFormat:@"swTrigThreshold%i", i]];
+        [encoder encodeInt:swTrigShaping[i]     forKey:[NSString stringWithFormat:@"swTrigShaping%i",   i]];
     }
     [encoder encodeInt:baseBias               forKey:@"baseBias"];
     [encoder encodeInt:majorityLevel          forKey:@"majorityLevel"];
