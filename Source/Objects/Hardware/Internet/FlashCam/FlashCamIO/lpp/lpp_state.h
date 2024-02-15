@@ -37,6 +37,9 @@ typedef struct Flags {
   unsigned int event;
 } Flags;
 
+/* forward decl if we want to fill that pointer. */
+typedef struct TriggerList TriggerList;
+
 typedef struct LPPState {
   /* internal */
   FCIOState *state;
@@ -58,6 +61,9 @@ typedef struct LPPState {
   int majority;                       // how many channels have fpga_energy > 0
   unsigned short ge_max_fpga_energy;  // what is the largest fpga_energy of those
   unsigned short ge_min_fpga_energy;  // what is the smallest fpga_energy of those
+
+  /* sub triggerlist */
+  TriggerList* trigger_list;
 
   /* final write decision */
   int write;

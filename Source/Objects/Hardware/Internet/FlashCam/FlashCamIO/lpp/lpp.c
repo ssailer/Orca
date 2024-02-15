@@ -74,7 +74,9 @@ Timestamp fcio_time_run2unix(Timestamp runtime, int timeoffsets[5], int use_exte
 }
 
 static inline unsigned int lpp_write_decision(PostProcessor* processor, LPPState* lpp_state) {
-  if ((lpp_state->state->last_tag != FCIOEvent) && (lpp_state->state->last_tag != FCIOSparseEvent)) return 1;
+  if ((lpp_state->state->last_tag != FCIOEvent) && (lpp_state->state->last_tag != FCIOSparseEvent))
+  // if ((lpp_state->state->last_tag != FCIOEvent))
+    return 1;
 
   if ((lpp_state->flags.event & processor->set_event_flags) ||
       (lpp_state->flags.trigger & processor->set_trigger_flags))
@@ -96,7 +98,7 @@ static inline Flags lpp_evt_flags(PostProcessor* processor, Flags flags, FCIOSta
     return flags;
   }
 
-  if (state->last_tag != FCIOEvent) {
+  if ((state->last_tag != FCIOEvent) && (state->last_tag != FCIOSparseEvent)) {
     return flags;
   }
 
@@ -143,7 +145,8 @@ static inline Flags lpp_evt_flags(PostProcessor* processor, Flags flags, FCIOSta
 
     FCIOState* previous_state = previous_lpp_state->state;
     /* TODO Check if Sparseevents retrigger, and how to handle this case*/
-    if (previous_state->last_tag != FCIOEvent) continue;
+    if ((previous_state->last_tag != FCIOEvent) && (previous_state->last_tag != FCIOSparseEvent))
+      continue;
 
     Timestamp previous_ts = fcio_time_timestamps2run(previous_state->event->timestamp);
 
@@ -200,6 +203,56 @@ static inline Flags lpp_st_analogue_sum(PostProcessor* processor, Flags flags, F
   fcio_event* event = state->event;
 
   tale_dsp_windowed_analogue_sum(processor->analogue_sum_cfg, config->eventsamples, config->adcs, event->trace);
+
+  if (processor->loglevel >= 5) {
+    fprintf(stderr, "DEBUG analog sum trigger list: evtno %d, nregions %d", event->timestamp[0], processor->analogue_sum_cfg->trigger_list.size);
+    int start = config->eventsamples;
+    int stop = 0;
+    for (int i = 0; i < processor->analogue_sum_cfg->trigger_list.size; i++) {
+
+      if (processor->analogue_sum_cfg->trigger_list.start[i] < start)
+        start = processor->analogue_sum_cfg->trigger_list.start[i];
+
+      if (processor->analogue_sum_cfg->trigger_list.stop[i] > stop)
+        stop = processor->analogue_sum_cfg->trigger_list.stop[i];
+
+      fprintf(stderr, " (%.1f,%d,%d,%d,%.3f)",
+      processor->analogue_sum_cfg->trigger_list.max_sum_pe[i],
+      processor->analogue_sum_cfg->trigger_list.start[i],
+      processor->analogue_sum_cfg->trigger_list.stop[i],
+      processor->analogue_sum_cfg->trigger_list.stop[i] - processor->analogue_sum_cfg->trigger_list.start[i],
+      (processor->analogue_sum_cfg->trigger_list.stop[i] - processor->analogue_sum_cfg->trigger_list.start[i])*16e-3
+    );
+    }
+
+    // int start = config->eventsamples;
+    // int stop = -1;
+    // for (int i = 0; i < processor->analogue_sum_cfg->trigger_list.size; i++) {
+
+    //   // if (processor->analogue_sum_cfg->trigger_list.start[i] > start)
+    //   if (processor->analogue_sum_cfg->trigger_list.start[i]; <= stop) { // this is the old stop
+    //     // overlapping regions (due to coincidence window)
+    //     // so we keep the old start and update the new stop
+    //     stop = processor->analogue_sum_cfg->trigger_list.stop[i];
+    //     continue;
+    //   } 
+    //   start = processor->analogue_sum_cfg->trigger_list.start[i];
+    //   stop = processor->analogue_sum_cfg->trigger_list.stop[i];
+
+      
+
+
+    //   // if (processor->analogue_sum_cfg->trigger_list.stop[i] > stop)
+
+
+    // }
+
+    fprintf(stderr, " region: (%d,%d,%d)\n",
+      start,stop,stop-start
+    );
+
+
+  }
 
   if (processor->analogue_sum_cfg->largest_sum_pe >= processor->sum_threshold_pe) {
     flags.trigger |= ST_TRIGGER_SIPM_NPE;
@@ -288,15 +341,21 @@ int lpp_process_fcio_state(PostProcessor* processor, LPPState* lpp_state, FCIOSt
   AnalogueSumCfg* analogue_sum_cfg = processor->analogue_sum_cfg;
   FPGAMajorityCfg* fpga_majority_cfg = processor->fpga_majority_cfg;
 
+  Flags flags = {.event = EVT_NULL, .trigger = ST_NULL};
+
   lpp_state->stream_tag = state->last_tag;
+  lpp_state->flags = flags;
+  lpp_state->timestamp.seconds = -1;
+  lpp_state->timestamp.nanoseconds = 0;
+  lpp_state->unixstamp.seconds = -1;
+  lpp_state->unixstamp.nanoseconds = 0;
 
   switch (state->last_tag) {
-    case FCIOEvent:
-    case FCIOSparseEvent: {
+    case FCIOSparseEvent:
+    case FCIOEvent: {
+
       lpp_state->timestamp = fcio_time_timestamps2run(state->event->timestamp);
       lpp_state->unixstamp = fcio_time_run2unix(lpp_state->timestamp, state->event->timeoffset, state->config->gps);
-
-      Flags flags = {.event = EVT_NULL, .trigger = ST_NULL};
 
       if (processor->checks) {
         const int max_ticks = 249999999;
@@ -460,8 +519,7 @@ int lpp_process_fcio_state(PostProcessor* processor, LPPState* lpp_state, FCIOSt
 
         if (fpga_majority_cfg->ntraces <= 0) {
           fpga_majority_cfg->ntraces = state->config->adcs;
-          processor->majority_threshold =
-              0;  // we pass the event even if there is no fpga_energy; it must be in the stream for a reason.
+          processor->majority_threshold = 0;  // we pass the event even if there is no fpga_energy; it must be in the stream for a reason.
         }
       }
       lpp_state->contains_timestamp = 0;
@@ -484,6 +542,7 @@ int lpp_process_fcio_state(PostProcessor* processor, LPPState* lpp_state, FCIOSt
 }
 
 void lpp_process_timings(PostProcessor* processor, LPPState* lpp_state) {
+
   if (timestamp_geq(processor->post_trigger_timestamp, lpp_state->timestamp)) {
     lpp_state->flags.event |= EVT_FORCE_POST_WINDOW;
 
@@ -503,8 +562,11 @@ void lpp_process_timings(PostProcessor* processor, LPPState* lpp_state) {
 
     LPPState* update_lpp_state = NULL;
     int previous_counter = 0;  // current lpp_state is a peeked state, so GetState(0) is the "previous one"
-    while ((update_lpp_state = LPPBufferGetState(processor->buffer, previous_counter--)) &&
-           timestamp_geq(update_lpp_state->timestamp, processor->pre_trigger_timestamp)) {
+    while ((update_lpp_state = LPPBufferGetState(processor->buffer, previous_counter--))
+            && timestamp_geq(update_lpp_state->timestamp, processor->pre_trigger_timestamp))
+    {
+      if (!update_lpp_state->contains_timestamp)
+        continue;
       update_lpp_state->flags.event |= EVT_FORCE_PRE_WINDOW;
       if (update_lpp_state->flags.event & EVT_ASUM_MIN_NPE) {
         update_lpp_state->flags.trigger |= ST_TRIGGER_SIPM_NPE_IN_WINDOW;
@@ -513,12 +575,15 @@ void lpp_process_timings(PostProcessor* processor, LPPState* lpp_state) {
   }
 
   if (lpp_state->flags.event & EVT_RETRIGGER) {
-    LPPState* previous_lpp_state = LPPBufferGetState(processor->buffer, 0);
-    // fprintf(stderr, "DEBUDEBUG %ld %d %d\n", lpp_state - previous_lpp_state, lpp_state->state->event->timestamp[0],
-    // previous_lpp_state->state->event->timestamp[0]);
-    if (previous_lpp_state && ((previous_lpp_state->flags.event & EVT_RETRIGGER) == 0)) {
-      // fprintf(stderr, "setting %d to E\n", previous_lpp_state->state->event->timestamp[0]);
-      previous_lpp_state->flags.event |= EVT_EXTENDED;
+    LPPState* update_lpp_state = NULL;
+    int previous_counter = 0;
+    while ( (update_lpp_state = LPPBufferGetState(processor->buffer, previous_counter--)) ) {
+      if (!update_lpp_state->contains_timestamp)
+        continue;
+      if ((update_lpp_state->flags.event & EVT_RETRIGGER) == 0) {
+        update_lpp_state->flags.event |= EVT_EXTENDED;
+        break;
+      }
     }
   }
 }
@@ -527,8 +592,10 @@ int lpp_process(PostProcessor* processor, LPPState* lpp_state, FCIOState* state)
   lpp_state->state = state;
 
   int rc = lpp_process_fcio_state(processor, lpp_state, state);
-  if (rc == 1) lpp_process_timings(processor, lpp_state);
-  if (rc == -1) return 0;
+  if (rc == 1)
+    lpp_process_timings(processor, lpp_state);
+  if (rc == -1)
+    return 0;
   return 1;
 }
 
@@ -541,7 +608,7 @@ int LPPInput(PostProcessor* processor, FCIOState* state) {
     fprintf(stderr, "CRITICAL LPPInput: Buffer full, refuse to overwrite.\n");
     return 0;
   }
-  if (state->last_tag == FCIOEvent || state->last_tag == FCIOSparseEvent) {
+  if ((state->last_tag == FCIOEvent) || (state->last_tag == FCIOSparseEvent)) {
     processor->nevents_read++;
   }
   processor->nrecords_read++;
@@ -554,9 +621,7 @@ int LPPInput(PostProcessor* processor, FCIOState* state) {
     return 0;  // This is a proxy for 0 free states, even though we do have some. Something in previous code did not
                // work out, and the LPPGetNextState function returns NULL on nfree = 0;
 
-  return processor->buffer->max_states - processor->buffer->fill_level;
-  /* could return possible number of state to write here, allowing know how often to call the LPPGetNextState, would be
-   * also the used/needed buffer depth*/
+  return LPPBufferFreeLevel(processor->buffer);
 }
 
 LPPState* LPPOutput(PostProcessor* processor) {
@@ -570,14 +635,19 @@ LPPState* LPPOutput(PostProcessor* processor) {
 
   lpp_state->write = lpp_write_decision(processor, lpp_state);
 
+  if (processor->analogue_sum_cfg)
+    lpp_state->trigger_list = &processor->analogue_sum_cfg->trigger_list;
+  else
+    lpp_state->trigger_list = NULL;
+
   if (lpp_state->write) {
     processor->nrecords_written++;
-    if ((lpp_state->state->last_tag == FCIOSparseEvent) || (lpp_state->state->last_tag == FCIOEvent))
+    if ((lpp_state->state->last_tag == FCIOEvent) || (lpp_state->state->last_tag == FCIOSparseEvent))
       processor->nevents_written++;
 
   } else {
     processor->nrecords_discarded++;
-    if ((lpp_state->state->last_tag == FCIOSparseEvent) || (lpp_state->state->last_tag == FCIOEvent))
+    if ((lpp_state->state->last_tag == FCIOEvent) || (lpp_state->state->last_tag == FCIOSparseEvent))
       processor->nevents_discarded++;
   }
 
@@ -673,15 +743,16 @@ int LPPStatsUpdate(PostProcessor* processor, int force) {
     stats->current_nwritten = processor->nevents_written - stats->n_written_events;
     stats->n_written_events = processor->nevents_written;
 
-    stats->n_discarded_events = stats->n_read_events - stats->n_written_events;
+    stats->current_ndiscarded = processor->nevents_discarded - stats->n_written_events;
+    stats->n_discarded_events = processor->nevents_discarded;
 
     stats->current_read_rate = stats->current_nread / stats->dt_current;
     stats->current_write_rate = stats->current_nwritten / stats->dt_current;
-    stats->current_discard_rate = stats->current_read_rate - stats->current_write_rate;
+    stats->current_discard_rate = stats->current_read_rate / stats->dt_current;
 
-    stats->avg_read_rate = processor->nevents_read / stats->runtime;
-    stats->avg_write_rate = processor->nevents_written / stats->runtime;
-    stats->avg_discard_rate = stats->avg_read_rate - stats->avg_write_rate;
+    stats->avg_read_rate = stats->n_read_events / stats->runtime;
+    stats->avg_write_rate = stats->n_written_events / stats->runtime;
+    stats->avg_discard_rate = stats->n_discarded_events / stats->runtime;
 
     return 1;
   }
@@ -873,6 +944,9 @@ int LPPSetSiPMParameters(PostProcessor* processor, int nchannels, int* channelma
   asc->coincidence_window = coincidence_window_samples;
   asc->sum_window_start_sample = sum_window_start_sample;
   asc->sum_window_stop_sample = sum_window_stop_sample;
+
+  asc->trigger_list.size = 0;
+  asc->trigger_list.threshold = coincidence_sum_threshold_pe; // use the same threshold as the processor to check for the flag
 
   /* TODO CHECK THIS*/
   asc->apply_gain_scaling = 1;

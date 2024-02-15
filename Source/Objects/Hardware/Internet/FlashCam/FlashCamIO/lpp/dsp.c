@@ -167,27 +167,71 @@ int centered_moving_average_u16(unsigned short *x, float *y, int start, int stop
   return q;
 }
 
-float max_windowed_sum(float *x, int start, int stop, int nsamples, int coincidence_window, int *largest_sum_offset) {
+float max_windowed_sum(float *x, int start, int stop, int nsamples, int coincidence_window, int *largest_sum_offset, TriggerList* trigger_list) {
   assert(start >= 0);
   assert(stop <= nsamples);
+  assert(coincidence_window > 0);
+  assert(trigger_list);
 
+  int up = 0;
+  trigger_list->size = 0; // reset the trigger list
+  trigger_list->max_sum_pe[0] = 0.0;
   float acc = 0;
   float largest_acc = 0;
 
   for (int i = start; i < start + coincidence_window && i < stop; i++) acc += x[i];
 
   largest_acc = acc;
-  int offset = start + coincidence_window - 1;
+  int offset = start;
+  if (acc >= trigger_list->threshold) {
+    trigger_list->start[trigger_list->size] = start;
+    trigger_list->max_sum_pe[trigger_list->size] = acc;
+    up = 1;
+  }
 
-  for (int i = start + coincidence_window; i < stop; i++) {
-    acc += x[i] - x[i - coincidence_window];
+  for (int i = start; i < (stop-coincidence_window); i++) {
+    acc += x[i + coincidence_window] - x[i];
     if (acc > largest_acc) {
       largest_acc = acc;
       offset = i;
     }
+
+    // if (up && acc >= trigger_list->threshold)
+    //   // do nothing
+    if (up && acc < trigger_list->threshold) {
+      // came down, end current trigger entry
+      trigger_list->stop[trigger_list->size] = i + 1 + coincidence_window;
+      trigger_list->size++;
+      trigger_list->max_sum_pe[trigger_list->size] = 0; // reset the values when we use a new one
+      up = 0;
+    } else if (!up && acc >= trigger_list->threshold) {
+      // start new entry
+      
+      // only if it's not the first one do we check if they are overlapping within the coincidence window
+      if (trigger_list->size && (i+1 < trigger_list->stop[trigger_list->size-1])) {// check if new start is within stop of old window
+        // it's inside, so we forget the previous stop and wait for the next one
+        trigger_list->size--;
+      } else {
+        // either it's the first one, or it's outside, so we start a new region
+        trigger_list->start[trigger_list->size] = i + 1; // first sample of the new sum
+      }
+      up = 1;
+      
+    }
+    if (acc > trigger_list->max_sum_pe[trigger_list->size]) {
+      trigger_list->max_sum_pe[trigger_list->size] = acc;
+    }
   }
+
+  if (up) {
+    // end the triggerlist if it's still up. last possible stop sample is `stop-coincidence_window`
+    trigger_list->stop[trigger_list->size] = stop-coincidence_window;
+    trigger_list->size++;
+  }
+
+  
   if (largest_sum_offset)
-    *largest_sum_offset = offset - coincidence_window / 2;  // round down if uneven window, close enough.
+    *largest_sum_offset = offset + coincidence_window / 2;  // round down if uneven window, close enough.
 
   return largest_acc;
 }
@@ -399,7 +443,7 @@ void tale_dsp_windowed_analogue_sum(AnalogueSumCfg *cfg, int nsamples, int ntrac
   }
 
   cfg->largest_sum_pe = max_windowed_sum(cfg->peak_trace, cfg->sum_window_start_sample, cfg->sum_window_stop_sample,
-                                         nsamples, cfg->coincidence_window, &cfg->largest_sum_offset);
+                                         nsamples, cfg->coincidence_window, &cfg->largest_sum_offset, &cfg->trigger_list);
   cfg->largest_pe = total_largest_peak;
   cfg->multiplicity = multiplicity;
 }

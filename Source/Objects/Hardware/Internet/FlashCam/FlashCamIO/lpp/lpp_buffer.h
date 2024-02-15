@@ -26,4 +26,6 @@ LPPState *LPPBufferGetState(LPPBuffer *buffer, int offset);
 LPPState *LPPBufferPeek(LPPBuffer *buffer);
 void LPPBufferCommit(LPPBuffer *buffer);
 LPPState *LPPBufferFetch(LPPBuffer *buffer);
+int LPPBufferFillLevel(LPPBuffer *buffer);
+int LPPBufferFreeLevel(LPPBuffer *buffer);
 int LPPBufferFlush(LPPBuffer *buffer);

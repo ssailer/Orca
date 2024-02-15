@@ -2,6 +2,15 @@
 
 #include <fcio.h>
 
+typedef struct TriggerList
+{
+  float threshold;
+  int start[FCIOMaxSamples];
+  int stop[FCIOMaxSamples]; // first sample after trigger up is gone
+  float max_sum_pe[FCIOMaxSamples];
+  int size;
+} TriggerList;
+
 typedef struct AnalogueSumCfg {
   int tracemap_format;
   int tracemap[FCIOMaxChannels];
@@ -24,6 +33,11 @@ typedef struct AnalogueSumCfg {
   int sum_window_start_sample;
   int sum_window_stop_sample;
 
+  /* testing -> determine the above threshold snippets
+      coincidence_window_trigger_list_threshold should be the same as the largest_sum_pe threshold in the calling
+  */
+  TriggerList trigger_list;
+
   float peak_trace[FCIOMaxSamples];
   float diff_trace[FCIOMaxSamples];
   int diff_trace_i32[FCIOMaxSamples];
@@ -37,6 +51,7 @@ typedef struct AnalogueSumCfg {
   int largest_sum_offset;
   float largest_pe;
   int multiplicity;
+
 
   float *pulse_times;
   float *pulse_amplitudes;
