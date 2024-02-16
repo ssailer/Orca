@@ -743,12 +743,12 @@ int LPPStatsUpdate(PostProcessor* processor, int force) {
     stats->current_nwritten = processor->nevents_written - stats->n_written_events;
     stats->n_written_events = processor->nevents_written;
 
-    stats->current_ndiscarded = processor->nevents_discarded - stats->n_written_events;
+    stats->current_ndiscarded = processor->nevents_discarded - stats->n_discarded_events;
     stats->n_discarded_events = processor->nevents_discarded;
 
     stats->current_read_rate = stats->current_nread / stats->dt_current;
     stats->current_write_rate = stats->current_nwritten / stats->dt_current;
-    stats->current_discard_rate = stats->current_read_rate / stats->dt_current;
+    stats->current_discard_rate = stats->current_discard_rate / stats->dt_current;
 
     stats->avg_read_rate = stats->n_read_events / stats->runtime;
     stats->avg_write_rate = stats->n_written_events / stats->runtime;
