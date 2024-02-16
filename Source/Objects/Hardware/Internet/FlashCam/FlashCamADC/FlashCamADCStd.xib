@@ -42,6 +42,10 @@
                 <outlet property="statusEventTextField" destination="lpf-1Q-AWA" id="12b-CG-ZKL"/>
                 <outlet property="statusPPSTextField" destination="6Rp-fg-dXg" id="ASh-EU-3Ea"/>
                 <outlet property="statusTicksTextField" destination="HOP-Xy-qlf" id="BK1-dn-AHu"/>
+                <outlet property="swTrigGainMatrix" destination="SZs-eK-vcf" id="HSB-Ig-9sE"/>
+                <outlet property="swTrigIncludeMatrix" destination="YuZ-oU-py4" id="WU3-h6-AzP"/>
+                <outlet property="swTrigShapingMatrix" destination="twn-li-XLD" id="2Wk-DD-gMz"/>
+                <outlet property="swTrigThresholdMatrix" destination="wA3-fa-mFJ" id="7De-14-caw"/>
                 <outlet property="tempView" destination="aQo-dA-nmh" id="2rm-47-19V"/>
                 <outlet property="thresholdMatrix" destination="hcI-pw-qyR" id="yzx-jn-mja"/>
                 <outlet property="timeRateLogButton" destination="nfL-VL-psp" id="pxU-2k-IgJ"/>
@@ -1281,216 +1285,216 @@
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Net-uu-MWO" id="4dF-wF-BuM">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="6" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Net-uu-MWO" id="4dF-wF-BuM">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="Kdl-Zo-Z4T">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="Net-uu-MWO"/>
-                                                                            <menuItem title="Peak Sum" tag="5" id="wMI-Oc-jFC"/>
-                                                                            <menuItem title="HW Multiplicity" tag="5" id="Gfb-vq-v8L"/>
-                                                                            <menuItem title="Digital Flag" tag="5" id="tit-vA-7b5"/>
+                                                                            <menuItem title="Off" state="on" tag="6" id="Net-uu-MWO"/>
+                                                                            <menuItem title="Peak Sum" tag="6" id="wMI-Oc-jFC"/>
+                                                                            <menuItem title="HW Multiplicity" tag="6" id="Gfb-vq-v8L"/>
+                                                                            <menuItem title="Digital Flag" tag="6" id="tit-vA-7b5"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="q6M-q6-BMy" id="Ks0-aA-sDe">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="7" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="q6M-q6-BMy" id="Ks0-aA-sDe">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="XEt-vQ-vOu">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="q6M-q6-BMy"/>
-                                                                            <menuItem title="Peak Sum" tag="5" id="Pxe-hY-icy"/>
-                                                                            <menuItem title="HW Multiplicity" tag="5" id="Lew-fL-tvS"/>
-                                                                            <menuItem title="Digital Flag" tag="5" id="Ggg-Ke-hKh"/>
+                                                                            <menuItem title="Off" state="on" tag="7" id="q6M-q6-BMy"/>
+                                                                            <menuItem title="Peak Sum" tag="7" id="Pxe-hY-icy"/>
+                                                                            <menuItem title="HW Multiplicity" tag="7" id="Lew-fL-tvS"/>
+                                                                            <menuItem title="Digital Flag" tag="7" id="Ggg-Ke-hKh"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="p38-ZU-5d6" id="1IQ-QP-GC2">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="8" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="p38-ZU-5d6" id="1IQ-QP-GC2">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="5i2-DJ-SUu">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="p38-ZU-5d6"/>
+                                                                            <menuItem title="Off" state="on" tag="8" id="p38-ZU-5d6"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="VCS-9D-fNn"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="o4B-3e-7Rw"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="sc8-tk-Jpn"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Etl-6F-FuG" id="XYr-0c-aAO">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="9" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Etl-6F-FuG" id="XYr-0c-aAO">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="sKg-xi-plZ">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="Etl-6F-FuG"/>
+                                                                            <menuItem title="Off" state="on" tag="9" id="Etl-6F-FuG"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="s93-DM-MNF"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="GpO-0I-uq9"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="6Dl-mF-EKX"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="6y7-xQ-rdZ" id="y6F-0v-i87">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="10" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="6y7-xQ-rdZ" id="y6F-0v-i87">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="yYU-Ly-p4I">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="6y7-xQ-rdZ"/>
+                                                                            <menuItem title="Off" state="on" tag="10" id="6y7-xQ-rdZ"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="kg9-gh-evx"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="wo9-vc-xwp"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="4Yd-ZK-5Ic"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="O36-3b-czQ" id="owc-bk-4SC">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="11" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="O36-3b-czQ" id="owc-bk-4SC">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="7Cn-YB-WAa">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="O36-3b-czQ"/>
+                                                                            <menuItem title="Off" state="on" tag="11" id="O36-3b-czQ"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="CYn-VC-zAF"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="VVo-fF-IwS"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="FSB-Fu-nRu"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="CAJ-bJ-cYw" id="bHk-NK-mve">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="12" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="CAJ-bJ-cYw" id="bHk-NK-mve">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="nq0-53-Okw">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="CAJ-bJ-cYw"/>
+                                                                            <menuItem title="Off" state="on" tag="12" id="CAJ-bJ-cYw"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="gvl-TS-wPs"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="RCX-fn-cIi"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="d2S-6l-001"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Mk3-du-b90" id="bty-Qk-xiO">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="13" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Mk3-du-b90" id="bty-Qk-xiO">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="hYM-UL-f49">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="Mk3-du-b90"/>
+                                                                            <menuItem title="Off" state="on" tag="13" id="Mk3-du-b90"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="gAr-Sf-KH9"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="3ZI-Zx-kJv"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="7O7-gX-gbW"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="PxT-Al-cgB" id="Utq-xj-HgK">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="14" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="PxT-Al-cgB" id="Utq-xj-HgK">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="wHz-Ln-xB3">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="PxT-Al-cgB"/>
+                                                                            <menuItem title="Off" state="on" tag="14" id="PxT-Al-cgB"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="Qi6-UL-SAp"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="UwP-NF-E4y"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="PFo-D5-8Mt"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="32y-9I-8GD" id="4qd-cB-T8d">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="15" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="32y-9I-8GD" id="4qd-cB-T8d">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="Cwa-w3-bbM">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="32y-9I-8GD"/>
+                                                                            <menuItem title="Off" state="on" tag="15" id="32y-9I-8GD"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="Rvp-aO-NpP"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="0Uq-KV-nNW"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="K0d-qC-GLG"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="wPV-Rc-GRF" id="kTL-aQ-WFp">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="16" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="wPV-Rc-GRF" id="kTL-aQ-WFp">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="QlD-b3-INx">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="wPV-Rc-GRF"/>
+                                                                            <menuItem title="Off" state="on" tag="16" id="wPV-Rc-GRF"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="Xw8-Fb-7m8"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="FyN-WK-4la"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="G5Q-Ix-6OC"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Nd8-fa-zub" id="Yu0-hb-R7u">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="17" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Nd8-fa-zub" id="Yu0-hb-R7u">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="WwQ-ju-cNU">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="Nd8-fa-zub"/>
+                                                                            <menuItem title="Off" state="on" tag="17" id="Nd8-fa-zub"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="3dr-Xa-NWj"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="K0c-Gj-nfB"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="jyb-ke-4JR"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="SVf-mh-Q7X" id="5i5-9J-Pdp">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="18" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="SVf-mh-Q7X" id="5i5-9J-Pdp">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="bxG-tf-5MW">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="SVf-mh-Q7X"/>
+                                                                            <menuItem title="Off" state="on" tag="18" id="SVf-mh-Q7X"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="epc-26-fYd"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="nrY-SD-coi"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="55f-JW-Eqh"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="i8e-j7-IJb" id="lJi-jI-9rZ">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="19" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="i8e-j7-IJb" id="lJi-jI-9rZ">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="U3N-db-2Sl">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="i8e-j7-IJb"/>
+                                                                            <menuItem title="Off" state="on" tag="19" id="i8e-j7-IJb"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="3J8-s7-q36"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="ys0-H2-Cqq"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="Ur2-qU-9AK"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="iE9-dW-fZY" id="CGM-h3-pjz">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="20" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="iE9-dW-fZY" id="CGM-h3-pjz">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="pHG-RV-bAU">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="iE9-dW-fZY"/>
+                                                                            <menuItem title="Off" state="on" tag="20" id="iE9-dW-fZY"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="td5-BD-8A8"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="mYV-Ib-Ezj"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="7YU-rV-Kbf"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="aYo-W9-MX3" id="ahF-Rx-NqM">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="21" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="aYo-W9-MX3" id="ahF-Rx-NqM">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="XgX-SB-Caq">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="aYo-W9-MX3"/>
+                                                                            <menuItem title="Off" state="on" tag="21" id="aYo-W9-MX3"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="K6F-sV-3sM"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="1BZ-nM-A3L"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="kcO-W2-2JJ"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="uxm-gc-T99" id="xBR-Ac-3Xk">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="22" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="uxm-gc-T99" id="xBR-Ac-3Xk">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="Cp8-qj-GGN">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="uxm-gc-T99"/>
+                                                                            <menuItem title="Off" state="on" tag="22" id="uxm-gc-T99"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="OtA-Ga-ACw"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="ua1-Pd-LrW"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="jRI-it-VKa"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="PQg-Bx-UEr" id="qaK-a0-qqj">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="23" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="PQg-Bx-UEr" id="qaK-a0-qqj">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="WGd-m8-NHh">
                                                                         <items>
-                                                                            <menuItem title="Off" state="on" tag="5" id="PQg-Bx-UEr"/>
+                                                                            <menuItem title="Off" state="on" tag="23" id="PQg-Bx-UEr"/>
                                                                             <menuItem title="Peak Sum" tag="5" id="eRT-qh-qJC"/>
                                                                             <menuItem title="HW Multiplicity" tag="5" id="Bkq-1S-U4b"/>
                                                                             <menuItem title="Digital Flag" tag="5" id="OAc-Nu-AfZ"/>
@@ -1499,6 +1503,9 @@
                                                                 </popUpButtonCell>
                                                             </column>
                                                         </cells>
+                                                        <connections>
+                                                            <action selector="swTrigIncludeAction:" target="-2" id="YPR-xn-Pnk"/>
+                                                        </connections>
                                                     </matrix>
                                                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6fU-iV-LPz">
                                                         <rect key="frame" x="417" y="673" width="61" height="39"/>
@@ -1561,98 +1568,101 @@
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="WEf-Yc-VYL">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="6" title="0" drawsBackground="YES" id="WEf-Yc-VYL">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="OOz-nB-a9a">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="7" title="0" drawsBackground="YES" id="OOz-nB-a9a">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="Qf6-ui-dU8">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="8" title="0" drawsBackground="YES" id="Qf6-ui-dU8">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="obX-eb-giM">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="9" title="0" drawsBackground="YES" id="obX-eb-giM">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="iOO-Hp-zhi">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="10" title="0" drawsBackground="YES" id="iOO-Hp-zhi">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="o6c-vC-ux5">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="11" title="0" drawsBackground="YES" id="o6c-vC-ux5">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="oKq-Z1-P6h">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="12" title="0" drawsBackground="YES" id="oKq-Z1-P6h">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="RBO-Sy-K3G">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="13" title="0" drawsBackground="YES" id="RBO-Sy-K3G">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="ZgD-wu-LBS">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="14" title="0" drawsBackground="YES" id="ZgD-wu-LBS">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="JCC-Ig-8AH">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="15" title="0" drawsBackground="YES" id="JCC-Ig-8AH">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="7b0-tc-qb8">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="16" title="0" drawsBackground="YES" id="7b0-tc-qb8">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="FnF-aL-oYb">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="17" title="0" drawsBackground="YES" id="FnF-aL-oYb">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="ZjY-JD-sfP">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="18" title="0" drawsBackground="YES" id="ZjY-JD-sfP">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="SsZ-gR-93S">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="19" title="0" drawsBackground="YES" id="SsZ-gR-93S">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="yfh-2O-H3n">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="20" title="0" drawsBackground="YES" id="yfh-2O-H3n">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="Lqi-Re-cit">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="21" title="0" drawsBackground="YES" id="Lqi-Re-cit">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="POY-ic-Zn4">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="22" title="0" drawsBackground="YES" id="POY-ic-Zn4">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="0" drawsBackground="YES" id="GMp-nr-XAL">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="23" title="0" drawsBackground="YES" id="GMp-nr-XAL">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                             </column>
                                                         </cells>
+                                                        <connections>
+                                                            <action selector="swTrigThresholdAction:" target="-2" id="DKH-C5-EbD"/>
+                                                        </connections>
                                                     </matrix>
                                                     <matrix toolTip="Software Trigger Shaping Parameter in Samples" verticalHuggingPriority="750" fixedFrame="YES" mode="track" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="twn-li-XLD" userLabel="SWT Shaping Matrix">
                                                         <rect key="frame" x="578" y="9" width="62" height="664"/>
@@ -1697,98 +1707,101 @@
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="0pE-oy-HXE">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="6" title="0" drawsBackground="YES" id="0pE-oy-HXE">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="z8X-dA-Uby">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="7" title="0" drawsBackground="YES" id="z8X-dA-Uby">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="WYQ-YH-fps">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="8" title="0" drawsBackground="YES" id="WYQ-YH-fps">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="Hoe-cb-raA">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="9" title="0" drawsBackground="YES" id="Hoe-cb-raA">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="Rn5-tw-oph">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="10" title="0" drawsBackground="YES" id="Rn5-tw-oph">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="tpG-PO-wFw">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="11" title="0" drawsBackground="YES" id="tpG-PO-wFw">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="seE-EM-STX">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="12" title="0" drawsBackground="YES" id="seE-EM-STX">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="ZIX-1X-2Zh">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="13" title="0" drawsBackground="YES" id="ZIX-1X-2Zh">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="Vb4-Qh-84s">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="14" title="0" drawsBackground="YES" id="Vb4-Qh-84s">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="s4M-vv-VwL">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="15" title="0" drawsBackground="YES" id="s4M-vv-VwL">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="UMA-qy-b5g">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="16" title="0" drawsBackground="YES" id="UMA-qy-b5g">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="1o6-K1-HRw">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="17" title="0" drawsBackground="YES" id="1o6-K1-HRw">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="QD2-OV-ZiV">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="18" title="0" drawsBackground="YES" id="QD2-OV-ZiV">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="lFh-d3-eCz">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="19" title="0" drawsBackground="YES" id="lFh-d3-eCz">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="fre-4p-kjS">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="20" title="0" drawsBackground="YES" id="fre-4p-kjS">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="ja5-kG-8se">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="21" title="0" drawsBackground="YES" id="ja5-kG-8se">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="feN-Lb-8c4">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="22" title="0" drawsBackground="YES" id="feN-Lb-8c4">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="-1" title="0" drawsBackground="YES" id="Rxp-1H-1Xf">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="23" title="0" drawsBackground="YES" id="Rxp-1H-1Xf">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                             </column>
                                                         </cells>
+                                                        <connections>
+                                                            <action selector="swTrigShapingAction:" target="-2" id="WDb-Zx-e4l"/>
+                                                        </connections>
                                                     </matrix>
                                                     <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Mte-VX-tgS">
                                                         <rect key="frame" x="570" y="676" width="70" height="35"/>
@@ -1836,7 +1849,7 @@
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="66Z-j1-e3w">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="4" title="0" drawsBackground="YES" id="66Z-j1-e3w">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1846,98 +1859,101 @@
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="ZrT-zg-C38">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="6" title="0" drawsBackground="YES" id="ZrT-zg-C38">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="kB3-mX-GKe">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="7" title="0" drawsBackground="YES" id="kB3-mX-GKe">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="bfV-S7-DAc">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="8" title="0" drawsBackground="YES" id="bfV-S7-DAc">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="SLe-mk-3NY">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="9" title="0" drawsBackground="YES" id="SLe-mk-3NY">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="foy-mI-92Y">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="10" title="0" drawsBackground="YES" id="foy-mI-92Y">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="iq7-oI-Xtm">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="11" title="0" drawsBackground="YES" id="iq7-oI-Xtm">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="Qy8-sq-h48">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="12" title="0" drawsBackground="YES" id="Qy8-sq-h48">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="Bnt-cV-WnB">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="13" title="0" drawsBackground="YES" id="Bnt-cV-WnB">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="fEN-42-s7F">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="14" title="0" drawsBackground="YES" id="fEN-42-s7F">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="qRO-ae-jNp">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="15" title="0" drawsBackground="YES" id="qRO-ae-jNp">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="MNq-wb-jKk">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="16" title="0" drawsBackground="YES" id="MNq-wb-jKk">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="S0w-vp-TO3">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="17" title="0" drawsBackground="YES" id="S0w-vp-TO3">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="twX-js-UcY">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="18" title="0" drawsBackground="YES" id="twX-js-UcY">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="S5a-0M-UaM">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="19" title="0" drawsBackground="YES" id="S5a-0M-UaM">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="S3d-bL-Emi">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="20" title="0" drawsBackground="YES" id="S3d-bL-Emi">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="B7k-sU-6sR">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="21" title="0" drawsBackground="YES" id="B7k-sU-6sR">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="jAM-pU-GsH">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="22" title="0" drawsBackground="YES" id="jAM-pU-GsH">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
-                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="3" title="0" drawsBackground="YES" id="1Ng-6z-X9c">
+                                                                <textFieldCell controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" tag="23" title="0" drawsBackground="YES" id="1Ng-6z-X9c">
                                                                     <font key="font" metaFont="label"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                                 </textFieldCell>
                                                             </column>
                                                         </cells>
+                                                        <connections>
+                                                            <action selector="swTrigGainAction:" target="-2" id="9X8-GH-e9n"/>
+                                                        </connections>
                                                     </matrix>
                                                 </subviews>
                                             </view>

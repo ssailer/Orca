@@ -49,18 +49,18 @@
     [super setModel:aModel];
     [[self window] setTitle:[NSString stringWithFormat:@"FlashCam ADC (0x%x, Crate %d, Slot %d)", [model cardAddress], [model crateNumber], [model slot]]];
     [shapingLabel setStringValue:@"Shaping Time (ns)"];
-    [flatTopLabel setStringValue:@"Flat Top (ns)"];
-    for(unsigned int i=0; i<[model numberOfChannels]; i++){
-        id cell = [filterTypeMatrix cellWithTag:i];
-        [[cell itemAtIndex:0] setTitle:@"Gauss"];
-        [[cell itemAtIndex:1] setTitle:@"Trap"];
-        [[cell itemAtIndex:2] setTitle:@"Cusp"];
-    }
-    [filterTypeMatrix setEnabled:YES];
+//    [flatTopLabel setStringValue:@"Flat Top (ns)"];
+//    for(unsigned int i=0; i<[model numberOfChannels]; i++){
+//        id cell = [filterTypeMatrix cellWithTag:i];
+//        [[cell itemAtIndex:0] setTitle:@"Gauss"];
+//        [[cell itemAtIndex:1] setTitle:@"Trap"];
+//        [[cell itemAtIndex:2] setTitle:@"Cusp"];
+//    }
+//    [filterTypeMatrix setEnabled:YES];
     for(unsigned int i = 0; i < [model numberOfChannels]; i++){
         id cell = [swTrigIncludeMatrix cellWithTag:i];
         [[cell itemAtIndex:0] setTitle:@"Off"];
-        [[cell itemAtIndex:1] setTitle:@"Analog Sum"];
+        [[cell itemAtIndex:1] setTitle:@"Peak Sum"];
         [[cell itemAtIndex:2] setTitle:@"HW Multiplicity"];
         [[cell itemAtIndex:3] setTitle:@"Digital Flag"];
 //        [[cell itemAtIndex:4] setTitle:@"Baseline Flag"];
@@ -495,7 +495,7 @@
         bool isPeakSum = [model swTrigInclude:i] == 1;
         bool isHWMultiplicity = [model swTrigInclude:i] == 2;
         bool isDigitalSignal = [model swTrigInclude:i] == 3;
-//        fprintf(stderr, "DEBUG swTrigIncludeChanged %d %d %d\n", isPeakSum, isHWMultiplicity, isDigitalSignal);
+//        fprintf(stderr, "DEBUG swTrigIncludeChanged chan %d/%d %d %d %d\n", i, maxChan, isPeakSum, isHWMultiplicity, isDigitalSignal);
 //        fprintf(stderr, "  setEnabled chan %d = %d,%d,%d,%d\n",i, isOff, isAnalogSum, isHWMultiplicity, isDigitalSignal);
         [[swTrigGainMatrix cellWithTag:i] setEnabled:isPeakSum||isDigitalSignal];
         [[swTrigThresholdMatrix cellWithTag:i] setEnabled:isPeakSum||isHWMultiplicity||isDigitalSignal];
@@ -838,26 +838,30 @@
 
 - (IBAction) swTrigIncludeAction:(id)sender
 {
-    if([[sender selectedCell] indexOfSelectedItem] != [model swTrigInclude:(unsigned int)[[sender selectedCell] tag]])
-        [model setSWTrigInclude:(unsigned int)[[sender selectedCell] tag] withValue:(int)[[sender selectedCell] indexOfSelectedItem]];
+    unsigned int row = (unsigned int)[sender selectedRow];
+    if([[sender selectedCell] indexOfSelectedItem] != [model swTrigInclude:row])
+        [model setSWTrigInclude:row withValue:(int)[[sender selectedCell] indexOfSelectedItem]];
 }
 
 - (IBAction) swTrigGainAction:(id)sender
 {
-    if([sender floatValue] != [model swTrigGain:(unsigned int)[[sender selectedCell] tag]])
-        [model setSWTrigGain:(unsigned int)[[sender selectedCell] tag] withValue:[sender floatValue]];
+    unsigned int row = (unsigned int)[sender selectedRow];
+    if([sender floatValue] != [model swTrigGain:row])
+        [model setSWTrigGain:row withValue:[sender floatValue]];
 }
 
 - (IBAction) swTrigThresholdAction:(id)sender
 {
-    if([sender floatValue] != [model swTrigThreshold:(unsigned int)[[sender selectedCell] tag]])
-        [model setSWTrigThreshold:(unsigned int)[[sender selectedCell] tag] withValue:[sender floatValue]];
+    unsigned int row = (unsigned int)[sender selectedRow];
+    if([sender floatValue] != [model swTrigThreshold:row])
+        [model setSWTrigThreshold:row withValue:[sender floatValue]];
 }
 
 - (IBAction) swTrigShapingAction:(id)sender
 {
-    if([sender intValue] != [model swTrigShaping:(unsigned int)[[sender selectedCell] tag]])
-        [model setSWTrigShaping:(unsigned int)[[sender selectedCell] tag] withValue:[sender intValue]];
+    unsigned int row = (unsigned int)[sender selectedRow];
+    if([sender intValue] != [model swTrigShaping:row])
+        [model setSWTrigShaping:row withValue:[sender intValue]];
 }
 
 - (IBAction) baseBiasAction:(id)sender
@@ -969,15 +973,25 @@
 - (void) setModel:(id)aModel
 {
     [super setModel:aModel];
-    [shapingLabel setStringValue:@"Fast Shape (ns)"];
-    [flatTopLabel setStringValue:@"Slow Shape (ns)"];
-    for(unsigned int i=0; i<[model numberOfChannels]; i++){
-        id cell = [filterTypeMatrix cellWithTag:i];
-        for(unsigned int j=0; j<3; j++) [[cell itemAtIndex:j] setTitle:@"N/A"];
-//        id cell = [swTrigIncludeMatrix cellWithTag:i];
+//    [shapingLabel setStringValue:@"Fast Shape (ns)"];
+//    [flatTopLabel setStringValue:@"Slow Shape (ns)"];
+//    for(unsigned int i=0; i<[model numberOfChannels]; i++){
+//        id cell = [filterTypeMatrix cellWithTag:i];
 //        for(unsigned int j=0; j<3; j++) [[cell itemAtIndex:j] setTitle:@"N/A"];
+////        id cell = [swTrigIncludeMatrix cellWithTag:i];
+////        for(unsigned int j=0; j<3; j++) [[cell itemAtIndex:j] setTitle:@"N/A"];
+//    }
+//    [filterTypeMatrix setEnabled:NO];
+    for(unsigned int i = 0; i < [model numberOfChannels]; i++){
+        id cell = [swTrigIncludeMatrix cellWithTag:i];
+        [[cell itemAtIndex:0] setTitle:@"Off"];
+        [[cell itemAtIndex:1] setTitle:@"Peak Sum"];
+        [[cell itemAtIndex:2] setTitle:@"HW Multiplicity"];
+        [[cell itemAtIndex:3] setTitle:@"Digital Flag"];
+//        [[cell itemAtIndex:4] setTitle:@"Baseline Flag"];
+//        [[cell itemAtIndex:5] setTitle:@"Muon Trigger Flag"];
+        
     }
-    [filterTypeMatrix setEnabled:NO];
 }
 
 @end
