@@ -932,7 +932,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         NSLog(@"%@: unknown configuration parameter %@\n",[self identifier], p);
         return;
     }
-    NSLog(@"%@: set parameter %@ to %@\n",[self identifier], p, v);
+    if (DEBUG)
+        NSLog(@"%@: set parameter %@ to %@\n",[self identifier], p, v);
 }
 
 - (void) setTimeout:(int)to
@@ -1385,23 +1386,27 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 NSLog(@"%@: FCIO stream closed due to timeout, however deselected records arrived.\n", [self identifier]);
             else if (timedout == 3)
                 NSLogColor([NSColor redColor], @"%@: post processor buffer overflow. Increase the ReadoutModel state buffer size.\n",[self identifier]);
-            return NO;
         }
-        
-        state = lppstate->state;
 
         if (LPPStatsUpdate(postprocessor, !lppstate)) {
             // returns one if logtime set in postprocessor has been reached.
             // Force if lppstate == NULL
             // TODO fill ListenerPostProcessor stats here
             // for now, we use LPP Influx style string to print to the statuslog
-            char logstring[255];
-            if (LPPStatsInfluxString(postprocessor, logstring, 255))
-                fprintf(stderr, "DEBUG postprocessor %s\n", logstring);
-            //                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
+            if ([[self configParam:@"lppLogLevel"] intValue]> 0) {
+                fprintf(stderr, "FOO %d\n", [[self configParam:@"lppLogLevel"] intValue]);
+                char logstring[255];
+                
+                if (LPPStatsInfluxString(postprocessor, logstring, 255))
+                    fprintf(stderr, "%s postprocessor %s\n", [[self identifier] UTF8String],logstring);
+                //                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
+            }
         }
+        if (!lppstate)
+            return NO;
         if (!lppstate->write || !writeNonTriggered)
             return YES; // skip non-triggered event, but keep running, except if we want to write everything.
+        state = lppstate->state; // set current read record
     }
     fcio_last_tag = state->last_tag;
             // TODO Handle what to do with non-triggered records here!
