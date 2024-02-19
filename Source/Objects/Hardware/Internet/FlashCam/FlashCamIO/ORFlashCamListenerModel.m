@@ -1365,6 +1365,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     int timedout = 0; // contains timeout reason
     bool writeWaveforms = true;
     bool writeNonTriggered = [[self configParam:@"lppWriteNonTriggered"] boolValue];
+    int lppLogLevel = [[self configParam:@"lppLogLevel"] intValue];
     FCIOState* state = NULL;
     LPPState* lppstate = NULL;
     if (!postprocessor) {
@@ -1393,26 +1394,37 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             // Force if lppstate == NULL
             // TODO fill ListenerPostProcessor stats here
             // for now, we use LPP Influx style string to print to the statuslog
-            if ([[self configParam:@"lppLogLevel"] intValue]> 0) {
-                fprintf(stderr, "FOO %d\n", [[self configParam:@"lppLogLevel"] intValue]);
+            if (lppLogLevel > 0) {
                 char logstring[255];
-                
                 if (LPPStatsInfluxString(postprocessor, logstring, 255))
                     fprintf(stderr, "%s postprocessor %s\n", [[self identifier] UTF8String],logstring);
                 //                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
             }
         }
+
         if (!lppstate)
             return NO;
-        if (!lppstate->write || !writeNonTriggered)
-            return YES; // skip non-triggered event, but keep running, except if we want to write everything.
         state = lppstate->state; // set current read record
+
+        char statestring[19] = {0};
+        LPPFlags2char(lppstate, 18, statestring);
+        if (!lppstate->write) {
+            if (lppLogLevel > 5) {
+                fprintf(stderr, "%s: postprocessor record_flags=%s\n", [[self identifier] UTF8String], statestring);
+            }
+            if (!writeNonTriggered)
+                return YES;
+        } else {
+            if (lppLogLevel > 0) {
+                fprintf(stderr, "%s: postprocessor record_flags=%s\n", [[self identifier] UTF8String], statestring);
+            }
+        }
     }
     fcio_last_tag = state->last_tag;
             // TODO Handle what to do with non-triggered records here!
             
             /* lpp_state definition
-             
+          
              #define ST_NSTATES 6
              typedef enum SoftwareTriggerFlags {
 
@@ -1506,19 +1518,20 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             // we can just use the unused channels here for the time being.
             // would be better to have a dynamic size possible for these kinds
             // of extensions
-            if (lppstate) {
-                if (!lppstate->write) {
-                    writeWaveforms = false;
-                }
-                state->event->type = 10; // LPP Event, use new EventType
-                state->event->timestamp[4] = (unsigned int)(lppstate->flags.trigger); // unsigned int
-                state->event->timestamp[5] = (unsigned int)(lppstate->flags.event); // unsigned int
-                state->event->timestamp[6] = (unsigned int)(lppstate->largest_sum_pe);  // float
-                state->event->timestamp[7] = lppstate->largest_sum_offset;
-                state->event->timestamp[8] = lppstate->channel_multiplicity;
-                state->event->timestamp[9] = *(int*)(&lppstate->largest_pe);  // float
-                state->event->timestamp_size = 10;
-            }
+//            if (lppstate) {
+//                if (!lppstate->write) {
+//                    writeWaveforms = false;
+//                }
+//                state->event->type = 10; // LPP Event, use new EventType
+//                state->event->timestamp[4] = (unsigned int)(lppstate->flags.trigger); // unsigned int
+//                state->event->timestamp[5] = (unsigned int)(lppstate->flags.event); // unsigned int
+//                state->event->timestamp[6] = (unsigned int)(lppstate->largest_sum_pe);  // float
+//                state->event->timestamp[7] = lppstate->largest_sum_offset;
+//                state->event->timestamp[8] = lppstate->channel_multiplicity;
+//                state->event->timestamp[9] = *(int*)(&lppstate->largest_pe);  // float
+//                state->event->timestamp_size = 10;
+//            }
+//            DEBUG_PRINT("fcioRead: got event record %d\n", 5);
             for(int itr=0; itr<state->event->num_traces; itr++){
                 NSDictionary* dict = [chanMap objectAtIndex:state->event->trace_list[itr]];
                 ORFlashCamADCModel* card = [dict objectForKey:@"adc"];
