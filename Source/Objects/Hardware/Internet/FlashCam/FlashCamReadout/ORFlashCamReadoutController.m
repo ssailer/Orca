@@ -958,7 +958,7 @@
             if(col == 1)      return [l configParam:@"lppHWMajThreshold"];
             else if(col == 2) return [l configParam:@"lppHWPreScalingRate"];
 //            else if(col == 3) return [l configParam:@"lppHWPreScalingThreshold"];
-            else if(col == 3) return [l configParam:@"lppHWCheckAll"];
+//            else if(col == 3) return [l configParam:@"lppHWCheckAll"];
         }
         else if(view == listenerLPPPeakSumTriggerView){
             if(col == 1)      return [l configParam:@"lppPSPreWindow"];
@@ -1090,8 +1090,8 @@
                                       withValue:[NSNumber numberWithDouble:[object doubleValue]]];
 //            else if(col == 3) [l setConfigParam:@"lppHWPreScalingThreshold"
 //                                      withValue:[NSNumber numberWithInt:[object intValue]]];
-            else if(col == 3) [l setConfigParam:@"lppHWCheckAll"
-                                      withValue:[NSNumber numberWithBool:[object boolValue]]];
+//            else if(col == 3) [l setConfigParam:@"lppHWCheckAll"
+//                                      withValue:[NSNumber numberWithBool:[object boolValue]]];
         }
         else if(view == listenerLPPPeakSumTriggerView){
             if(col == 1)      [l setConfigParam:@"lppPSPreWindow"
