@@ -480,6 +480,23 @@
     }
 }
 
+- (void) setSWTLockState
+{
+    int chan = 0;
+    int maxChan = [model numberOfChannels];
+    for(int i = chan; i < maxChan; i++){
+        bool isPeakSum = [model swtInclude:i] == 1;
+        bool isHWMultiplicity = [model swtInclude:i] == 2;
+        bool isDigitalFlag = [model swtInclude:i] == 3;
+        bool isPulserFlag = [model swtInclude:i] == 4;
+        bool isBaselineFlag = [model swtInclude:i] == 5;
+        bool isMuonFlag = [model swtInclude:i] == 6;
+        [[swtCalibrationMatrix cellWithTag:i] setEnabled:isPeakSum||isDigitalFlag||isPulserFlag||isBaselineFlag||isMuonFlag];
+        [[swtThresholdMatrix cellWithTag:i] setEnabled:isPeakSum||isHWMultiplicity||isDigitalFlag||isPulserFlag||isBaselineFlag||isMuonFlag];
+        [[swtShapingTimeMatrix cellWithTag:i] setEnabled:isPeakSum];
+    }
+}
+
 - (void) swtIncludeChanged:(NSNotification*)note
 {
     int chan = 0;
@@ -490,17 +507,8 @@
     }
     for(int i = chan; i < maxChan; i++){
         [[swtIncludeMatrix cellAtRow:i column:0] selectItemAtIndex:[model swtInclude:i]];
-        bool isPeakSum = [model swtInclude:i] == 1;
-        bool isHWMultiplicity = [model swtInclude:i] == 2;
-        bool isDigitalFlag = [model swtInclude:i] == 3;
-        bool isPulserFlag = [model swtInclude:i] == 4;
-        bool isBaselineFlag = [model swtInclude:i] == 5;
-        bool isMuonFlag = [model swtInclude:i] == 6;
-
-        [[swtCalibrationMatrix cellWithTag:i] setEnabled:isPeakSum||isDigitalFlag||isPulserFlag||isBaselineFlag||isMuonFlag];
-        [[swtThresholdMatrix cellWithTag:i] setEnabled:isPeakSum||isHWMultiplicity||isDigitalFlag||isPulserFlag||isBaselineFlag||isMuonFlag];
-        [[swtShapingTimeMatrix cellWithTag:i] setEnabled:isPeakSum];
     }
+    [self setSWTLockState];
 }
 
 - (void) swtCalibrationChanged:(NSNotification*)note
@@ -732,7 +740,6 @@
     lock |= runInProgress || [gSecurity isLocked:ORFlashCamCardSettingsLock];
     [super settingsLock:lock];
     [chanEnabledMatrix      setEnabled:!lock];
-    
     [baselineMatrix         setEnabled:!lock];
     [thresholdMatrix        setEnabled:!lock];
     [adcGainMatrix          setEnabled:!lock];
@@ -745,11 +752,11 @@
     [baselineSlewMatrix     setEnabled:!lock];
     [swtIncludeMatrix       setEnabled:!lock];
     if (lock) {
-            [swtCalibrationMatrix       setEnabled:!lock];
-            [swtThresholdMatrix  setEnabled:!lock];
-            [swtShapingTimeMatrix    setEnabled:!lock];
+            [swtCalibrationMatrix setEnabled:!lock];
+            [swtThresholdMatrix   setEnabled:!lock];
+            [swtShapingTimeMatrix setEnabled:!lock];
     } else {
-        [self swtIncludeChanged:nil];
+        [self setSWTLockState];
     }
     [baseBiasTextField      setEnabled:!lock];
     [majorityLevelPUButton  setEnabled:!lock];
