@@ -269,6 +269,17 @@ static inline Flags lpp_st_analogue_sum(PostProcessor* processor, Flags flags, F
   return flags;
 }
 
+static inline Timestamp generate_prescaling_timestamp(float rate)
+{
+  double shift = random_exponential(1.0 / rate);
+  double integral;
+  double fractional = modf(shift, &integral);
+  Timestamp timestamp;
+  timestamp.seconds = (long)integral;
+  timestamp.nanoseconds = (long)(fractional * 1.0e9);
+  return timestamp;
+}
+
 static inline Flags lpp_st_prescaling(PostProcessor* processor, Flags flags, Timestamp event_unix_timestamp) {
   /*
     Exit early if:
@@ -282,17 +293,15 @@ static inline Flags lpp_st_prescaling(PostProcessor* processor, Flags flags, Tim
   /* ge prescaling */
   if (processor->ge_prescaling_rate > 0.0 && (flags.event & EVT_FPGA_MULTIPLICITY_ENERGY_BELOW) &&
       ((flags.trigger & ST_TRIGGER_FORCE) == 0)) {
-    if (processor->ge_prescaling_timestamp.seconds == 0) {
-      /* initialize with the first event in the stream, which will have the prescaled flag.*/
-      processor->ge_prescaling_timestamp = event_unix_timestamp;
+    if (processor->ge_prescaling_timestamp.seconds == -1) {
+      /* initialize with the first event in the stream.*/
+      processor->ge_prescaling_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
     }
-    if (timestamp_geq(event_unix_timestamp, processor->ge_prescaling_timestamp)) {
+    else if (timestamp_geq(event_unix_timestamp, processor->ge_prescaling_timestamp)) {
       flags.trigger |= ST_TRIGGER_GE_PRESCALED;
-      double shift = random_exponential(1.0 / processor->ge_prescaling_rate);
-      double integral;
-      double fractional = modf(shift, &integral);
-      processor->ge_prescaling_timestamp.seconds += (long)integral;
-      processor->ge_prescaling_timestamp.nanoseconds += (long)(fractional * 1.0e9);
+      Timestamp next_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
+      processor->ge_prescaling_timestamp.seconds += next_timestamp.seconds;
+      processor->ge_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
     }
   }
 
@@ -305,24 +314,21 @@ static inline Flags lpp_st_prescaling(PostProcessor* processor, Flags flags, Tim
   if (!processor->sipm_prescaling || flags.trigger) return flags;
 
   switch (processor->sipm_prescaling[0]) {
-    case 'A': {
-      if (processor->sipm_prescaling_timestamp.seconds == 0) {
-        /* initialize with the first event in the stream, which will have the prescaled flag.*/
-        processor->sipm_prescaling_timestamp = event_unix_timestamp;
+    case 'a': {
+      if (processor->sipm_prescaling_timestamp.seconds == -1) {
+        /* initialize with the first event in the stream.*/
+        processor->sipm_prescaling_timestamp = generate_prescaling_timestamp(processor->sipm_prescaling_rate);
       }
-
-      if (timestamp_geq(event_unix_timestamp, processor->sipm_prescaling_timestamp)) {
+      else if (timestamp_geq(event_unix_timestamp, processor->sipm_prescaling_timestamp)) {
         flags.trigger |= ST_TRIGGER_SIPM_PRESCALED;
-        double shift = random_exponential(1.0 / processor->sipm_prescaling_rate);
-        double integral;
-        double fractional = modf(shift, &integral);
-        processor->sipm_prescaling_timestamp.seconds += (long)integral;
-        processor->sipm_prescaling_timestamp.nanoseconds += (long)(fractional * 1.0e9);
+        Timestamp next_timestamp = generate_prescaling_timestamp(processor->sipm_prescaling_rate);
+        processor->sipm_prescaling_timestamp.seconds += next_timestamp.seconds;
+        processor->sipm_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
       }
 
       break;
     }
-    case 'F': {
+    case 'o': {
       if (processor->sipm_prescaling_counter == processor->sipm_prescaling_offset) {
         flags.trigger |= ST_TRIGGER_SIPM_PRESCALED;
         processor->sipm_prescaling_counter = 0;
@@ -672,6 +678,8 @@ PostProcessor* LPPCreate(void) {
       (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
   processor->minimum_buffer_depth = 2;  // we accept one FCIOStatus packet interleaved between two events
   processor->stats.start_time = 0.0;    // reset, actual start time happens with the first record insertion.
+  processor->ge_prescaling_timestamp.seconds = -1; // will init when it's needed
+  processor->sipm_prescaling_timestamp.seconds = -1; // will init when it's needed
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
   LPPEnableEventFlags(processor, EVT_AUX_PULSER | EVT_AUX_BASELINE | EVT_EXTENDED | EVT_RETRIGGER);
@@ -894,6 +902,7 @@ int LPPSetGeParameters(PostProcessor* processor, int nchannels, int* channelmap,
   if (processor->loglevel >= 4) {
     fprintf(stderr, "DEBUG LPPSetGeParameters\n");
     fprintf(stderr, "DEBUG majority_threshold %d\n", processor->majority_threshold);
+    fprintf(stderr, "DEBUG average_prescaling_rate_hz %f\n", ge_average_prescaling_rate_hz);
     fprintf(stderr, "DEBUG skip_full_counting %d\n", fmc->fast);
     fprintf(stderr, "DEBUG channelmap_format %d : %s\n", fmc->tracemap_format, channelmap_format);
     for (int i = 0; i < fmc->ntraces; i++) {
@@ -933,9 +942,9 @@ int LPPSetSiPMParameters(PostProcessor* processor, int nchannels, int* channelma
   processor->post_trigger_window.seconds = 0;
   processor->post_trigger_window.nanoseconds = coincidence_post_window_ns;
   processor->sipm_prescaling_rate = average_prescaling_rate_hz;
-  if (processor->sipm_prescaling_rate == 0.0)
+  if (processor->sipm_prescaling_rate > 0.0)
     processor->sipm_prescaling =
-        "AverageRate";  // could be "FixedOffset" when selecting ->sipm_prescaling_offset, but is disabled here.
+        "average";  // could be "offset" when selecting ->sipm_prescaling_offset, but is disabled here.
   else
     processor->sipm_prescaling = NULL;
   processor->muon_coincidence = enable_muon_coincidence;
