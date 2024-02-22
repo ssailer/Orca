@@ -69,7 +69,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="0.0" y="0.0" width="939" height="343"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="875"/>
             <value key="minSize" type="size" width="939" height="343"/>
             <value key="maxSize" type="size" width="939" height="343"/>
             <view key="contentView" wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="EiT-Mj-1SZ">
@@ -568,15 +568,16 @@
                                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                                         <size key="cellSize" width="76" height="18"/>
                                                         <size key="intercellSpacing" width="8" height="9"/>
-                                                        <popUpButtonCell key="prototype" type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="border" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="aqD-nJ-hET" id="8ju-C8-DRs">
+                                                        <popUpButtonCell key="prototype" type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" borderStyle="border" tag="-1" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="aqD-nJ-hET" id="8ju-C8-DRs">
                                                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                             <font key="font" metaFont="miniSystem"/>
                                                             <menu key="menu" title="OtherViews" id="f5K-7R-D1M">
                                                                 <items>
-                                                                    <menuItem title="Off" state="on" id="aqD-nJ-hET" userLabel="Off"/>
+                                                                    <menuItem title="Off" tag="-1" id="aqD-nJ-hET" userLabel="Off"/>
                                                                     <menuItem title="Peak Sum" tag="1" id="YSA-Dg-grO"/>
                                                                     <menuItem title="HW Multiplicity" tag="2" id="429-rP-dz6"/>
                                                                     <menuItem title="Digital Flag" tag="3" id="aGb-Fp-UbC" userLabel="Digital Flag"/>
+                                                                    <menuItem title="Pulser Flag" tag="4" id="7VW-k3-1y8" userLabel="Pulser Flag"/>
                                                                     <menuItem title="Baseline Flag" tag="5" id="8Lu-aA-614" userLabel="Baseline Flag"/>
                                                                     <menuItem title="Muon Flag" tag="6" id="iku-3u-aOl" userLabel="Muon Flag"/>
                                                                 </items>
@@ -599,44 +600,44 @@
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="1" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="IgN-Bp-7nh" id="BUa-jx-SC4">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="1" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="IgN-Bp-7nh" id="BUa-jx-SC4">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="Znm-bJ-cQB">
                                                                         <items>
                                                                             <menuItem title="Off" state="on" tag="1" id="IgN-Bp-7nh" userLabel="Off"/>
                                                                             <menuItem title="Peak Sum" tag="1" id="rBT-wQ-sG0"/>
-                                                                            <menuItem title="HW Multiplicity" tag="1" id="ipS-MB-Tn9"/>
-                                                                            <menuItem title="Digital Flag" tag="1" id="xCu-dL-KS9" userLabel="Digital Flag"/>
+                                                                            <menuItem title="HW Multiplicity" tag="2" id="ipS-MB-Tn9"/>
+                                                                            <menuItem title="Digital Flag" tag="3" id="xCu-dL-KS9" userLabel="Digital Flag"/>
                                                                             <menuItem title="Pulser Flag" tag="4" id="IIq-Rz-aqv" userLabel="Pulser Flag"/>
                                                                             <menuItem title="Baseline Flag" tag="5" id="Hvn-3Y-O9l" userLabel="Baseline Flag"/>
                                                                             <menuItem title="Muon Flag" tag="6" id="5ob-Gf-5QV" userLabel="Muon Flag"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="2" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="E2r-lb-oAM" id="t81-4i-3IO">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="2" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="E2r-lb-oAM" id="t81-4i-3IO">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="jLr-Gn-yDX">
                                                                         <items>
                                                                             <menuItem title="Off" state="on" tag="2" id="E2r-lb-oAM" userLabel="Off"/>
-                                                                            <menuItem title="Peak Sum" tag="2" id="y9F-u7-itj"/>
+                                                                            <menuItem title="Peak Sum" tag="1" id="y9F-u7-itj"/>
                                                                             <menuItem title="HW Multiplicity" tag="2" id="bGY-fZ-8gP"/>
-                                                                            <menuItem title="Digital Flag" tag="2" id="N8l-o1-yvZ" userLabel="Digital Flag"/>
+                                                                            <menuItem title="Digital Flag" tag="3" id="N8l-o1-yvZ" userLabel="Digital Flag"/>
                                                                             <menuItem title="Pulser Flag" tag="4" id="VXL-DI-zpw" userLabel="Pulser Flag"/>
                                                                             <menuItem title="Baseline Flag" tag="5" id="3MH-ae-cQr" userLabel="Baseline Flag"/>
                                                                             <menuItem title="Muon Flag" tag="6" id="z2b-mh-c4h" userLabel="Muon Flag"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="3" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="qJE-si-biu" id="iUy-9f-Yzg">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="3" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="qJE-si-biu" id="iUy-9f-Yzg">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="Wc0-ac-hf5">
                                                                         <items>
                                                                             <menuItem title="Off" state="on" tag="3" id="qJE-si-biu" userLabel="Off"/>
-                                                                            <menuItem title="Peak Sum" tag="3" id="eJ3-RO-b8L"/>
-                                                                            <menuItem title="HW Multiplicity" tag="3" id="nO0-i7-XCy"/>
+                                                                            <menuItem title="Peak Sum" tag="1" id="eJ3-RO-b8L"/>
+                                                                            <menuItem title="HW Multiplicity" tag="2" id="nO0-i7-XCy"/>
                                                                             <menuItem title="Digital Flag" tag="3" id="at8-ep-bB0" userLabel="Digital Flag"/>
                                                                             <menuItem title="Pulser Flag" tag="4" id="Stu-RK-Ocv" userLabel="Pulser Flag"/>
                                                                             <menuItem title="Baseline Flag" tag="5" id="StT-Ye-F0w" userLabel="Baseline Flag"/>
@@ -644,30 +645,30 @@
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="4" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Lo3-6n-8GC" id="9yj-yV-0Mp">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="4" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="Lo3-6n-8GC" id="9yj-yV-0Mp">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="0vk-Fh-CgS">
                                                                         <items>
                                                                             <menuItem title="Off" state="on" tag="4" id="Lo3-6n-8GC" userLabel="Off"/>
-                                                                            <menuItem title="Peak Sum" tag="4" id="NrD-mQ-qMn"/>
-                                                                            <menuItem title="HW Multiplicity" tag="4" id="21I-r9-F1b"/>
-                                                                            <menuItem title="Digital Flag" tag="4" id="EiX-lJ-s3i" userLabel="Digital Flag"/>
+                                                                            <menuItem title="Peak Sum" tag="1" id="NrD-mQ-qMn"/>
+                                                                            <menuItem title="HW Multiplicity" tag="2" id="21I-r9-F1b"/>
+                                                                            <menuItem title="Digital Flag" tag="3" id="EiX-lJ-s3i" userLabel="Digital Flag"/>
                                                                             <menuItem title="Pulser Flag" tag="4" id="5jO-yT-cLG" userLabel="Pulser Flag"/>
                                                                             <menuItem title="Baseline Flag" tag="5" id="Faq-Jp-sJ2" userLabel="Baseline Flag"/>
                                                                             <menuItem title="Muon Flag" tag="6" id="paR-SN-rYc" userLabel="Muon Flag"/>
                                                                         </items>
                                                                     </menu>
                                                                 </popUpButtonCell>
-                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="jbn-lE-hxS" id="7Si-jM-gkl">
+                                                                <popUpButtonCell type="push" title="Off" bezelStyle="rounded" alignment="center" controlSize="mini" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="5" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="jbn-lE-hxS" id="7Si-jM-gkl">
                                                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="miniSystem"/>
                                                                     <menu key="menu" title="OtherViews" id="K7k-OL-wHE">
                                                                         <items>
                                                                             <menuItem title="Off" state="on" tag="5" id="jbn-lE-hxS" userLabel="Off"/>
-                                                                            <menuItem title="Peak Sum" tag="5" id="isf-d6-owK"/>
-                                                                            <menuItem title="HW Multiplicity" tag="5" id="UhJ-aV-hgg"/>
-                                                                            <menuItem title="Digital Flag" tag="5" id="9RU-VM-j32" userLabel="Digital Flag"/>
+                                                                            <menuItem title="Peak Sum" tag="1" id="isf-d6-owK"/>
+                                                                            <menuItem title="HW Multiplicity" tag="2" id="UhJ-aV-hgg"/>
+                                                                            <menuItem title="Digital Flag" tag="3" id="9RU-VM-j32" userLabel="Digital Flag"/>
                                                                             <menuItem title="Pulser Flag" tag="4" id="JLJ-Jh-MXI" userLabel="Pulser Flag"/>
                                                                             <menuItem title="Baseline Flag" tag="5" id="NTE-EZ-CQn" userLabel="Baseline Flag"/>
                                                                             <menuItem title="Muon Flag" tag="6" id="WZ6-dC-Tp4" userLabel="Muon Flag"/>

@@ -489,7 +489,7 @@
         maxChan = chan+1;
     }
     for(int i = chan; i < maxChan; i++){
-        [[swtIncludeMatrix cellWithTag:i] selectItemAtIndex:[model swtInclude:i]];
+        [[swtIncludeMatrix cellAtRow:i column:0] selectItemAtIndex:[model swtInclude:i]];
         bool isPeakSum = [model swtInclude:i] == 1;
         bool isHWMultiplicity = [model swtInclude:i] == 2;
         bool isDigitalFlag = [model swtInclude:i] == 3;
