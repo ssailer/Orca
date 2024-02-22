@@ -1063,7 +1063,7 @@ NSString* ORL200ModelL200FileNameChanged = @"ORL200ModelL200FileNameChanged";
             [aCmd addField: @"poleZeroTime"  withLong:[hw poleZeroTime:chan]];
             [aCmd addField: @"postTrigger"   withLong:[hw postTrigger:chan]];
             [aCmd addField: @"baselineSlew"  withLong:[hw baselineSlew:chan]];
-            [aCmd addField: @"swTrigInclude" withLong:[hw swTrigInclude:chan]];
+            [aCmd addField: @"swTrigInclude" withLong:[hw swtInclude:chan]];
             
             //card level settings
             [aCmd addField: @"promSlot"       withLong:[hw promSlot]];
