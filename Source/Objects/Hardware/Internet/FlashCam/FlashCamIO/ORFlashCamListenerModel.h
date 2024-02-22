@@ -112,6 +112,10 @@
     int* lppPSChannelShapings;
     float* lppPSChannelLowPass;
     
+    int nlppFlagChannels;
+    int* lppFlagChannelMap;
+    int* lppFlagChannelThresholds;
+    
     int lppPulserChannel;
     int lppPulserChannelThreshold;
     int lppBaselineChannel;
