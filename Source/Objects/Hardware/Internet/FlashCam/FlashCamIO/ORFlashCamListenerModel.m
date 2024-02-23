@@ -954,17 +954,24 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
 #pragma mark •••FCIO methods
 
-- (void) readerThreadMain
+- (void) readerThreadMain:(ORDataPacket*)aDataPacket
 {
-    @autoreleasepool {
-        if ( [self fcioOpen] ) {
-            [self performSelectorOnMainThread:@selector(setUpImage) withObject:nil waitUntilDone:NO];
-            while ( [self fcioRead:dataPacketForThread] ) {
-                // putDataInQueue is self-locking for thread safety
-                [[dataPacketForThread dataTask] putDataInQueue:dataPacketForThread force:YES];
+
+    if ( [self fcioOpen] ) {
+        [self performSelectorOnMainThread:@selector(setUpImage) withObject:nil waitUntilDone:NO];
+
+        bool running = false;
+        do {
+            @autoreleasepool {
+                //autoreleasing here is needed, main leak would be in the shipevents inside fcioRead,
+                if ((running = [self fcioRead:aDataPacket])) {
+                    // putDataInQueue is self-locking for thread safety
+                    [[aDataPacket dataTask] putDataInQueue:aDataPacket force:YES];
+                }
             }
-            [self fcioClose];
-        }
+        } while (running);
+
+        [self fcioClose];
     }
 }
 
@@ -1084,6 +1091,7 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                 NSDictionary* dict = [chanMap objectAtIndex:state->event->trace_list[itr]];
                 ORFlashCamADCModel* card = [dict objectForKey:@"adc"];
                 unsigned int chan = [[dict objectForKey:@"channel"] unsignedIntValue];
+                DEBUG_PRINT("LPP: itr %d trace_list %d chan %d trace_map 0x%x\n",itr,state->event->trace_list[itr], chan, state->config->tracemap[state->event->trace_list[itr]] );
                 [card shipEvent:state->event withIndex:state->event->trace_list[itr]
                      andChannel:chan use:aDataPacket includeWF:writeWaveforms];
             }
@@ -1362,8 +1370,11 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
 
     [readerThread release];
     readerThread = [[NSThread alloc] initWithTarget:self
-                                            selector:@selector(readerThreadMain)
-                                            object:nil];
+                                           selector:@selector(readerThreadMain:)
+                                            object:dataPacketForThread];
+    
+    enablePostProcessor = [[self configParam:@"lppEnabled"] boolValue];
+
     readoutShouldStart = YES; // signal to takeData that we are ready
 }
 

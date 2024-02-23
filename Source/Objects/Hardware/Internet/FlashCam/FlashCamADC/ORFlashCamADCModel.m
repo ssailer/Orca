@@ -851,7 +851,8 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     isRunning = false;
     [wfRates   stop];
     [trigRates stop];
-    [self setWFsamples:0];
+//    [self setWFsamples:0]; // release on run start, keep available because we don't know if a listener ist still writing.
+    // it seems line this is not only called from the listener runTaskStopped but from somewhere else (the main takeData thread?)
     [startTime release];
     startTime = nil;
 }
