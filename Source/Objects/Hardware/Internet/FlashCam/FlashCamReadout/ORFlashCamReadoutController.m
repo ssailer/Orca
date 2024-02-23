@@ -56,6 +56,7 @@
     [self updateRmIfaceFromListenerIfacePUButton];
     [self updateRmIfaceFromListenerListenerPUButton];
     if([model localMode]) [fcSourcePathButton setTitle:@"Set Path to FC Readout Source:"];
+    if([model localMode]) [fcSourcePathButton setTitle:@"Set Path to FC Readout Source:"];
     else [fcSourcePathButton setTitle:@"Get Path to FC Readout Source:"];
 }
 
@@ -950,9 +951,11 @@
         }
         else if(view == listenerLPPGeneralView){
             if(col == 1)      return [l configParam:@"lppEnabled"];
-            else if(col == 2) return [l configParam:@"lppWriteNonTriggered"];
-            else if(col == 3) return [l configParam:@"lppLogTime"];
-            else if(col == 4) return [l configParam:@"lppLogLevel"];
+            if(col == 2)      return [l configParam:@"lppHWEnabled"];
+            if(col == 3)      return [l configParam:@"lppPSEnabled"];
+            else if(col == 4) return [l configParam:@"lppWriteNonTriggered"];
+            else if(col == 5) return [l configParam:@"lppLogTime"];
+            else if(col == 6) return [l configParam:@"lppLogLevel"];
         }
         else if(view == listenerLPPHWMultiplicityView){
             if(col == 1)      return [l configParam:@"lppHWMajThreshold"];
@@ -1076,11 +1079,15 @@
         else if(view == listenerLPPGeneralView){
             if(col == 1)      [l setConfigParam:@"lppEnabled"
                                       withValue:[NSNumber numberWithBool:[object boolValue]]];
-            else if(col == 2) [l setConfigParam:@"lppWriteNonTriggered"
+            else if(col == 2)      [l setConfigParam:@"lppHWEnabled"
                                       withValue:[NSNumber numberWithBool:[object boolValue]]];
-            else if(col == 3) [l setConfigParam:@"lppLogTime"
+            else if(col == 3)      [l setConfigParam:@"lppPSEnabled"
+                                      withValue:[NSNumber numberWithBool:[object boolValue]]];
+            else if(col == 4) [l setConfigParam:@"lppWriteNonTriggered"
+                                      withValue:[NSNumber numberWithBool:[object boolValue]]];
+            else if(col == 5) [l setConfigParam:@"lppLogTime"
                                       withValue:[NSNumber numberWithDouble:[object doubleValue]]];
-            else if(col == 4) [l setConfigParam:@"lppLogLevel"
+            else if(col == 6) [l setConfigParam:@"lppLogLevel"
                                       withValue:[NSNumber numberWithInt:[object intValue]]];
         }
         else if(view == listenerLPPHWMultiplicityView){

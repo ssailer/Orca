@@ -91,6 +91,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     [self setConfigParam:@"extraFiles"      withValue:[NSNumber numberWithBool:NO]];
     
     [self setConfigParam:@"lppEnabled"      withValue:[NSNumber numberWithBool:NO]];
+    [self setConfigParam:@"lppHWEnabled"      withValue:[NSNumber numberWithBool:NO]];
+    [self setConfigParam:@"lppPSEnabled"      withValue:[NSNumber numberWithBool:NO]];
     [self setConfigParam:@"lppWriteNonTriggered" withValue:[NSNumber numberWithBool:NO]];
     [self setConfigParam:@"lppLogTime"      withValue:[NSNumber numberWithDouble:3.0]];
     [self setConfigParam:@"lppLogLevel"      withValue:[NSNumber numberWithInt:0]];
@@ -98,11 +100,11 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     [self setConfigParam:@"lppBaselineChan" withValue:[NSNumber numberWithInt:-1]];
     [self setConfigParam:@"lppMuonChan"     withValue:[NSNumber numberWithInt:-1]];
     [self setConfigParam:@"lppHWMajThreshold"  withValue:[NSNumber numberWithInt:-1]];
-    [self setConfigParam:@"lppHWPreScalingRate"  withValue:[NSNumber numberWithDouble:0.01]];
+    [self setConfigParam:@"lppHWPreScalingRate"  withValue:[NSNumber numberWithDouble:0.00]];
 //    [self setConfigParam:@"lppHWCheckAll"  withValue:[NSNumber numberWithBool:YES]];
     [self setConfigParam:@"lppPSPreWindow"   withValue:[NSNumber numberWithInt:2000000]];
     [self setConfigParam:@"lppPSPostWindow"   withValue:[NSNumber numberWithInt:2000000]];
-    [self setConfigParam:@"lppPSPreScalingRate"  withValue:[NSNumber numberWithDouble:0.01]];
+    [self setConfigParam:@"lppPSPreScalingRate"  withValue:[NSNumber numberWithDouble:0.0]];
     [self setConfigParam:@"lppPSMuonCoincidence"  withValue:[NSNumber numberWithBool:NO]];
     [self setConfigParam:@"lppPSSumWindowStart"  withValue:[NSNumber numberWithInt:-1]];
     [self setConfigParam:@"lppPSSumWindowSize"  withValue:[NSNumber numberWithInt:-1]];
@@ -456,6 +458,10 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     else if([p isEqualToString:@"writeFCIOLog"])
         return [NSNumber numberWithBool:[[configParams objectForKey:@"writeFCIOLog"] boolValue]];
     else if([p isEqualToString:@"lppEnabled"])
+        return [NSNumber numberWithBool:[[configParams objectForKey:p] boolValue]];
+    else if([p isEqualToString:@"lppHWEnabled"])
+        return [NSNumber numberWithBool:[[configParams objectForKey:p] boolValue]];
+    else if([p isEqualToString:@"lppPSEnabled"])
         return [NSNumber numberWithBool:[[configParams objectForKey:p] boolValue]];
     else if([p isEqualToString:@"lppWriteNonTriggered"])
         return [NSNumber numberWithBool:[[configParams objectForKey:p] boolValue]];
@@ -896,6 +902,10 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
     else if([p isEqualToString:@"lppEnabled"])
         [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
+    else if([p isEqualToString:@"lppHWEnabled"])
+        [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
+    else if([p isEqualToString:@"lppPSEnabled"])
+        [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
     else if([p isEqualToString:@"lppWriteNonTriggered"])
         [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
     else if([p isEqualToString:@"lppLogTime"])
@@ -1234,40 +1244,45 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     
     const char* channelmap_format = "fcio-tracemap";
     
-    if (lppPulserChannel >= 0 || lppBaselineChannel >= 0 || lppMuonChannel >= 0)
+    if (lppPulserChannel >= 0 || lppBaselineChannel >= 0 || lppMuonChannel >= 0) {
         if (!LPPSetAuxParameters(postprocessor, channelmap_format,
-                            lppPulserChannel, lppPulserChannelThreshold,
-                            lppBaselineChannel, lppBaselineChannelThreshold,
-                            lppMuonChannel, lppMuonChannelThreshold
+                                 lppPulserChannel, lppPulserChannelThreshold,
+                                 lppBaselineChannel, lppBaselineChannelThreshold,
+                                 lppMuonChannel, lppMuonChannelThreshold
                                  )) {
             NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing Aux parameters.\n", [self identifier]);
             return NO;
         }
-    if (nlppHWChannels)
+    }
+
+    if ([self configParam:@"lppHWEnabled"] && nlppHWChannels) {
         if (!LPPSetGeParameters(postprocessor, nlppHWChannels, lppHWChannelMap, channelmap_format,
-                           [[self configParam:@"lppHWMajThreshold"] intValue],
-                           0, // do not skip any channels to check
-                           lppHWPrescalingThresholds,
+                                [[self configParam:@"lppHWMajThreshold"] intValue],
+                                0, // do not skip any channels to check
+                                lppHWPrescalingThresholds,
                                 [[self configParam:@"lppHWPreScalingRate"] floatValue])) {
             NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing HW Multiplicity parameters.\n", [self identifier]);
             return NO;
         }
-    if (nlppPSChannels)
+    }
+
+    if ([self configParam:@"lppPSEnabled"] && nlppPSChannels) {
         if (!LPPSetSiPMParameters(postprocessor, nlppPSChannels, lppPSChannelMap, channelmap_format,
-                             lppPSChannelGains, lppPSChannelThresholds,
-                             lppPSChannelShapings, lppPSChannelLowPass,
-                             [[self configParam:@"lppPSPreWindow"] intValue],
-                             [[self configParam:@"lppPSPostWindow"] intValue],
-                             [[self configParam:@"lppPSSumWindowSize"] intValue],
-                             [[self configParam:@"lppPSSumWindowStart"] intValue],
-                             [[self configParam:@"lppPSSumWindowStart"] intValue] + [[self configParam:@"lppPSSumWindowSize"] intValue],
-                             [[self configParam:@"lppPSAbsoluteThreshold"] floatValue],
-                             [[self configParam:@"lppPSCoincidenceThreshold"] floatValue],
-                             [[self configParam:@"lppPSPreScalingRate"] floatValue],
+                                  lppPSChannelGains, lppPSChannelThresholds,
+                                  lppPSChannelShapings, lppPSChannelLowPass,
+                                  [[self configParam:@"lppPSPreWindow"] intValue],
+                                  [[self configParam:@"lppPSPostWindow"] intValue],
+                                  [[self configParam:@"lppPSSumWindowSize"] intValue],
+                                  [[self configParam:@"lppPSSumWindowStart"] intValue],
+                                  [[self configParam:@"lppPSSumWindowStart"] intValue] + [[self configParam:@"lppPSSumWindowSize"] intValue],
+                                  [[self configParam:@"lppPSAbsoluteThreshold"] floatValue],
+                                  [[self configParam:@"lppPSCoincidenceThreshold"] floatValue],
+                                  [[self configParam:@"lppPSPreScalingRate"] floatValue],
                                   [[self configParam:@"lppPSMuonCoincidence"] intValue])) {
             NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing Peak Sum parameters.\n", [self identifier]);
             return NO;
         }
+    }
 
 //                const char* filepath = "<path_to_config>/lppconfig_local.txt";
 //                LPPSetParametersFromFile(postprocessor, filepath);
