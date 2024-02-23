@@ -1112,7 +1112,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [encoder encodeInt:swtInclude[i]        forKey:[NSString stringWithFormat:@"swtType%i",      i]];
         [encoder encodeFloat:swtCalibration[i]  forKey:[NSString stringWithFormat:@"swtCalibration%i",      i]];
         [encoder encodeFloat:swtThreshold[i]    forKey:[NSString stringWithFormat:@"swtThreshold%i", i]];
-        [encoder encodeInt:swtShapingTime[i]    forKey:[NSString stringWithFormat:@"swtShapingTIme%i",   i]];
+        [encoder encodeInt:swtShapingTime[i]    forKey:[NSString stringWithFormat:@"swtShapingTime%i",   i]];
     }
     [encoder encodeInt:baseBias               forKey:@"baseBias"];
     [encoder encodeInt:majorityLevel          forKey:@"majorityLevel"];
@@ -1280,7 +1280,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [a addObject:p];
     
     p = [[[ORHWWizParam alloc] init] autorelease];
-    [p setName:@"SW Trigger Gain"];
+    [p setName:@"SW Trigger Calibration"];
     [p setFormat:@"##0.00" upperLimit:65536 lowerLimit:0 stepSize:1 units:@"LSB"];
     [p setSetMethod:@selector(setSWTCalibration:withValue:) getMethod:@selector(swtCalibration:)];
     [p setCanBeRamped:YES];
