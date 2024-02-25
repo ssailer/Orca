@@ -927,9 +927,9 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 //    else if([p isEqualToString:@"lppHWCheckAll"])
 //        [configParams setObject:[NSNumber numberWithBool:[v boolValue]] forKey:p];
     else if([p isEqualToString:@"lppPSPreWindow"])
-        [configParams setObject:[NSNumber numberWithInt:MIN(MAX(0,[v intValue]),1e9)] forKey:p];
+        [configParams setObject:[NSNumber numberWithInt:MIN(MAX(0,[v intValue]),2147483647)] forKey:p];
     else if([p isEqualToString:@"lppPSPostWindow"])
-        [configParams setObject:[NSNumber numberWithInt:MIN(MAX(0,[v intValue]),1e9)] forKey:p];
+        [configParams setObject:[NSNumber numberWithInt:MIN(MAX(0,[v intValue]),2147483647)] forKey:p];
     else if([p isEqualToString:@"lppPSPreScalingRate"])
         [configParams setObject:[NSNumber numberWithDouble:MAX(0.0,[v doubleValue])] forKey:p];
     else if([p isEqualToString:@"lppPSMuonCoincidence"])
@@ -1237,7 +1237,6 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         NSLog(@"%@: Couldn't allocate software trigger.\n", [self identifier]);
         return NO;
     }
-    LPPSetBufferSize(postprocessor, stateBuffer);
     LPPSetLogTime(postprocessor, [[self configParam:@"lppLogTime"] doubleValue]);
     LPPSetLogLevel(postprocessor, [[self configParam:@"lppLogLevel"] intValue]);
 
@@ -1283,6 +1282,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             return NO;
         }
     }
+    LPPSetBufferSize(postprocessor, stateBuffer);
 
 //                const char* filepath = "<path_to_config>/lppconfig_local.txt";
 //                LPPSetParametersFromFile(postprocessor, filepath);
@@ -1448,8 +1448,14 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             if (!writeNonTriggered)
                 return YES;
         } else {
-            if (lppLogLevel > 3) {
-                fprintf(stderr, "%s: postprocessor record_flags=%s\n", [[self identifier] UTF8String], statestring);
+            if (lppLogLevel > 2 && lppstate->stream_tag != FCIOStatus) {
+                fprintf(stderr, "%s: postprocessor record_flags=%s ge,multi=%d,min=%d,max=%d sipm,sum=%f,max=%f,mult=%d,offset=%d fill_level=%d\n",
+                        [[self identifier] UTF8String], statestring,
+                        lppstate->majority,lppstate->ge_min_fpga_energy, lppstate->ge_max_fpga_energy,
+                        lppstate->largest_sum_pe, lppstate->largest_pe,
+                        lppstate->channel_multiplicity,lppstate->largest_sum_offset,
+                        LPPBufferFillLevel(postprocessor->buffer)
+                        );
             }
         }
     }
