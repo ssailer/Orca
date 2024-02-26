@@ -1163,6 +1163,9 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     lppPulserChannel = -1;
     lppBaselineChannel = -1;
     lppMuonChannel = -1;
+    lppPulserChannelThreshold = 0;
+    lppBaselineChannelThreshold = 0;
+    lppBaselineChannelThreshold = 0;
     for(ORReadOutObject* obj in [readOutList children]){
         if(![[obj object] isKindOfClass:NSClassFromString(@"ORFlashCamCard")]) continue;
         ORFlashCamCard* card = (ORFlashCamCard*) [obj object];
@@ -1232,6 +1235,11 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             }
         }
     }
+    
+    if (postprocessor) {
+        // should never occur, buf if it does, because code evolves, it is checked against.
+        LPPDestroy(postprocessor);
+    }
 
     if (!(postprocessor = LPPCreate())) {
         NSLog(@"%@: Couldn't allocate software trigger.\n", [self identifier]);
@@ -1243,15 +1251,14 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     
     const char* channelmap_format = "fcio-tracemap";
     
-    if (lppPulserChannel >= 0 || lppBaselineChannel >= 0 || lppMuonChannel >= 0) {
-        if (!LPPSetAuxParameters(postprocessor, channelmap_format,
-                                 lppPulserChannel, lppPulserChannelThreshold,
-                                 lppBaselineChannel, lppBaselineChannelThreshold,
-                                 lppMuonChannel, lppMuonChannelThreshold
-                                 )) {
-            NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing Aux parameters.\n", [self identifier]);
-            return NO;
-        }
+    /* always set the Aux Parameters to get sane defaults, we picked some at the beginning of this function.*/
+    if (!LPPSetAuxParameters(postprocessor, channelmap_format,
+                             lppPulserChannel, lppPulserChannelThreshold,
+                             lppBaselineChannel, lppBaselineChannelThreshold,
+                             lppMuonChannel, lppMuonChannelThreshold
+                             )) {
+        NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing Aux parameters.\n", [self identifier]);
+        return NO;
     }
 
     if ([self configParam:@"lppHWEnabled"] && nlppHWChannels) {
@@ -1282,7 +1289,12 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
             return NO;
         }
     }
-    LPPSetBufferSize(postprocessor, stateBuffer);
+    int realized_buffer_depth = LPPSetBufferSize(postprocessor, stateBuffer);
+    if (realized_buffer_depth != stateBuffer) {
+        // should also never occur
+        NSLogColor([NSColor redColor], @"%@: Software trigger: buffer depth too small, adjust the state buffer depth to 16 at minimum\n", [self identifier]);
+        return NO;
+    }
 
 //                const char* filepath = "<path_to_config>/lppconfig_local.txt";
 //                LPPSetParametersFromFile(postprocessor, filepath);
@@ -1336,8 +1348,10 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 //        FCIOSelectStateTag(reader, FCIOStatus);
 //        FCIOSelectStateTag(reader, FCIOEvent);
 //        FCIOSelectStateTag(reader, FCIOSparseEvent);
-        if (enablePostProcessor && ![self setupPostProcessor])
+        if (enablePostProcessor && ![self setupPostProcessor]) {
             return NO;
+        }
+           
         return YES;
     } else {
         NSLogColor([NSColor redColor], @"%@: unable to open %@\n",[self identifier], [self streamDescription]);
