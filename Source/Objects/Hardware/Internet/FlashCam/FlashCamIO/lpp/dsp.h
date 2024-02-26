@@ -68,7 +68,7 @@ typedef struct FPGAMajorityCfg {
 
   int fast;
   /* result fields */
-  int majority;
+  int multiplicity;
   int n_fpga_energy_below;
   unsigned short max_fpga_energy;
   unsigned short min_fpga_energy;

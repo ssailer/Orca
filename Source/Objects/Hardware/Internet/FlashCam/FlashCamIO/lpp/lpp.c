@@ -182,14 +182,14 @@ static inline Flags lpp_st_majority(PostProcessor* processor, Flags flags, FCIOS
   tale_dsp_fpga_energy_majority(processor->fpga_majority_cfg, config->adcs, event->theader);
 
   /* don't set to higher than 1 if you are sane */
-  if (processor->fpga_majority_cfg->majority >= processor->majority_threshold) {
+  if (processor->fpga_majority_cfg->multiplicity >= processor->majority_threshold) {
     flags.event |= EVT_FPGA_MULTIPLICITY;
 
     /* if majority is >= 1, then the following check is safe, otherwise think about what happens when majority == 0
        if there is any channel with a majority above the threshold, it's a force trigger, if not, it should be
        prescaled and not affect the rest of the datastream.
     */
-    if (processor->fpga_majority_cfg->n_fpga_energy_below == processor->fpga_majority_cfg->majority)
+    if (processor->fpga_majority_cfg->n_fpga_energy_below == processor->fpga_majority_cfg->multiplicity)
       flags.event |= EVT_FPGA_MULTIPLICITY_ENERGY_BELOW;
     else
       flags.trigger |= ST_TRIGGER_FORCE;
@@ -300,6 +300,11 @@ static inline Flags lpp_st_prescaling(PostProcessor* processor, Flags flags, Tim
     else if (timestamp_geq(event_unix_timestamp, processor->ge_prescaling_timestamp)) {
       flags.trigger |= ST_TRIGGER_GE_PRESCALED;
       Timestamp next_timestamp = generate_prescaling_timestamp(processor->ge_prescaling_rate);
+      if (processor->loglevel >= 4)
+        fprintf(stderr, "DEBUG ge_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
+          processor->ge_prescaling_timestamp.seconds, processor->ge_prescaling_timestamp.nanoseconds,
+          next_timestamp.seconds, next_timestamp.nanoseconds
+        );
       processor->ge_prescaling_timestamp.seconds += next_timestamp.seconds;
       processor->ge_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
     }
@@ -322,6 +327,11 @@ static inline Flags lpp_st_prescaling(PostProcessor* processor, Flags flags, Tim
       else if (timestamp_geq(event_unix_timestamp, processor->sipm_prescaling_timestamp)) {
         flags.trigger |= ST_TRIGGER_SIPM_PRESCALED;
         Timestamp next_timestamp = generate_prescaling_timestamp(processor->sipm_prescaling_rate);
+        if (processor->loglevel >= 4)
+        fprintf(stderr, "DEBUG sipm_prescaling current timestamp %ld.%09ld + %ld.%09ld\n",
+          processor->ge_prescaling_timestamp.seconds, processor->ge_prescaling_timestamp.nanoseconds,
+          next_timestamp.seconds, next_timestamp.nanoseconds
+        );
         processor->sipm_prescaling_timestamp.seconds += next_timestamp.seconds;
         processor->sipm_prescaling_timestamp.nanoseconds += next_timestamp.nanoseconds;
       }
@@ -381,7 +391,7 @@ int lpp_process_fcio_state(PostProcessor* processor, LPPState* lpp_state, FCIOSt
 
       if (fpga_majority_cfg) {
         flags = lpp_st_majority(processor, flags, state);
-        lpp_state->majority = fpga_majority_cfg->majority;
+        lpp_state->majority = fpga_majority_cfg->multiplicity;
         lpp_state->ge_max_fpga_energy = fpga_majority_cfg->max_fpga_energy;
         lpp_state->ge_min_fpga_energy = fpga_majority_cfg->min_fpga_energy;
       }
@@ -676,10 +686,17 @@ PostProcessor* LPPCreate(void) {
   processor->minimum_buffer_window.seconds = 0;
   processor->minimum_buffer_window.nanoseconds =
       (FCIOMaxSamples + 1) * 16;        // this is required to check for retrigger events
-  processor->minimum_buffer_depth = 2;  // we accept one FCIOStatus packet interleaved between two events
+  processor->minimum_buffer_depth = 16; // the minimum buffer window * 30kHz event rate requires at least 16 records
   processor->stats.start_time = 0.0;    // reset, actual start time happens with the first record insertion.
   processor->ge_prescaling_timestamp.seconds = -1; // will init when it's needed
   processor->sipm_prescaling_timestamp.seconds = -1; // will init when it's needed
+
+  /* default tracemap for HW and PS are fine, as they are allocated to zero.
+     special aux channels need to be below zero, as they don't have an ntraces counter.
+  */
+  processor->aux.pulser_trace_index = -1;
+  processor->aux.baseline_trace_index = -1;
+  processor->aux.muon_trace_index = -1;
 
   /* hardcoded defaults which should make sense. Used SetFunctions outside to overwrite */
   LPPEnableEventFlags(processor, EVT_AUX_PULSER | EVT_AUX_BASELINE | EVT_EXTENDED | EVT_RETRIGGER);
@@ -708,7 +725,10 @@ int LPPSetBufferSize(PostProcessor* processor, int buffer_depth) {
 
     return 0;
   }
-  return 1;
+    if (processor->loglevel >=2) {
+        fprintf(stderr, "DEBUG LPPSetBufferSize to depth %d and window %ld.%09ld\n", processor->buffer->max_states, processor->buffer->buffer_window.seconds, processor->buffer->buffer_window.nanoseconds);
+    }
+  return buffer_depth;
 }
 
 void LPPDestroy(PostProcessor* processor) {
@@ -928,19 +948,31 @@ int LPPSetSiPMParameters(PostProcessor* processor, int nchannels, int* channelma
   if ((asc->tracemap_format = get_channelmap_format(channelmap_format)) < 0) {
     if (processor->loglevel)
       fprintf(stderr,
-              "ERROR LPPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
+              "CRITICAL LPPSetSiPMParameters: channel map type %s is not supported. Valid inputs are "
               "\"fcio-trace-index\", \"fcio-tracemap\" or \"rawid\".\n",
               channelmap_format);
     free(asc);
     return 0;
   }
 
-  processor->windowed_sum_threshold_pe = coincidence_sum_threshold_pe;
-  processor->sum_threshold_pe = sum_threshold_pe;
-  processor->pre_trigger_window.seconds = 0;
-  processor->pre_trigger_window.nanoseconds = coincidence_pre_window_ns;
-  processor->post_trigger_window.seconds = 0;
-  processor->post_trigger_window.nanoseconds = coincidence_post_window_ns;
+  if (coincidence_sum_threshold_pe >= 0)
+    processor->windowed_sum_threshold_pe = coincidence_sum_threshold_pe;
+  else {
+    fprintf(stderr, "CRICITAL coincidence_sum_threshold_pe needs to be >= 0 is %f\n", coincidence_sum_threshold_pe);
+    return 0;
+  }
+
+  if (sum_threshold_pe >= 0)
+    processor->sum_threshold_pe = sum_threshold_pe;
+  else {
+    fprintf(stderr, "CRICITAL sum_threshold_pe needs to be >= 0 is %f\n", sum_threshold_pe);
+    return 0;
+  }
+
+  processor->pre_trigger_window.seconds = coincidence_pre_window_ns / 1000000000L;
+  processor->pre_trigger_window.nanoseconds = coincidence_pre_window_ns % 1000000000L;
+  processor->post_trigger_window.seconds = coincidence_post_window_ns / 1000000000L;
+  processor->post_trigger_window.nanoseconds = coincidence_post_window_ns % 1000000000L;
   processor->sipm_prescaling_rate = average_prescaling_rate_hz;
   if (processor->sipm_prescaling_rate > 0.0)
     processor->sipm_prescaling =
@@ -966,10 +998,35 @@ int LPPSetSiPMParameters(PostProcessor* processor, int nchannels, int* channelma
   asc->dsp_post_max_samples = 0;
   for (int i = 0; i < nchannels && i < FCIOMaxChannels; i++) {
     asc->tracemap[i] = channelmap[i];
-    asc->gains[i] = calibration_pe_adc[i];
-    asc->thresholds[i] = channel_thresholds_pe[i];
-    asc->shaping_widths[i] = shaping_width_samples[i];
-    asc->lowpass[i] = lowpass_factors[i];
+
+    if (calibration_pe_adc[i] >= 0) {
+      asc->gains[i] = calibration_pe_adc[i];
+    } else {
+      fprintf(stderr, "CRITICAL calibration_pe_adc for channel[%d] = %d needs to be >= 0 is %f\n", i, channelmap[i], calibration_pe_adc[i]);
+      return 0;
+    }
+
+    if (channel_thresholds_pe[i] >= 0) {
+      asc->thresholds[i] = channel_thresholds_pe[i];
+    } else {
+      fprintf(stderr, "CRITICAL channel_thresholds_pe for channel[%d] = %d needs to be >= 0 is %f\n", i, channelmap[i], channel_thresholds_pe[i]);
+      return 0;
+    }
+
+    if (shaping_width_samples[i] >= 1) {
+      asc->shaping_widths[i] = shaping_width_samples[i];
+    } else {
+      fprintf(stderr, "CRITICAL shaping_width_samples for channel[%d] = %d needs to be >= 1 is %d\n", i, channelmap[i], shaping_width_samples[i]);
+      return 0;
+    }
+
+    if (lowpass_factors[i] >= 0) {
+      asc->lowpass[i] = lowpass_factors[i];
+    } else {
+      fprintf(stderr, "CRITICAL lowpass_factors for channel[%d] = %d needs to be >= 0 is %d\n", i, channelmap[i], lowpass_factors[i]);
+      return 0;
+    }
+
     asc->dsp_pre_samples[i] = tale_dsp_diff_and_smooth_pre_samples(shaping_width_samples[i], asc->lowpass[i]);
     if (asc->dsp_pre_samples[i] > asc->dsp_pre_max_samples) asc->dsp_pre_max_samples = asc->dsp_pre_samples[i];
     asc->dsp_post_samples[i] = tale_dsp_diff_and_smooth_post_samples(shaping_width_samples[i], asc->lowpass[i]);

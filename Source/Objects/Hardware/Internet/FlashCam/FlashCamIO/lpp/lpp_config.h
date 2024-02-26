@@ -135,10 +135,10 @@ int LPPSetParametersFromFile(PostProcessor *processor, const char *setup_path) {
        .needarg = 1,
        .name = "--fpga-majority-threshold",
        .desc = "<log-time:double> : Timedelta between logging data output."},
-      {.val = 20,
-       .needarg = 1,
-       .name = "--observables",
-       .desc = "<path-to-file:string> : File to write event-by-event observables to."},
+      // {.val = 20,
+      //  .needarg = 1,
+      //  .name = "--observables",
+      //  .desc = "<path-to-file:string> : File to write event-by-event observables to."},
       {.val = 21,
        .needarg = 0,
        .name = "--skip-full-counting",
@@ -230,7 +230,7 @@ int LPPSetParametersFromFile(PostProcessor *processor, const char *setup_path) {
   float sipm_average_prescaling_rate_hz = 0.0;
   float ge_average_prescaling_rate_hz = 10;
   unsigned short ge_prescaling_threshold_adc[FCIOMaxChannels] = {0};
-  const char *observables_file_path = NULL;
+  // const char *observables_file_path = NULL;
   int loglevel = 1;
 
   yopt_t opt_state;
@@ -294,10 +294,10 @@ int LPPSetParametersFromFile(PostProcessor *processor, const char *setup_path) {
         majority_threshold = atoi(value) >= 1 ? atoi(value) : 1;
         break;
       }
-      case 20: {
-        observables_file_path = value;
-        break;
-      }
+      // case 20: {
+      //   observables_file_path = value;
+      //   break;
+      // }
       case 21: {
         skip_full_counting = 1;
         break;

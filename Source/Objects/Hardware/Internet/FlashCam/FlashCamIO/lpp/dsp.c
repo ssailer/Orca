@@ -451,7 +451,7 @@ void tale_dsp_windowed_analogue_sum(AnalogueSumCfg *cfg, int nsamples, int ntrac
 void tale_dsp_fpga_energy_majority(FPGAMajorityCfg *cfg, int ntraces, unsigned short **trace_headers) {
   assert(cfg->ntraces <= ntraces);
 
-  int fpga_maj = 0;
+  int fpga_energy_multiplicity = 0;
   int n_fpga_energy_below = 0;
   unsigned short max = 0;
   unsigned short min = USHRT_MAX;
@@ -461,22 +461,23 @@ void tale_dsp_fpga_energy_majority(FPGAMajorityCfg *cfg, int ntraces, unsigned s
     /* FCIO Trace Header 1 contains fpga_energy */
     unsigned short fpga_energy = trace_headers[trace_idx][1];
     if (fpga_energy) {
-      fpga_maj++;
-      if (fpga_energy < cfg->fpga_energy_threshold_adc[i]) n_fpga_energy_below++;
+      fpga_energy_multiplicity++;
 
-      if (fpga_energy) {
-        if (fpga_energy < min) min = fpga_energy;
-        if (fpga_energy > max) max = fpga_energy;
-      }
+      if (fpga_energy < cfg->fpga_energy_threshold_adc[i])
+        n_fpga_energy_below++;
+
+      if (fpga_energy < min) min = fpga_energy;
+      if (fpga_energy > max) max = fpga_energy;
+
       if (cfg->fast) break;
     }
   }
 
-  cfg->majority = fpga_maj;
+  cfg->multiplicity = fpga_energy_multiplicity;
   cfg->n_fpga_energy_below = n_fpga_energy_below;
   cfg->max_fpga_energy = max;
 
-  if (!fpga_maj) {
+  if (!fpga_energy_multiplicity) {
     cfg->min_fpga_energy = 0;
   } else {
     cfg->min_fpga_energy = min;
