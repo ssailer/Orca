@@ -913,15 +913,31 @@ int LPPSetGeParameters(PostProcessor* processor, int nchannels, int* channelmap,
 
   for (int i = 0; i < nchannels && i < FCIOMaxChannels; i++) {
     fmc->tracemap[i] = channelmap[i];
+    if (ge_prescaling_threshold_adc[i] >= 0) {
+      fmc->fpga_energy_threshold_adc[i] = ge_prescaling_threshold_adc[i];
+    } else {
+      fprintf(stderr, "CRITICAL ge_prescaling_threshold_adc for channel[%d] = %d needs to be >= 0 is %d\n", i, channelmap[i], ge_prescaling_threshold_adc[i]);
+      return 0;
+    }
     fmc->fpga_energy_threshold_adc[i] = ge_prescaling_threshold_adc[i];
   }
   fmc->fast = skip_full_counting;
-  processor->majority_threshold = majority_threshold;
-  processor->ge_prescaling_rate = ge_average_prescaling_rate_hz;
+  if (majority_threshold >= 1)
+    processor->majority_threshold = majority_threshold;
+  else {
+    fprintf(stderr, "CRITICAL majority_threshold needs to be >= 1 is %d\n", majority_threshold);
+    return 0;
+  }
+  if (ge_average_prescaling_rate_hz >= 0.0)
+    processor->ge_prescaling_rate = ge_average_prescaling_rate_hz;
+  else {
+    fprintf(stderr, "CRITICAL ge_average_prescaling_rate_hz needs to be >= 0.0 is %f\n", ge_average_prescaling_rate_hz);
+    return 0;
+  }
 
   if (processor->loglevel >= 4) {
     fprintf(stderr, "DEBUG LPPSetGeParameters\n");
-    fprintf(stderr, "DEBUG majority_threshold %d\n", processor->majority_threshold);
+    fprintf(stderr, "DEBUG majority_threshold %d\n", majority_threshold);
     fprintf(stderr, "DEBUG average_prescaling_rate_hz %f\n", ge_average_prescaling_rate_hz);
     fprintf(stderr, "DEBUG skip_full_counting %d\n", fmc->fast);
     fprintf(stderr, "DEBUG channelmap_format %d : %s\n", fmc->tracemap_format, channelmap_format);
