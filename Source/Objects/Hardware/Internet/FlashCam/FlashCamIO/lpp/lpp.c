@@ -826,7 +826,7 @@ LPPState* LPPGetNextState(PostProcessor* processor, FCIOStateReader* reader, int
     /* this should handle the timeout, so we don't have to do it in the postprocessor.
      */
     if (!nfree) {
-      if (timedout) *timedout = 3;
+      if (timedout) *timedout = 10;
       return NULL;
     }
     state = FCIOGetNextState(reader, timedout);
@@ -922,10 +922,10 @@ int LPPSetGeParameters(PostProcessor* processor, int nchannels, int* channelmap,
     fmc->fpga_energy_threshold_adc[i] = ge_prescaling_threshold_adc[i];
   }
   fmc->fast = skip_full_counting;
-  if (majority_threshold >= 1)
+  if (majority_threshold >= 0)
     processor->majority_threshold = majority_threshold;
   else {
-    fprintf(stderr, "CRITICAL majority_threshold needs to be >= 1 is %d\n", majority_threshold);
+    fprintf(stderr, "CRITICAL majority_threshold needs to be >= 0 is %d\n", majority_threshold);
     return 0;
   }
   if (ge_average_prescaling_rate_hz >= 0.0)
