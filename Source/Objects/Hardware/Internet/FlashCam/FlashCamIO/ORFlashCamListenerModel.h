@@ -86,9 +86,12 @@
 
     int currentStartupTime;
 
-    NSThread* readerThread;
-    bool readoutShouldStart;
-    bool readoutIsRunning;
+    NSThread* listenerThread;
+    bool startFinished;
+    bool setupFinished;
+    bool stopRunning;
+    bool takingData;
+    bool runTaskCompleted;
     
     //new
     NSDateFormatter*  logDateFormatter;
@@ -181,7 +184,7 @@
 
 #pragma mark •••FCIO methods
 - (bool) fcioOpen;
-- (void) fcioClose;
+- (bool) fcioClose;
 - (bool) fcioRead:(ORDataPacket*)aDataPacket;
 - (void) runFailed;
 
