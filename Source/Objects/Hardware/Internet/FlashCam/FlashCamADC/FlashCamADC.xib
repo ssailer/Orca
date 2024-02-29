@@ -693,6 +693,7 @@
                                                     <textField toolTip="Sets a threshold for peak detecting relative to the gain calib value." focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="g1F-k1-vTt">
                                                         <rect key="frame" x="686" y="181" width="76" height="32"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                        <string key="toolTip">For Peaksum and Flag Channel: Sets a threshold for peak detecting relative to the calibration value. For HW Multiplicity: sets a threshold on the fpga energy value. Channels below that threshold are eligible for prescaling.</string>
                                                         <textFieldCell key="cell" selectable="YES" alignment="center" title="SWT Threshold" id="idz-Gd-pXw">
                                                             <font key="font" metaFont="label"/>
                                                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
