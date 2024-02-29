@@ -222,7 +222,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     [eventRateHistory    release];
     [deadTimeHistory     release];
     [runTask             release];
-    [listenerThread        release];
+    [listenerThread      release];
     [readOutList         release];
     [readOutArgs         release];
     [dataFileName        release];
@@ -1432,7 +1432,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 NSLog(@"%@: FCIO stream closed due to timeout.\n", [self identifier]);
             else if (timedout == 2)
                 NSLog(@"%@: FCIO stream closed due to timeout, however deselected records arrived.\n", [self identifier]);
-            else if (timedout == 3)
+            else if (timedout == 10)
                 NSLogColor([NSColor redColor], @"%@: post processor buffer overflow. Increase the ReadoutModel state buffer size.\n",[self identifier]);
         }
 
@@ -1857,6 +1857,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     }
 
     [self setReadOutArgs:readoutArgs]; // set args as far as we can, need to store it until startReadoutTask is called.
+
+    enablePostProcessor = [[self configParam:@"lppEnabled"] boolValue];
 
     setupFinished = YES;
 }
