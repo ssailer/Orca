@@ -1148,7 +1148,6 @@ NSString* ORFlashCamListenerModelFCRunLogFlushed     = @"ORFlashCamListenerModel
                 NSDictionary* dict = [chanMap objectAtIndex:state->event->trace_list[itr]];
                 ORFlashCamADCModel* card = [dict objectForKey:@"adc"];
                 unsigned int chan = [[dict objectForKey:@"channel"] unsignedIntValue];
-                DEBUG_PRINT("LPP: itr %d trace_list %d chan %d trace_map 0x%x\n",itr,state->event->trace_list[itr], chan, state->config->tracemap[state->event->trace_list[itr]] );
                 [card shipEvent:state->event withIndex:state->event->trace_list[itr]
                      andChannel:chan use:aDataPacket includeWF:writeWaveforms];
             }
