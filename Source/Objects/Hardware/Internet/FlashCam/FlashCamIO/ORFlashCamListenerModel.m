@@ -1194,14 +1194,14 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                     }
                     case 3: { // Digital Flag
                         // TODO: not implemented
-                        NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Digital Flag selected on 0x%x, but it's not implemented yet.", [self identifier], identifier);
+                        NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Digital Flag selected on 0x%x, but it's not implemented yet.", [self identifier], identifier);
                     }
                     case 4: {
                         if (lppPulserChannel == -1) {
                             lppPulserChannel = identifier;
                             lppPulserChannelThreshold = [adc swtCalibration:ich] * [adc swtThreshold:ich];
                         } else {
-                            NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Trying to overwrite Pulser Channel setting 0x%x with 0x%x.\n", [self identifier], lppPulserChannel, identifier );
+                            NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Trying to overwrite Pulser Channel setting 0x%x with 0x%x.\n", [self identifier], lppPulserChannel, identifier );
                             return NO;
                         }
                         break;
@@ -1211,7 +1211,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                             lppBaselineChannel = identifier;
                             lppBaselineChannelThreshold = [adc swtCalibration:ich] * [adc swtThreshold:ich];
                         } else {
-                            NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Trying to overwrite Baseline Channel setting 0x%x with 0x%x.\n", [self identifier], lppBaselineChannel, identifier );
+                            NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Trying to overwrite Baseline Channel setting 0x%x with 0x%x.\n", [self identifier], lppBaselineChannel, identifier );
                             return NO;
                         }
                         break;
@@ -1221,7 +1221,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                             lppMuonChannel = identifier;
                             lppMuonChannelThreshold = [adc swtCalibration:ich] * [adc swtThreshold:ich];
                         } else {
-                            NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Trying to overwrite Muon Channel setting 0x%x with 0x%x.\n", [self identifier], lppMuonChannel, identifier );
+                            NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Trying to overwrite Muon Channel setting 0x%x with 0x%x.\n", [self identifier], lppMuonChannel, identifier );
                             return NO;
                         }
                         break;
@@ -1257,7 +1257,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                              lppBaselineChannel, lppBaselineChannelThreshold,
                              lppMuonChannel, lppMuonChannelThreshold
                              )) {
-        NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing Aux parameters.\n", [self identifier]);
+        NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Error parsing Aux parameters.\n", [self identifier]);
         return NO;
     }
 
@@ -1267,7 +1267,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                                 0, // do not skip any channels to check
                                 lppHWPrescalingThresholds,
                                 [[self configParam:@"lppHWPreScalingRate"] floatValue])) {
-            NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing HW Multiplicity parameters.\n", [self identifier]);
+            NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Error parsing HW Multiplicity parameters.\n", [self identifier]);
             return NO;
         }
     }
@@ -1285,7 +1285,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                                   [[self configParam:@"lppPSCoincidenceThreshold"] floatValue],
                                   [[self configParam:@"lppPSPreScalingRate"] floatValue],
                                   [[self configParam:@"lppPSMuonCoincidence"] intValue])) {
-            NSLogColor([NSColor redColor], @"%s: setupSoftwareTrigger: Error parsing Peak Sum parameters.\n", [self identifier]);
+            NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Error parsing Peak Sum parameters.\n", [self identifier]);
             return NO;
         }
     }

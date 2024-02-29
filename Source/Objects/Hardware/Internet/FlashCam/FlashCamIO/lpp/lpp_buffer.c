@@ -23,10 +23,8 @@ LPPBuffer *LPPBufferCreate(unsigned int buffer_depth, Timestamp buffer_window) {
 }
 
 void LPPBufferDestroy(LPPBuffer *buffer) {
-  assert(buffer);
-  assert(buffer->lpp_states);
-  free(buffer->lpp_states);
-
+  if (buffer)
+    free(buffer->lpp_states);
   free(buffer);
 }
 
