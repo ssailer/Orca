@@ -57,16 +57,6 @@
 //        [[cell itemAtIndex:2] setTitle:@"Cusp"];
 //    }
 //    [filterTypeMatrix setEnabled:YES];
-    for(unsigned int i = 0; i < [model numberOfChannels]; i++){
-        id cell = [swtIncludeMatrix cellWithTag:i];
-        [[cell itemAtIndex:0] setTitle:@"Off"];
-        [[cell itemAtIndex:1] setTitle:@"Peak Sum"];
-        [[cell itemAtIndex:2] setTitle:@"HW Multiplicity"];
-        [[cell itemAtIndex:3] setTitle:@"Digital Flag"];
-        [[cell itemAtIndex:4] setTitle:@"Pulser Flag"];
-        [[cell itemAtIndex:4] setTitle:@"Baseline Flag"];
-        [[cell itemAtIndex:5] setTitle:@"Muon Flag"];
-    }
 //    NSArray* m = [NSArray arrayWithObjects:baselineMatrix, thresholdMatrix, adcGainMatrix, trigGainMatrix,
 //                  shapeTimeMatrix, flatTopTimeMatrix, poleZeroTimeMatrix, postTriggerMatrix, baselineSlewMatrix,
 //                  swtCalibrationMatrix, swtThresholdMatrix, swtShapingTimeMatrix, rateTextFields,
@@ -996,14 +986,6 @@
 ////        for(unsigned int j=0; j<3; j++) [[cell itemAtIndex:j] setTitle:@"N/A"];
 //    }
 //    [filterTypeMatrix setEnabled:NO];
-    for(unsigned int i = 0; i < [model numberOfChannels]; i++){
-        id cell = [swtIncludeMatrix cellWithTag:i];
-        [[cell itemAtIndex:0] setTitle:@"Off"];
-        [[cell itemAtIndex:1] setTitle:@"Peak Sum"];
-        [[cell itemAtIndex:2] setTitle:@"HW Multiplicity"];
-        [[cell itemAtIndex:3] setTitle:@"Digital Flag"];
-        // no Pulser, Baseline, Muon flags
-    }
 }
 
 @end
