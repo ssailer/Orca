@@ -46,7 +46,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 
 #define DEBUG_PRINT(fmt, ...) do { if (DEBUG) fprintf( stderr, (fmt), __VA_ARGS__); } while (0)
 #define DEBUG 0
-#define DEBUG_LPP
+//#define DEBUG_LPP
 
 #pragma mark •••Initialization
 
@@ -1310,19 +1310,6 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     if(reader)
         return NO;
 
-    if(!chanMap){
-        NSLogColor([NSColor redColor], @"%@: channel mapping has not been specified, aborting connection\n", [self identifier]);
-        return NO;
-    }
-    if(!interface || port == 0)
-        return NO;
-
-    [self updateIP];
-    if([ip isEqualToString:@""]){
-        NSLogColor([NSColor redColor], @"%@: unable to obtain IP address for interface %@\n",[self identifier], interface);
-        return NO;
-    }
-
     NSString* fcioRemote = (listenerRemoteIsFile) ? dataFileName : [NSString stringWithFormat:@"tcp://listen/%d/%@", port, ip];
 
     // If the remote is a file, FCIOCreateStateReader will fail, if it doesn't exist yet.
@@ -1631,6 +1618,10 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 - (void) setupReadoutTask
 {
     [self updateIP];
+    if([ip isEqualToString:@""]){
+        NSLogColor([NSColor redColor], @"%@: unable to obtain IP address for interface %@\n",[self identifier], interface);
+        return;
+    }
 
     NSMutableArray*  readoutArgs   = [NSMutableArray array];
     [readoutArgs addObjectsFromArray:[self readOutArgs]];
