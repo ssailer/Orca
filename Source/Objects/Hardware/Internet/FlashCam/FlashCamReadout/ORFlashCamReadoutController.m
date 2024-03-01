@@ -1095,10 +1095,6 @@
                                       withValue:[NSNumber numberWithInt:[object intValue]]];
             else if(col == 2) [l setConfigParam:@"lppHWPreScalingRate"
                                       withValue:[NSNumber numberWithDouble:[object doubleValue]]];
-//            else if(col == 3) [l setConfigParam:@"lppHWPreScalingThreshold"
-//                                      withValue:[NSNumber numberWithInt:[object intValue]]];
-//            else if(col == 3) [l setConfigParam:@"lppHWCheckAll"
-//                                      withValue:[NSNumber numberWithBool:[object boolValue]]];
         }
         else if(view == listenerLPPPeakSumTriggerView){
             if(col == 1)      [l setConfigParam:@"lppPSPreWindow"

@@ -1194,7 +1194,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                         break;
                     }
                     case 3: { // Digital Flag
-                        // TODO: not implemented
+                        // TODO: Digital Flag Channel Type not implemented, only specialized versions available
                         NSLogColor([NSColor redColor], @"%@: setupSoftwareTrigger: Digital Flag selected on 0x%x, but it's not implemented yet.", [self identifier], identifier);
                     }
                     case 4: {
