@@ -822,7 +822,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [flags addObjectsFromArray:@[@"-amajw", [NSString stringWithFormat:@"%d,%d,1", [self majorityWidth], index]]];
     for(unsigned int i=0; i<[self numberOfChannels]; i++){
         unsigned int j = i + offset;
-        /* The following check should check in the following hierarchy:
+        /* The following check should run in the following hierarchy:
          if trigAll is set in the ReadoutModel, the channel-wise paramters need to be set
          if not, then we only skip the settings, if the channel is neither readout out (chanEnabled) not sending it's triggers upstream
          */
@@ -938,8 +938,7 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     isRunning = false;
     [wfRates   stop];
     [trigRates stop];
-//    [self setWFsamples:0]; // release on run start, keep available because we don't know if a listener ist still writing.
-    // it seems line this is not only called from the listener runTaskStopped but from somewhere else (the main takeData thread?)
+    [self setWFsamples:0];
     [startTime release];
     startTime = nil;
 }
