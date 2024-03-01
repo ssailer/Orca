@@ -45,7 +45,8 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
 @implementation ORFlashCamListenerModel
 
 #define DEBUG_PRINT(fmt, ...) do { if (DEBUG) fprintf( stderr, (fmt), __VA_ARGS__); } while (0)
-#define DEBUG 1
+#define DEBUG 0
+#define DEBUG_LPP
 
 #pragma mark •••Initialization
 
@@ -1182,7 +1183,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                         lppPSChannelGains[nlppPSChannels] = [adc swtCalibration:ich];
                         lppPSChannelThresholds[nlppPSChannels] = [adc swtThreshold:ich];
                         lppPSChannelShapings[nlppPSChannels] = [adc swtShapingTime:ich];
-                        lppPSChannelLowPass[nlppPSChannels] = 0.0; // TODO: should we enable lowpass?
+                        lppPSChannelLowPass[nlppPSChannels] = 0.0; // Don't need lowpass for now
                         nlppPSChannels++;
                         break;
                     }
@@ -1237,7 +1238,7 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
     }
     
     if (postprocessor) {
-        // should never occur, buf if it does, because code evolves, it is checked against.
+        // should never occur, buf if it does, because code evolves, it is checked again.
         LPPDestroy(postprocessor);
     }
 
@@ -1436,31 +1437,21 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                 NSLogColor([NSColor redColor], @"%@: post processor buffer overflow. Increase the ReadoutModel state buffer size.\n",[self identifier]);
         }
 
+#ifdef DEBUG_LPP
         if (LPPStatsUpdate(postprocessor, !lppstate)) {
-            // returns one if logtime set in postprocessor has been reached.
-            // Force if lppstate == NULL
-            // TODO fill ListenerPostProcessor stats here
-            // for now, we use LPP Influx style string to print to the statuslog
+            // returns one if stats have been updated, or if the stream ends.
             if (lppLogLevel > 0) {
                 char logstring[255];
                 if (LPPStatsInfluxString(postprocessor, logstring, 255))
-                    fprintf(stderr, "%s postprocessor %s\n", [[self identifier] UTF8String],logstring);
-                //                NSLog(@"ORFlashCamListener: PostProcessor: %s\n", logstring);
+                    fprintf(stderr, "%s: postprocessor %s\n", [[self identifier] UTF8String],logstring);
             }
         }
-
-        if (!lppstate)
-            return NO;
-        state = lppstate->state; // set current read record
-
         char statestring[19] = {0};
         LPPFlags2char(lppstate, 18, statestring);
         if (!lppstate->write) {
             if (lppLogLevel > 5) {
                 fprintf(stderr, "%s: postprocessor record_flags=%s\n", [[self identifier] UTF8String], statestring);
             }
-            if (!writeNonTriggered)
-                return YES;
         } else {
             if (lppLogLevel > 2 && lppstate->stream_tag != FCIOStatus) {
                 fprintf(stderr, "%s: postprocessor record_flags=%s ge,multi=%d,min=%d,max=%d sipm,sum=%f,max=%f,mult=%d,offset=%d fill_level=%d\n",
@@ -1472,88 +1463,21 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
                         );
             }
         }
+#endif
+        if (!lppstate)
+            return NO; // stream has ended - similar to FCIOGetNextState
+        state = lppstate->state; // set current read record
+
+        if (!lppstate->write && !writeNonTriggered) // write to output even if software trigger did not trigger
+            return YES;
     }
     fcio_last_tag = state->last_tag;
-            // TODO Handle what to do with non-triggered records here!
-            
-            /* lpp_state definition
-          
-             #define ST_NSTATES 6
-             typedef enum SoftwareTriggerFlags {
+    // TODO: Implement the writing of the additional postprocessor information, for triggered & non-triggered records.
+    // decide on what to write, and how
+    // - add postprocessor flags to regular events OR send additional record
+    // would be better to have a dynamic size possible for these kinds
+    // of extensions
 
-               ST_NULL                       = 0,
-               ST_TRIGGER_FORCE              = 1 << 0,
-               ST_TRIGGER_SIPM_NPE           = 1 << 1,
-               ST_TRIGGER_SIPM_NPE_IN_WINDOW = 1 << 2,
-               ST_TRIGGER_SIPM_PRESCALED     = 1 << 3,
-               ST_TRIGGER_GE_PRESCALED       = 1 << 4,
-
-             } SoftwareTriggerFlags;
-
-
-             #define EVT_NSTATES 11
-             typedef enum EventFlags {
-
-               EVT_NULL                           = 0,
-               EVT_AUX_PULSER                     = 1 << 0,
-               EVT_AUX_BASELINE                   = 1 << 1,
-               EVT_AUX_MUON                       = 1 << 2,
-               EVT_RETRIGGER                      = 1 << 3,
-               EVT_EXTENDED                       = 1 << 4,
-               EVT_FPGA_MULTIPLICITY              = 1 << 5,
-               EVT_ASUM_MIN_NPE                   = 1 << 6,
-               EVT_FORCE_PRE_WINDOW               = 1 << 7,
-               EVT_FORCE_POST_WINDOW              = 1 << 8,
-               EVT_FPGA_MULTIPLICITY_ENERGY_BELOW = 1 << 9,
-
-             } EventFlags;
-
-
-             typedef struct Flags {
-               unsigned int trigger;
-               unsigned int event;
-             } Flags;
-
-             typedef struct LPPState {
-               FCIOState *state;
-               Timestamp timestamp;
-               Timestamp unixstamp;
-               int contains_timestamp;
-               int in_buffer;
-
-               Flags flags;
-               int majority;
-               float largest_sum_pe;
-               int largest_sum_offset;
-               int channel_multiplicity;
-               float largest_pe;
-
-               unsigned short ge_max_fpga_energy;
-               unsigned short ge_min_fpga_energy;
-
-               int write;
-               int stream_tag;
-
-             } LPPState;
-             */
-            
-//            if (lppstate->write)
-//                break;
-//        }
-        
-//        if (lppstate) {
-//            state = lppstate->state;
-//        }
-        /* lppstate == NULL indicates, that the reader has reached End-of-Stream.
-         we can check if timedout has any more information and report a reason.
-         In any case it's done now and we will disconnect.
-         It's expected that FCIOState* state == NULL in this case so the rest
-         of the functions handles the disconnect case.
-         */
-        
-//    }
-    
-    
     switch(state->last_tag){
         case FCIOConfig: {
             DEBUG_PRINT( "%s %s: fcioRead: config\n", [[self identifier] UTF8String], [[[NSThread currentThread] description] UTF8String]);
@@ -1564,27 +1488,22 @@ NSString* ORFlashCamListenerModelLPPConfigChanged    = @"ORFlashCamListenerModel
         }
         case FCIOEvent:
         case FCIOSparseEvent: {
-//            fprintf(stderr, "DEBUG fcioRead: parsing Event no %d with tag %d\n", state->event->timestamp[0], fcio_last_tag);
-            // TODO: this is for debugging only at the moment.
-            // check which ones got triggered and which ones not.
-            // need a new packet + extend the existing one in principle
-            // we can just use the unused channels here for the time being.
-            // would be better to have a dynamic size possible for these kinds
-            // of extensions
-//            if (lppstate) {
-//                if (!lppstate->write) {
-//                    writeWaveforms = false;
-//                }
-//                state->event->type = 10; // LPP Event, use new EventType
-//                state->event->timestamp[4] = (unsigned int)(lppstate->flags.trigger); // unsigned int
-//                state->event->timestamp[5] = (unsigned int)(lppstate->flags.event); // unsigned int
-//                state->event->timestamp[6] = (unsigned int)(lppstate->largest_sum_pe);  // float
-//                state->event->timestamp[7] = lppstate->largest_sum_offset;
-//                state->event->timestamp[8] = lppstate->channel_multiplicity;
-//                state->event->timestamp[9] = *(int*)(&lppstate->largest_pe);  // float
-//                state->event->timestamp_size = 10;
-//            }
-//            DEBUG_PRINT("fcioRead: got event record %d\n", 5);
+
+#ifdef DEBUG_LPP
+            if (!lppstate->write) {
+                writeWaveforms = false; // might not properly work with data parsing downstream
+            }
+            // this implementation reused the unused timestamp fields. This produces conflicts with fc250b version 2.
+            // should better use a separate new record.
+            state->event->type = 10; // LPP Event, use new EventType
+            state->event->timestamp[4] = (unsigned int)(lppstate->flags.trigger); // unsigned int
+            state->event->timestamp[5] = (unsigned int)(lppstate->flags.event); // unsigned int
+            state->event->timestamp[6] = (unsigned int)(lppstate->largest_sum_pe * 100);  // increase precision up to 2 decimals, won't ever need more than that
+            state->event->timestamp[7] = lppstate->largest_sum_offset; // the sample within the event
+            state->event->timestamp[8] = lppstate->channel_multiplicity; // the number of channels participating
+            state->event->timestamp[9] = *(int*)(&lppstate->largest_pe);  // float
+            state->event->timestamp_size = 10;
+#endif
             for(int itr=0; itr<state->event->num_traces; itr++){
                 NSDictionary* dict = [chanMap objectAtIndex:state->event->trace_list[itr]];
                 ORFlashCamADCModel* card = [dict objectForKey:@"adc"];
