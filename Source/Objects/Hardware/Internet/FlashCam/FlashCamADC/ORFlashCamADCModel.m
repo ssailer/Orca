@@ -32,12 +32,12 @@ NSString* ORFlashCamADCModelBaselineChanged              = @"ORFlashCamADCModelB
 NSString* ORFlashCamADCModelBaseBiasChanged              = @"ORFlashCamADCModelBaseBiasChanged";
 NSString* ORFlashCamADCModelThresholdChanged             = @"ORFlashCamADCModelThresholdChanged";
 NSString* ORFlashCamADCModelADCGainChanged               = @"ORFlashCamADCModelADCGainChanged";
-NSString* ORFlashCamADCModelTrigGainChanged              = @"ORFlashCamADCModelTrigGainChanged";
+//NSString* ORFlashCamADCModelTrigGainChanged              = @"ORFlashCamADCModelTrigGainChanged";
 NSString* ORFlashCamADCModelShapeTimeChanged             = @"ORFlashCamADCModelShapeTimeChanged";
-NSString* ORFlashCamADCModelFilterTypeChanged            = @"ORFlashCamADCModelFilterTypeChanged";
-NSString* ORFlashCamADCModelFlatTopTimeChanged           = @"ORFlashCamADCModelFlatTopTimeChanged";
+//NSString* ORFlashCamADCModelFilterTypeChanged            = @"ORFlashCamADCModelFilterTypeChanged";
+//NSString* ORFlashCamADCModelFlatTopTimeChanged           = @"ORFlashCamADCModelFlatTopTimeChanged";
 NSString* ORFlashCamADCModelPoleZeroTimeChanged          = @"ORFlashCamADCModelPoleZeroTimeChanged";
-NSString* ORFlashCamADCModelPostTriggerChanged           = @"ORFlashCamADCModelPostTriggerChanged";
+//NSString* ORFlashCamADCModelPostTriggerChanged           = @"ORFlashCamADCModelPostTriggerChanged";
 NSString* ORFlashCamADCModelBaselineSlewChanged          = @"ORFlashCamADCModelBaselineSlewChanged";
 NSString* ORFlashCamADCModelSWTIncludeChanged            = @"ORFlashCamADCModelSWTIncludeChanged";
 NSString* ORFlashCamADCModelSWTCalibrationChanged        = @"ORFlashCamADCModelSWTCalibrationChanged";
@@ -67,12 +67,12 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [self setBaseline:i         withValue:-1];
         [self setThreshold:i        withValue:5000];
         [self setADCGain:i          withValue:0];
-        [self setTrigGain:i         withValue:0.0];
+//        [self setTrigGain:i         withValue:0.0];
         [self setShapeTime:i        withValue:16*256];
-        [self setFilterType:i       withValue:1];
-        [self setFlatTopTime:i      withValue:16.0*128];
+//        [self setFilterType:i       withValue:1];
+//        [self setFlatTopTime:i      withValue:16.0*128];
         [self setPoleZeroTime:i     withValue:16.0*4096*6];
-        [self setPostTrigger:i      withValue:0.0];
+//        [self setPostTrigger:i      withValue:0.0];
         [self setBaselineSlew:i     withValue:0];
         [self setSWTInclude:i       withValue:0];
         [self setSWTCalibration:i   withValue:20];
@@ -300,11 +300,11 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     return adcGain[chan];
 }
 
-- (float) trigGain:(unsigned int)chan
-{
-    if(chan >= [self numberOfChannels]) return 0.0;
-    return trigGain[chan];
-}
+//- (float) trigGain:(unsigned int)chan
+//{
+//    if(chan >= [self numberOfChannels]) return 0.0;
+//    return trigGain[chan];
+//}
 
 - (int) shapeTime:(unsigned int)chan
 {
@@ -312,17 +312,17 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     return shapeTime[chan];
 }
 
-- (int) filterType:(unsigned int)chan
-{
-    if(chan >= [self numberOfChannels]) return 0;
-    return filterType[chan];
-}
-
-- (float) flatTopTime:(unsigned int)chan
-{
-    if(chan >= [self numberOfChannels]) return 0.0;
-    return flatTopTime[chan];
-}
+//- (int) filterType:(unsigned int)chan
+//{
+//    if(chan >= [self numberOfChannels]) return 0;
+//    return filterType[chan];
+//}
+//
+//- (float) flatTopTime:(unsigned int)chan
+//{
+//    if(chan >= [self numberOfChannels]) return 0.0;
+//    return flatTopTime[chan];
+//}
 
 - (float) poleZeroTime:(unsigned int)chan
 {
@@ -330,11 +330,11 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     return poleZeroTime[chan];
 }
 
-- (float) postTrigger:(unsigned int)chan
-{
-    if(chan >= [self numberOfChannels]) return 0.0;
-    return postTrigger[chan];
-}
+//- (float) postTrigger:(unsigned int)chan
+//{
+//    if(chan >= [self numberOfChannels]) return 0.0;
+//    return postTrigger[chan];
+//}
 
 - (int) baselineSlew:(unsigned int)chan
 {
@@ -529,16 +529,16 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
                                                       userInfo:info];
 }
 
-- (void) setTrigGain:(unsigned int)chan withValue:(float)gain
-{
-    if(chan >= [self numberOfChannels]) return;
-    [[[self undoManager] prepareWithInvocationTarget:self] setTrigGain:chan withValue:trigGain[chan]];
-    trigGain[chan] = MIN(MAX(0.0, gain), 1.0);
-    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
-    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelTrigGainChanged
-                                                        object:self
-                                                      userInfo:info];
-}
+//- (void) setTrigGain:(unsigned int)chan withValue:(float)gain
+//{
+//    if(chan >= [self numberOfChannels]) return;
+//    [[[self undoManager] prepareWithInvocationTarget:self] setTrigGain:chan withValue:trigGain[chan]];
+//    trigGain[chan] = MIN(MAX(0.0, gain), 1.0);
+//    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+//    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelTrigGainChanged
+//                                                        object:self
+//                                                      userInfo:info];
+//}
 
 - (void) setShapeTime:(unsigned int)chan withValue:(int)time
 {
@@ -551,29 +551,29 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
                                                       userInfo:info];
 }
 
-- (void) setFilterType:(unsigned int)chan withValue:(int)type
-{
-    if(chan >= [self numberOfChannels]) return;
-    [[[self undoManager] prepareWithInvocationTarget:self] setFilterType:chan withValue:filterType[chan]];
-    filterType[chan] = MIN(MAX(0, type), 2);
-    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
-    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelFilterTypeChanged
-                                                        object:self
-                                                      userInfo:info];
-    if(filterType == 0) [self setFlatTopTime:chan withValue:0.0];
-}
+//- (void) setFilterType:(unsigned int)chan withValue:(int)type
+//{
+//    if(chan >= [self numberOfChannels]) return;
+//    [[[self undoManager] prepareWithInvocationTarget:self] setFilterType:chan withValue:filterType[chan]];
+//    filterType[chan] = MIN(MAX(0, type), 2);
+//    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+//    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelFilterTypeChanged
+//                                                        object:self
+//                                                      userInfo:info];
+//    if(filterType == 0) [self setFlatTopTime:chan withValue:0.0];
+//}
 
-- (void) setFlatTopTime:(unsigned int)chan withValue:(float)time
-{
-    if(chan >= [self numberOfChannels]) return;
-    [[[self undoManager] prepareWithInvocationTarget:self] setFlatTopTime:chan withValue:flatTopTime[chan]];
-    if([self filterType:chan] == 0) flatTopTime[chan] = 0.0;
-    else flatTopTime[chan] = MAX(0.0, time);
-    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
-    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelFlatTopTimeChanged
-                                                        object:self
-                                                      userInfo:info];
-}
+//- (void) setFlatTopTime:(unsigned int)chan withValue:(float)time
+//{
+//    if(chan >= [self numberOfChannels]) return;
+//    [[[self undoManager] prepareWithInvocationTarget:self] setFlatTopTime:chan withValue:flatTopTime[chan]];
+//    if([self filterType:chan] == 0) flatTopTime[chan] = 0.0;
+//    else flatTopTime[chan] = MAX(0.0, time);
+//    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+//    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelFlatTopTimeChanged
+//                                                        object:self
+//                                                      userInfo:info];
+//}
 
 - (void) setPoleZeroTime:(unsigned int)chan withValue:(float)time
 {
@@ -586,16 +586,16 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
                                                       userInfo:info];
 }
 
-- (void) setPostTrigger:(unsigned int)chan withValue:(float)time
-{
-    if(chan >= [self numberOfChannels]) return;
-    [[[self undoManager] prepareWithInvocationTarget:self] setPostTrigger:chan withValue:postTrigger[chan]];
-    postTrigger[chan] = MAX(0.0, time);
-    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
-    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelPostTriggerChanged
-                                                        object:self
-                                                      userInfo:info];
-}
+//- (void) setPostTrigger:(unsigned int)chan withValue:(float)time
+//{
+//    if(chan >= [self numberOfChannels]) return;
+//    [[[self undoManager] prepareWithInvocationTarget:self] setPostTrigger:chan withValue:postTrigger[chan]];
+//    postTrigger[chan] = MAX(0.0, time);
+//    NSDictionary* info = [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:chan] forKey:@"Channel"];
+//    [[NSNotificationCenter defaultCenter] postNotificationName:ORFlashCamADCModelPostTriggerChanged
+//                                                        object:self
+//                                                      userInfo:info];
+//}
 
 - (void) setBaselineSlew:(unsigned int)chan withValue:(int)slew
 {
@@ -1101,12 +1101,12 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [encoder encodeInt:baseline[i]          forKey:[NSString stringWithFormat:@"baseline%i",        i]];
         [encoder encodeInt:threshold[i]         forKey:[NSString stringWithFormat:@"threshold%i",       i]];
         [encoder encodeInt:adcGain[i]           forKey:[NSString stringWithFormat:@"adcGain%i",         i]];
-        [encoder encodeFloat:trigGain[i]        forKey:[NSString stringWithFormat:@"trigGain%i",        i]];
+//        [encoder encodeFloat:trigGain[i]        forKey:[NSString stringWithFormat:@"trigGain%i",        i]];
         [encoder encodeInt:shapeTime[i]         forKey:[NSString stringWithFormat:@"shapeTime%i",       i]];
-        [encoder encodeInt:filterType[i]        forKey:[NSString stringWithFormat:@"filterType%i",      i]];
-        [encoder encodeFloat:flatTopTime[i]     forKey:[NSString stringWithFormat:@"flatTopTime%i",     i]];
+//        [encoder encodeInt:filterType[i]        forKey:[NSString stringWithFormat:@"filterType%i",      i]];
+//        [encoder encodeFloat:flatTopTime[i]     forKey:[NSString stringWithFormat:@"flatTopTime%i",     i]];
         [encoder encodeFloat:poleZeroTime[i]    forKey:[NSString stringWithFormat:@"poleZeroTime%i",    i]];
-        [encoder encodeFloat:postTrigger[i]     forKey:[NSString stringWithFormat:@"postTrigger%i",     i]];
+//        [encoder encodeFloat:postTrigger[i]     forKey:[NSString stringWithFormat:@"postTrigger%i",     i]];
         [encoder encodeInt:baselineSlew[i]      forKey:[NSString stringWithFormat:@"baselineSlew%i",    i]];
         [encoder encodeInt:swtInclude[i]        forKey:[NSString stringWithFormat:@"swtType%i",      i]];
         [encoder encodeFloat:swtCalibration[i]  forKey:[NSString stringWithFormat:@"swtCalibration%i",      i]];
@@ -1131,12 +1131,12 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [self addCurrentState:dict intArray:baseline             forKey:@"Baseline"];
     [self addCurrentState:dict intArray:threshold            forKey:@"Threshold"];
     [self addCurrentState:dict intArray:adcGain              forKey:@"ADCGain"];
-    [self addCurrentState:dict floatArray:trigGain           forKey:@"TrigGain"];
+//    [self addCurrentState:dict floatArray:trigGain           forKey:@"TrigGain"];
     [self addCurrentState:dict intArray:shapeTime            forKey:@"ShapeTime"];
-    [self addCurrentState:dict intArray:filterType           forKey:@"FilterType"];
-    [self addCurrentState:dict floatArray:flatTopTime        forKey:@"FlatTopTime"];
+//    [self addCurrentState:dict intArray:filterType           forKey:@"FilterType"];
+//    [self addCurrentState:dict floatArray:flatTopTime        forKey:@"FlatTopTime"];
     [self addCurrentState:dict floatArray:poleZeroTime       forKey:@"PoleZeroTime"];
-    [self addCurrentState:dict floatArray:postTrigger        forKey:@"PostTrigger"];
+//    [self addCurrentState:dict floatArray:postTrigger        forKey:@"PostTrigger"];
     [self addCurrentState:dict intArray:baselineSlew         forKey:@"BaselineSlew"];
     [self addCurrentState:dict intArray:swtInclude           forKey:@"SWTType"];
     [self addCurrentState:dict floatArray:swtCalibration     forKey:@"SWTCalibration"];
@@ -1215,19 +1215,19 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [p setCanBeRamped:YES];
     [a addObject:p];
     
-    p = [[[ORHWWizParam alloc] init] autorelease];
-    [p setName:@"Filter Type"];
-    [p setFormat:@"##0" upperLimit:2 lowerLimit:0 stepSize:1 units:@""];
-    [p setSetMethod:@selector(setFilterType:withValue:) getMethod:@selector(filterType:)];
-    [p setCanBeRamped:YES];
-    [a addObject:p];
-    
-    p = [[[ORHWWizParam alloc] init] autorelease];
-    [p setName:@"Flat Top Time"];
-    [p setFormat:@"##0" upperLimit:1<<16 lowerLimit:0 stepSize:1 units:@"ns"];
-    [p setSetMethod:@selector(setFlatTopTime:withValue:) getMethod:@selector(flatTopTime:)];
-    [p setCanBeRamped:YES];
-    [a addObject:p];
+//    p = [[[ORHWWizParam alloc] init] autorelease];
+//    [p setName:@"Filter Type"];
+//    [p setFormat:@"##0" upperLimit:2 lowerLimit:0 stepSize:1 units:@""];
+//    [p setSetMethod:@selector(setFilterType:withValue:) getMethod:@selector(filterType:)];
+//    [p setCanBeRamped:YES];
+//    [a addObject:p];
+//
+//    p = [[[ORHWWizParam alloc] init] autorelease];
+//    [p setName:@"Flat Top Time"];
+//    [p setFormat:@"##0" upperLimit:1<<16 lowerLimit:0 stepSize:1 units:@"ns"];
+//    [p setSetMethod:@selector(setFlatTopTime:withValue:) getMethod:@selector(flatTopTime:)];
+//    [p setCanBeRamped:YES];
+//    [a addObject:p];
     
     p = [[[ORHWWizParam alloc] init] autorelease];
     [p setName:@"Pole Zero Time"];
@@ -1250,19 +1250,19 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
     [p setCanBeRamped:YES];
     [a addObject:p];
     
-    p = [[[ORHWWizParam alloc] init] autorelease];
-    [p setName:@"Trig Gain"];
-    [p setFormat:@"##0" upperLimit:1000 lowerLimit:0 stepSize:0.1 units:@""];
-    [p setSetMethod:@selector(setTrigGain:withValue:) getMethod:@selector(trigGain:)];
-    [p setCanBeRamped:YES];
-    [a addObject:p];
+//    p = [[[ORHWWizParam alloc] init] autorelease];
+//    [p setName:@"Trig Gain"];
+//    [p setFormat:@"##0" upperLimit:1000 lowerLimit:0 stepSize:0.1 units:@""];
+//    [p setSetMethod:@selector(setTrigGain:withValue:) getMethod:@selector(trigGain:)];
+//    [p setCanBeRamped:YES];
+//    [a addObject:p];
     
-    p = [[[ORHWWizParam alloc] init] autorelease];
-    [p setName:@"Post Trigger"];
-    [p setFormat:@"##@" upperLimit:1000000 lowerLimit:0 stepSize:0.1 units:@"ns"];
-    [p setSetMethod:@selector(setPostTrigger:withValue:) getMethod:@selector(postTrigger:)];
-    [p setCanBeRamped:YES];
-    [a addObject:p];
+//    p = [[[ORHWWizParam alloc] init] autorelease];
+//    [p setName:@"Post Trigger"];
+//    [p setFormat:@"##@" upperLimit:1000000 lowerLimit:0 stepSize:0.1 units:@"ns"];
+//    [p setSetMethod:@selector(setPostTrigger:withValue:) getMethod:@selector(postTrigger:)];
+//    [p setCanBeRamped:YES];
+//    [a addObject:p];
     
     p = [[[ORHWWizParam alloc] init] autorelease];
     [p setName:@"Baseline Slew"];
@@ -1351,12 +1351,12 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
         [chval setObject:[NSNumber numberWithInt:[self baseline:i]]         forKey:@"baseline"];
         [chval setObject:[NSNumber numberWithInt:[self threshold:i]]        forKey:@"threshold"];
         [chval setObject:[NSNumber numberWithInt:[self shapeTime:i]]        forKey:@"shapeTime"];
-        [chval setObject:[NSNumber numberWithInt:[self filterType:i]]       forKey:@"filterType"];
+//        [chval setObject:[NSNumber numberWithInt:[self filterType:i]]       forKey:@"filterType"];
         [chval setObject:[NSNumber numberWithInt:[self adcGain:i]]          forKey:@"adcGain"];
-        [chval setObject:[NSNumber numberWithFloat:[self trigGain:i]]       forKey:@"trigGain"];
-        [chval setObject:[NSNumber numberWithFloat:[self flatTopTime:i]]    forKey:@"flatTopTime"];
+//        [chval setObject:[NSNumber numberWithFloat:[self trigGain:i]]       forKey:@"trigGain"];
+//        [chval setObject:[NSNumber numberWithFloat:[self flatTopTime:i]]    forKey:@"flatTopTime"];
         [chval setObject:[NSNumber numberWithFloat:[self poleZeroTime:i]]   forKey:@"poleZeroTime"];
-        [chval setObject:[NSNumber numberWithFloat:[self postTrigger:i]]    forKey:@"postTrigger"];
+//        [chval setObject:[NSNumber numberWithFloat:[self postTrigger:i]]    forKey:@"postTrigger"];
         [chval setObject:[NSNumber numberWithInt:[self baselineSlew:i]]     forKey:@"baselineSlew"];
         [chval setObject:[NSNumber numberWithBool:[self swtInclude:i]]   forKey:@"swtType:"];
         [chval setObject:[NSNumber numberWithFloat:[self swtCalibration:i]]      forKey:@"swtCalibration:"];

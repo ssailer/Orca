@@ -48,12 +48,12 @@
     int baseline[kMaxFlashCamADCChannels];        // bldac
     int threshold[kMaxFlashCamADCChannels];       // athr
     int adcGain[kMaxFlashCamADCChannels];         // ag
-    float trigGain[kMaxFlashCamADCChannels];      // tgm
+//    float trigGain[kMaxFlashCamADCChannels];      // tgm
     int shapeTime[kMaxFlashCamADCChannels];       // gs
-    int filterType[kMaxFlashCamADCChannels];
-    float flatTopTime[kMaxFlashCamADCChannels];   // gf
+//    int filterType[kMaxFlashCamADCChannels];
+//    float flatTopTime[kMaxFlashCamADCChannels];   // gf
     float poleZeroTime[kMaxFlashCamADCChannels];  // gpz
-    float postTrigger[kMaxFlashCamADCChannels];   // pthr
+//    float postTrigger[kMaxFlashCamADCChannels];   // pthr
     int baselineSlew[kMaxFlashCamADCChannels];    // gbs
     int swtInclude[kMaxFlashCamADCChannels];   // LPP Channel Type
     float swtCalibration[kMaxFlashCamADCChannels];       // LPP Channel Gain if type is analog
@@ -99,12 +99,12 @@
 - (int) baseline:(unsigned int)chan;
 - (int) threshold:(unsigned int)chan;
 - (int) adcGain:(unsigned int)chan;
-- (float) trigGain:(unsigned int)chan;
+//- (float) trigGain:(unsigned int)chan;
 - (int) shapeTime:(unsigned int)chan;
-- (int) filterType:(unsigned int)chan;
-- (float) flatTopTime:(unsigned int)chan;
+//- (int) filterType:(unsigned int)chan;
+//- (float) flatTopTime:(unsigned int)chan;
 - (float) poleZeroTime:(unsigned int)chan;
-- (float) postTrigger:(unsigned int)chan;
+//- (float) postTrigger:(unsigned int)chan;
 - (int) baselineSlew:(unsigned int)chan;
 - (int) swtInclude:(unsigned int)chan;
 - (float) swtCalibration:(unsigned int)chan;
@@ -134,12 +134,12 @@
 - (void) setBaseline:(unsigned int)chan       withValue:(int)base;
 - (void) setThreshold:(unsigned int)chan      withValue:(int)thresh;
 - (void) setADCGain:(unsigned int)chan        withValue:(int)gain;
-- (void) setTrigGain:(unsigned int)chan       withValue:(float)gain;
+//- (void) setTrigGain:(unsigned int)chan       withValue:(float)gain;
 - (void) setShapeTime:(unsigned int)chan      withValue:(int)time;
-- (void) setFilterType:(unsigned int)chan     withValue:(int)type;
-- (void) setFlatTopTime:(unsigned int)chan    withValue:(float)time;
+//- (void) setFilterType:(unsigned int)chan     withValue:(int)type;
+//- (void) setFlatTopTime:(unsigned int)chan    withValue:(float)time;
 - (void) setPoleZeroTime:(unsigned int)chan   withValue:(float)time;
-- (void) setPostTrigger:(unsigned int)chan    withValue:(float)time;
+//- (void) setPostTrigger:(unsigned int)chan    withValue:(float)time;
 - (void) setBaselineSlew:(unsigned int)chan   withValue:(int)slew;
 - (void) setSWTInclude:(unsigned int)chan  withValue:(int)swTrigType;
 - (void) setSWTCalibration:(unsigned int)chan     withValue:(float)swTrigGain;
@@ -224,12 +224,12 @@ extern NSString* ORFlashCamADCModelBaselineChanged;
 extern NSString* ORFlashCamADCModelBaseBiasChanged;
 extern NSString* ORFlashCamADCModelThresholdChanged;
 extern NSString* ORFlashCamADCModelADCGainChanged;
-extern NSString* ORFlashCamADCModelTrigGainChanged;
+//extern NSString* ORFlashCamADCModelTrigGainChanged;
 extern NSString* ORFlashCamADCModelShapeTimeChanged;
-extern NSString* ORFlashCamADCModelFilterTypeChanged;
-extern NSString* ORFlashCamADCModelFlatTopTimeChanged;
+//extern NSString* ORFlashCamADCModelFilterTypeChanged;
+//extern NSString* ORFlashCamADCModelFlatTopTimeChanged;
 extern NSString* ORFlashCamADCModelPoleZeroTimeChanged;
-extern NSString* ORFlashCamADCModelPostTriggerChanged;
+//extern NSString* ORFlashCamADCModelPostTriggerChanged;
 extern NSString* ORFlashCamADCModelBaselineSlewChanged;
 extern NSString* ORFlashCamADCModelSWTIncludeChanged;
 extern NSString* ORFlashCamADCModelSWTCalibrationChanged;
