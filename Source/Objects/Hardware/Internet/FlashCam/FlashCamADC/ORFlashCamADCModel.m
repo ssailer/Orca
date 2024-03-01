@@ -1037,18 +1037,18 @@ NSString* ORFlashCamADCModelBaselineSampleTimeChanged    = @"ORFlashCamADCModelB
                  withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"threshold%i", i]]];
         [self setADCGain:i
                withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"adcGain%i", i]]];
-        [self setTrigGain:i
-                withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"trigGain%i", i]]];
+//        [self setTrigGain:i
+//                withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"trigGain%i", i]]];
         [self setShapeTime:i
                  withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"shapeTime%i", i]]];
-        [self setFilterType:i
-                  withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"filterType%i", i]]];
-        [self setFlatTopTime:i
-                   withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"flatTopTime%i", i]]];
+//        [self setFilterType:i
+//                  withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"filterType%i", i]]];
+//        [self setFlatTopTime:i
+//                   withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"flatTopTime%i", i]]];
         [self setPoleZeroTime:i
                     withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"poleZeroTime%i",  i]]];
-        [self setPostTrigger:i
-                   withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"postTrigger%i", i]]];
+//        [self setPostTrigger:i
+//                   withValue:[decoder decodeFloatForKey:[NSString stringWithFormat:@"postTrigger%i", i]]];
         [self setBaselineSlew:i
                     withValue:[decoder decodeIntForKey:[NSString stringWithFormat:@"baselineSlew%i", i]]];
         [self setSWTInclude:i
