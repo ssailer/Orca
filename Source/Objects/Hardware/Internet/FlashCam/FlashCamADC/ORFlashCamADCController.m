@@ -63,9 +63,9 @@
         [[cell itemAtIndex:1] setTitle:@"Peak Sum"];
         [[cell itemAtIndex:2] setTitle:@"HW Multiplicity"];
         [[cell itemAtIndex:3] setTitle:@"Digital Flag"];
-//        [[cell itemAtIndex:4] setTitle:@"Baseline Flag"];
-//        [[cell itemAtIndex:5] setTitle:@"Muon Trigger Flag"];
-        
+        [[cell itemAtIndex:4] setTitle:@"Pulser Flag"];
+        [[cell itemAtIndex:4] setTitle:@"Baseline Flag"];
+        [[cell itemAtIndex:5] setTitle:@"Muon Flag"];
     }
 //    NSArray* m = [NSArray arrayWithObjects:baselineMatrix, thresholdMatrix, adcGainMatrix, trigGainMatrix,
 //                  shapeTimeMatrix, flatTopTimeMatrix, poleZeroTimeMatrix, postTriggerMatrix, baselineSlewMatrix,
@@ -1002,9 +1002,7 @@
         [[cell itemAtIndex:1] setTitle:@"Peak Sum"];
         [[cell itemAtIndex:2] setTitle:@"HW Multiplicity"];
         [[cell itemAtIndex:3] setTitle:@"Digital Flag"];
-//        [[cell itemAtIndex:4] setTitle:@"Baseline Flag"];
-//        [[cell itemAtIndex:5] setTitle:@"Muon Trigger Flag"];
-        
+        // no Pulser, Baseline, Muon flags
     }
 }
 
