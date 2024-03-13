@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -3497,8 +3497,6 @@
 		A8175F8B220D8D07003AC7E5 /* ADEIControl.nib in Resources */ = {isa = PBXBuildFile; fileRef = A8175F82220D8D06003AC7E5 /* ADEIControl.nib */; };
 		A8175F8C220D8D07003AC7E5 /* ORADEIControlController.h in Headers */ = {isa = PBXBuildFile; fileRef = A8175F83220D8D06003AC7E5 /* ORADEIControlController.h */; };
 		A86253F3221217E7005D26EC /* ORADEIControlDefs.h in Headers */ = {isa = PBXBuildFile; fileRef = A86253F2221217E6005D26EC /* ORADEIControlDefs.h */; };
-		A8A519B22A72C9BC00F6FE93 /* lpp_config.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A519B12A72C9BC00F6FE93 /* lpp_config.h */; };
-		A8A519B42A72CDC800F6FE93 /* yopt.h in Headers */ = {isa = PBXBuildFile; fileRef = A8A519B32A72CDC700F6FE93 /* yopt.h */; };
 		A8E6694D2A702F2800A9775A /* dsp.h in Headers */ = {isa = PBXBuildFile; fileRef = A8E669412A702F2500A9775A /* dsp.h */; };
 		A8E6694E2A702F2800A9775A /* lpp_state.h in Headers */ = {isa = PBXBuildFile; fileRef = A8E669422A702F2500A9775A /* lpp_state.h */; };
 		A8E6694F2A702F2800A9775A /* lpp.c in Sources */ = {isa = PBXBuildFile; fileRef = A8E669432A702F2600A9775A /* lpp.c */; };
@@ -7435,8 +7433,6 @@
 		A8175F82220D8D06003AC7E5 /* ADEIControl.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = ADEIControl.nib; sourceTree = "<group>"; };
 		A8175F83220D8D06003AC7E5 /* ORADEIControlController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ORADEIControlController.h; sourceTree = "<group>"; };
 		A86253F2221217E6005D26EC /* ORADEIControlDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ORADEIControlDefs.h; sourceTree = "<group>"; };
-		A8A519B12A72C9BC00F6FE93 /* lpp_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lpp_config.h; sourceTree = "<group>"; };
-		A8A519B32A72CDC700F6FE93 /* yopt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yopt.h; sourceTree = "<group>"; };
 		A8E669412A702F2500A9775A /* dsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dsp.h; sourceTree = "<group>"; };
 		A8E669422A702F2500A9775A /* lpp_state.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lpp_state.h; sourceTree = "<group>"; };
 		A8E669432A702F2600A9775A /* lpp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lpp.c; sourceTree = "<group>"; };
@@ -15185,8 +15181,6 @@
 		A8E669402A702EC000A9775A /* lpp */ = {
 			isa = PBXGroup;
 			children = (
-				A8A519B32A72CDC700F6FE93 /* yopt.h */,
-				A8A519B12A72C9BC00F6FE93 /* lpp_config.h */,
 				A8E6694A2A702F2800A9775A /* dsp.c */,
 				A8E669412A702F2500A9775A /* dsp.h */,
 				A8E669462A702F2600A9775A /* l200_channelmaps.h */,
@@ -16129,7 +16123,6 @@
 				8434A1CF055B3287002D3102 /* NcdMuxController.h in Headers */,
 				8434A1D1055B3287002D3102 /* NcdMuxModel.h in Headers */,
 				8434A1D2055B3287002D3102 /* NcdMuxHWModel.h in Headers */,
-				A8A519B22A72C9BC00F6FE93 /* lpp_config.h in Headers */,
 				70C6000C2469D45600400C83 /* ORLabJackT7Model.h in Headers */,
 				E636382626B08F1200584B16 /* ORFlashCamADCDecoders.h in Headers */,
 				846298BB20A369A90024C081 /* ORTDS2024Controller.h in Headers */,
@@ -16998,7 +16991,6 @@
 				84B754611160E01C00667631 /* ORCC4189Decoders.h in Headers */,
 				84B754631160E01C00667631 /* ORCC4189Model.h in Headers */,
 				84F50A2E116B7151000275F2 /* ORCmdLabelController.h in Headers */,
-				A8A519B42A72CDC800F6FE93 /* yopt.h in Headers */,
 				84F50A30116B7151000275F2 /* ORCmdLabelModel.h in Headers */,
 				EF69C433116E5DC3008ABADC /* ORSNOCrateReadout.hh in Headers */,
 				8490D2981177532C00D25B1F /* ORIpeV4MiniCrateController.h in Headers */,

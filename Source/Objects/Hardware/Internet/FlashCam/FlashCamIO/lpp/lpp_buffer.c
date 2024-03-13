@@ -85,8 +85,8 @@ LPPState *LPPBufferFetch(LPPBuffer *buffer) {
     lpp_state->in_buffer = 0;
 
     return lpp_state;
-  } else {
-    Timestamp delta = timestamp_sub(buffer->buffer_timestamp, lpp_state->timestamp);
+  // } else {
+    // Timestamp delta = timestamp_sub(buffer->buffer_timestamp, lpp_state->timestamp);
     // fprintf(stderr, "DEBUG/BUFFER: Cannot fetch from buffer: lpp_state %p in_buffer %d buffer_ts=%ld.%09ld lpp_state_ts=%ld.%09ld delta_ts=%ld.%09ld\n",
     //   (void*)lpp_state, lpp_state->in_buffer, buffer->buffer_timestamp.seconds, buffer->buffer_timestamp.nanoseconds,
     //   lpp_state->timestamp.seconds, lpp_state->timestamp.nanoseconds,

@@ -913,12 +913,6 @@ int LPPSetGeParameters(PostProcessor* processor, int nchannels, int* channelmap,
 
   for (int i = 0; i < nchannels && i < FCIOMaxChannels; i++) {
     fmc->tracemap[i] = channelmap[i];
-    if (ge_prescaling_threshold_adc[i] >= 0) {
-      fmc->fpga_energy_threshold_adc[i] = ge_prescaling_threshold_adc[i];
-    } else {
-      fprintf(stderr, "CRITICAL ge_prescaling_threshold_adc for channel[%d] = %d needs to be >= 0 is %d\n", i, channelmap[i], ge_prescaling_threshold_adc[i]);
-      return 0;
-    }
     fmc->fpga_energy_threshold_adc[i] = ge_prescaling_threshold_adc[i];
   }
   fmc->fast = skip_full_counting;
@@ -1039,7 +1033,7 @@ int LPPSetSiPMParameters(PostProcessor* processor, int nchannels, int* channelma
     if (lowpass_factors[i] >= 0) {
       asc->lowpass[i] = lowpass_factors[i];
     } else {
-      fprintf(stderr, "CRITICAL lowpass_factors for channel[%d] = %d needs to be >= 0 is %d\n", i, channelmap[i], lowpass_factors[i]);
+      fprintf(stderr, "CRITICAL lowpass_factors for channel[%d] = %d needs to be >= 0 is %f\n", i, channelmap[i], lowpass_factors[i]);
       return 0;
     }
 

@@ -2,6 +2,7 @@
 
 #include <fcio.h>
 #include <timestamps.h>
+#include <dsp.h>
 
 #define ST_NSTATES 6
 typedef enum SoftwareTriggerFlags {
@@ -36,9 +37,6 @@ typedef struct Flags {
   unsigned int trigger;
   unsigned int event;
 } Flags;
-
-/* forward decl if we want to fill that pointer. */
-typedef struct TriggerList TriggerList;
 
 typedef struct LPPState {
   /* internal */
