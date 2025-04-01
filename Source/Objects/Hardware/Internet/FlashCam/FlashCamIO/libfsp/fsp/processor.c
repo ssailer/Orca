@@ -163,9 +163,6 @@ static inline void fsp_derive_triggerflags(StreamProcessor* processor, FSPState*
       fsp_state->write_flags.trigger.wps_coincident_sum = 1;
     }
 
-  if (processor->triggerconfig.enabled_flags.trigger.hwm_prescaled && fsp_state->proc_flags.hwm.prescaled)
-    fsp_state->write_flags.trigger.hwm_prescaled = 1;
-
   if (processor->triggerconfig.enabled_flags.trigger.wps_prescaled && fsp_state->proc_flags.wps.prescaled)
     fsp_state->write_flags.trigger.wps_prescaled = 1;
 }

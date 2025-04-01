@@ -470,12 +470,13 @@ void fsp_dsp_windowed_peak_sum(DSPWindowedPeakSum *cfg, int nsamples, int num_tr
   cfg->max_peak_offset = total_largest_peak_offset;
 }
 
-void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int num_traces, unsigned short* trace_list, unsigned short **trace_headers) {
+void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int prescale_ratio, int num_traces, unsigned short* trace_list, unsigned short **trace_headers) {
 
   int multiplicity = 0;
   int mult_below_threshold = 0;
   unsigned short max = 0;
   unsigned short min = USHRT_MAX;
+  cfg->n_prescaled = 0;
   for (int i = 0; i < num_traces; i++) {
     int trace_idx = trace_list[i];
     if (cfg->tracemap.enabled[trace_idx] < 0)
@@ -488,8 +489,14 @@ void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int num_traces, uns
     if (fpga_energy) {
       multiplicity++;
 
-      if (fpga_energy < cfg->fpga_energy_threshold_adc[map_idx])
+      if (fpga_energy < cfg->fpga_energy_threshold_adc[map_idx]) {
         mult_below_threshold++;
+        cfg->below_threshold_counter[map_idx]++;
+        if (prescale_ratio && cfg->below_threshold_counter[map_idx] % prescale_ratio == 0) {
+          cfg->n_prescaled++;
+          cfg->below_threshold_counter[map_idx] = 0;
+        }
+      }
 
       if (fpga_energy < min) min = fpga_energy;
       if (fpga_energy > max) max = fpga_energy;

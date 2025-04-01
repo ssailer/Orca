@@ -101,9 +101,9 @@ int FSP_L200_SetGeParameters(StreamProcessor* processor, int nchannels, int* cha
     fprintf(stderr, "DEBUG channelmap_format  %d : %s\n", hwm->tracemap.format, channelmap_fmt2str(format));
     for (int i = 0; i < hwm->tracemap.n_mapped; i++) {
       if (hwm->tracemap.format == FCIO_TRACE_MAP_FORMAT) {
-        fprintf(stderr, "DEBUG channel 0x%x\n", hwm->tracemap.map[i]);
+        fprintf(stderr, "DEBUG mapped channel 0x%x\n", hwm->tracemap.map[i]);
       } else {
-        fprintf(stderr, "DEBUG channel %d\n", hwm->tracemap.map[i]);
+        fprintf(stderr, "DEBUG mapped channel %d\n", hwm->tracemap.map[i]);
       }
     }
   }

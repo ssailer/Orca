@@ -60,11 +60,14 @@ typedef struct DSPWindowedPeakSum {
 typedef struct DSPHardwareMultiplicity {
   FSPTraceMap tracemap;
   unsigned short fpga_energy_threshold_adc[FCIOMaxChannels];
+  int below_threshold_counter[FCIOMaxChannels];
+  int prescale_ratio;
 
   int fast;
   /* result fields */
   int multiplicity; // multiplicity of hardware energy values
   int n_below_minimum_multiplicity; // counts the number of channels below fpga_energy_threshold_adc but > 0
+  int n_prescaled; // counts the number of channels that were prescaled
   unsigned short max_value; // the largest channel hw value
   unsigned short min_value; // the smallest channel hw value, but > 0
 
@@ -101,7 +104,7 @@ float fsp_dsp_local_peaks_f32(float *input_trace, float *peak_trace, int start, 
                                float *peak_amplitudes, int *npeaks, int* largest_peak_offset);
 
 void fsp_dsp_windowed_peak_sum(DSPWindowedPeakSum *cfg, int nsamples, int num_traces, unsigned short* trace_list, unsigned short **traces);
-void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int num_traces, unsigned short* trace_list, unsigned short **trace_headers);
+void fsp_dsp_hardware_majority(DSPHardwareMultiplicity *cfg, int num_traces, int prescale_ratio, unsigned short* trace_list, unsigned short **trace_headers);
 void fsp_dsp_channel_threshold(DSPChannelThreshold* cfg, int nsamples, int num_traces, unsigned short* trace_list, unsigned short **traces, unsigned short **theaders);
 
 

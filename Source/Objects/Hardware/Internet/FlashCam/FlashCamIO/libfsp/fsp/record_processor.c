@@ -80,9 +80,6 @@ static inline EventFlags fsp_evt_flags(StreamProcessor* processor, FCIOState* st
   // FCIOStateReader* reader = processor->buffer->reader;
   /*
   Determine if:
-  - pulser event
-  - baseline event
-  - muon event
   - consecutive event
   */
   EventFlags evtflags = {0};
@@ -168,7 +165,7 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
 
   HWMFlags hwmflags = {0};
 
-  fsp_dsp_hardware_majority(&processor->dsp_hwm, event->num_traces, event->trace_list, event->theader);
+  fsp_dsp_hardware_majority(&processor->dsp_hwm, processor->triggerconfig.hwm_prescale_ratio, event->num_traces, event->trace_list, event->theader);
 
   if (processor->dsp_hwm.multiplicity >= processor->triggerconfig.hwm_min_multiplicity) {
     hwmflags.multiplicity_threshold = 1;
@@ -183,11 +180,8 @@ static inline HWMFlags fsp_swt_hardware_majority(StreamProcessor* processor, FCI
   }
 
   if (hwmflags.multiplicity_below) {
-    processor->hwm_prescale_ready_counter++;
-    if (processor->triggerconfig.hwm_prescale_ratio > 0) {
-      if ((processor->hwm_prescale_ready_counter % processor->triggerconfig.hwm_prescale_ratio) == 0) {
-        hwmflags.prescaled = 1;
-      }
+    if (processor->triggerconfig.hwm_prescale_ratio > 0 && processor->dsp_hwm.n_prescaled > 0) {
+      hwmflags.prescaled = 1;
     }
     else if (processor->triggerconfig.hwm_prescale_rate > 0.0) {
       if (processor->hwm_prescale_timestamp.seconds == -1) {
@@ -403,8 +397,6 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
                       processor->dsp_ct.tracemap.map[i]);
             }
           }
-        } else {
-          return -1;
         }
       }
 
@@ -416,11 +408,10 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
               fprintf(stderr, "DEBUG conversion peak sum trace index %d\n", processor->dsp_wps.tracemap.map[i]);
             }
           }
-        } else {
+        } else if (processor->loglevel >= 2){
           fprintf(stderr,
-                  "CRITICAL fsp_process_fcio_state: during conversion of peak sum channels, one channel could not "
+                  "WARNING fsp_process_fcio_state: during conversion of peak sum channels, one channel could not "
                   "be mapped.\n");
-          return -1;
         }
 
         if (wps_cfg->sum_window_stop_sample < 0)
@@ -474,11 +465,10 @@ int fsp_process_fcio_state(StreamProcessor* processor, FSPState* fsp_state, FCIO
                       processor->dsp_hwm.tracemap.map[i]);
             }
           }
-        } else {
+        } else if (processor->loglevel >= 2) {
           fprintf(stderr,
-                  "CRITICAL fsp_process_fcio_state: during conversion of hw majority channels, one channel could "
+                  "WARNING fsp_process_fcio_state: during conversion of hw majority channels, one channel could "
                   "not be mapped.\n");
-          return -1;
         }
       }
 
